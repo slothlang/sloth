@@ -1,12 +1,12 @@
-# Variables can be declared using the `let` keyword, however they will be deeply
-# immutable. If you would like to make the variable mutable you can use `let mut`
+# Variables can be declared using the `var` keyword, however they will be mutable. 
+# If you would like to make the variable immutable you can use `val`
 #
 # Variables can not be exported and can not be referrenced accross modules.
-let x = 0;
-let mut y = 0;
+var x = 0;
+val y = 0;
 
-x = 5; # Invalid
-y = 5; # Valid
+x = 5; # Valid
+y = 5; # Invalid
 
 # Constants can be declared using the `const` keyword, unlike variables they can
 # be exported and accessed across modules.

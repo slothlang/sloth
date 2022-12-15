@@ -6,7 +6,7 @@ type Person = {
     grades: Map<String, i32>,
 };
 
-let cody = Person {
+val cody = Person {
     name: "Cody Q",
     age: 17,
     hobbies: {
@@ -59,12 +59,12 @@ impl Color {
             (value * 255) as u8
         }
 
-        let h = (hue * 6).floor() as i32;
+        val h = (hue * 6).floor() as i32;
         
-        let f = hue * 6 - h;
-        let p = value * (1 - saturation);
-        let q = value * (1 - f * saturation);
-        let t = value * (1 - (1 - f) * saturation);
+        val f = hue * 6 - h;
+        val p = value * (1 - saturation);
+        val q = value * (1 - f * saturation);
+        val t = value * (1 - (1 - f) * saturation);
 
         return match h {
             0 => Color(c(value), c(t), c(p)),

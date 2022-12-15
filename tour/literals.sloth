@@ -1,32 +1,32 @@
 # Literals
-let number = 85; #TODO: Decide on default integer type
-let number = 85.0; # f64 is the default float type
+val number = 85; #TODO: Decide on default integer type
+val number = 85.0; # f64 is the default float type
 
-let number: u16 = 27; # If you want more control over memory usage you can specify a integer type
-let number: u16 = 27u16;
-let number: u16 = 0x1B;
-let number: u16 = 0x1Bu16;
+val number: u16 = 27; # If you want more control over memory usage you can specify a integer type
+val number: u16 = 27u16;
+val number: u16 = 0x1B;
+val number: u16 = 0x1Bu16;
 
-let number: BigInt = BigInt::from(73);     #TODO: naming
-let number: BigFloat = BigFloat::from(73); #TODO: naming
+val number: BigInt = BigInt::from(73);     #TODO: naming
+val number: BigFloat = BigFloat::from(73); #TODO: naming
 
-let chars: char = ' ';
+val chars: char = ' ';
 
-let strings: String = "Normal string";
-let strings: String = "Formated strings ${number}";
-let strings: String = """String literals""";
+val strings: String = "Normal string";
+val strings: String = "Formated strings ${number}";
+val strings: String = """String literals""";
 
-let regex: Regex = /[0-9A-F]/;
+val regex: Regex = /[0-9A-F]/;
 
-let list: List<i32> = [1, 2, 3, 2];
-let sets: Set<i32> = {1, 2, 3, 2};
+val list: List<i32> = [1, 2, 3, 2];
+val sets: Set<i32> = {1, 2, 3, 2};
 
-let maps = { 
+val maps = { 
     "foo": 48,
     "bar": 97, 
 };
 
-let maps: Map<String, i32> = { 
+val maps: Map<String, i32> = { 
     "foo": 48,
     "bar": 97, 
 };
@@ -41,7 +41,7 @@ maps.keys()   # ["foo", "bar"]
 maps.values() # [48, 97]
 
 # Spreading
-let lhs = [1, 2, 3];
-let rhs = [4, 5, 6];
-let combined_list = [..lhs, ..rhs, 2, 4, 6];
-let combined_sets = {..lhs, ..rhs, 2, 4, 6};
+val lhs = [1, 2, 3];
+val rhs = [4, 5, 6];
+val combined_list = [..lhs, ..rhs, 2, 4, 6];
+val combined_sets = {..lhs, ..rhs, 2, 4, 6};

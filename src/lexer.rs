@@ -49,7 +49,8 @@ pub enum TokenType {
     Identifier(String),
 
     // Keywords
-    Let,
+    Val,
+    Var,
     Fn,
 
     If,
@@ -245,7 +246,8 @@ impl<'a> Iterator for Lexer<'a> {
                 }
 
                 match value.as_str() {
-                    "let" => TokenType::Let,
+                    "val" => TokenType::Val,
+                    "var" => TokenType::Var,
                     "fn" => TokenType::Fn,
                     "if" => TokenType::If,
                     "else" => TokenType::Else,

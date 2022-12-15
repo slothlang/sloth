@@ -1,13 +1,13 @@
 # Types can be inferred. 
 # If inferrence fails it will be set to "any" unless strict mode is on 
 pub fn add(lhs, rhs) {
-    let result = lhs + rhs;
+    val result = lhs + rhs;
     return result;
 }
 
 # ...or manually specified
 pub fn mul(lhs: i32, rhs: i32) -> i32 {
-    let result = lhs * rhs;
+    val result = lhs * rhs;
     return result;
 }
 
@@ -16,14 +16,14 @@ pub fn mul(lhs: i32, rhs: i32) -> i32 {
 ## lhs: Left hand side of subtraction
 ## rhs: Right hand side of subtraction
 pub fn sub(lhs: i32, rhs: i32) -> i32 {
-    let result = lhs - rhs;
+    val result = lhs - rhs;
     return result;
 }
 
 ## Fizzbuzz implementation from 1 through 100
 fn fizzbuzz() {
     for x in 1..=100 {
-        let message = match (x % 5, x % 3) {
+        val message = match (x % 5, x % 3) {
             (0, 0) => "FizzBuzz",
             (0, _) => "Fizz",
             (_, 0) => "Buzz",
