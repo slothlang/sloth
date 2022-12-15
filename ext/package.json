@@ -1,0 +1,39 @@
+{
+  "name": "sloth-lang",
+  "displayName": "Sloth Lang",
+  "description": "Language support for Sloth",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.22.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sloth",
+        "aliases": [
+          "sloth"
+        ],
+        "extensions": [
+          ".sloth"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sloth",
+        "scopeName": "source.sloth",
+        "path": "./syntaxes/sloth.tmLanguage.json"
+      }
+    ]
+  },
+  "devDependencies": {
+    "vsce": "^2.15.0"
+  },
+  "scripts": {
+    "package": "vsce package"
+  }
+}

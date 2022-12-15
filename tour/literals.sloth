@@ -1,0 +1,47 @@
+# Literals
+let number = 85; #TODO: Decide on default integer type
+let number = 85.0; # f64 is the default float type
+
+let number: u16 = 27; # If you want more control over memory usage you can specify a integer type
+let number: u16 = 27u16;
+let number: u16 = 0x1B;
+let number: u16 = 0x1Bu16;
+
+let number: BigInt = BigInt::from(73);     #TODO: naming
+let number: BigFloat = BigFloat::from(73); #TODO: naming
+
+let chars: char = ' ';
+
+let strings: String = "Normal string";
+let strings: String = "Formated strings ${number}";
+let strings: String = """String literals""";
+
+let regex: Regex = /[0-9A-F]/;
+
+let list: List<i32> = [1, 2, 3, 2];
+let sets: Set<i32> = {1, 2, 3, 2};
+
+let maps = { 
+    "foo": 48,
+    "bar": 97, 
+};
+
+let maps: Map<String, i32> = { 
+    "foo": 48,
+    "bar": 97, 
+};
+
+# `value?` Can be used to bubble up an Option or Result
+# `value!` Can be used to panic on None or Error
+
+maps["foo"]   # Option<i32>
+maps["foo"]!  # 48
+maps["foo"]?  # 48 - Caller of function is responsible for None case
+maps.keys()   # ["foo", "bar"]
+maps.values() # [48, 97]
+
+# Spreading
+let lhs = [1, 2, 3];
+let rhs = [4, 5, 6];
+let combined_list = [..lhs, ..rhs, 2, 4, 6];
+let combined_sets = {..lhs, ..rhs, 2, 4, 6};

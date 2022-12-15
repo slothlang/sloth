@@ -1,0 +1,6 @@
+print("Hello World!");
+
+## A basic for loop greeting the user in multiple languages
+for greeting in ["Hello", "Hola", "你好"] {
+    print(greeting + " World!");
+}

@@ -1,0 +1,79 @@
+# Structure Type
+type Person = {
+    name: String,
+    age: i32,
+    hobbies: Set<String>,
+    grades: Map<String, i32>,
+};
+
+let cody = Person {
+    name: "Cody Q",
+    age: 17,
+    hobbies: {
+        "Computer Science", 
+        "Cybersecurity",
+    },
+    grades: {
+        "Computer Science": 100,
+        "Mathmatics": 96,
+        "Physics": 93,
+        "English": 78,
+    },
+};
+
+# Tuple Type
+type Position = (i32, i32);
+
+# Tagged Union Type
+type Option<T> =
+    | None
+    | Some = T;
+
+type Class = Archer | Mage | Tank;
+
+type Operation = 
+    | Add     = (Operation, Operation)
+    | Literal = i32; 
+
+# Type Alias
+type OptionPos = Option<Position>;
+
+# Functions can be associated with types using 'impl' blocks. 
+type Color = (f64, f64, f64);
+
+impl Color {
+    pub const BLACK = Color(0.0, 0.0, 0.0);
+    pub const WHITE = Color(1.0, 1.0, 1.0);
+    pub const RED   = Color(1.0, 0.0, 0.0);
+    pub const GREEN = Color(0.0, 1.0, 0.0);
+    pub const BLUE  = Color(0.0, 0.0, 1.0);
+
+    ## Get a color from red green and blue
+    pub fn rgb(red: u8, green: u8, blue: u8) -> Color {
+        Color(red / 255.0, green / 255.0, blue / 255.0)
+    }
+
+    ## Get a color from a hue, saturation and value
+    pub fn hsv(hue: f64, saturation: f64, value: f64) -> Color {
+        fn c(value: f64) -> u8 {
+            (value * 255) as u8
+        }
+
+        let h = (hue * 6).floor() as i32;
+        
+        let f = hue * 6 - h;
+        let p = value * (1 - saturation);
+        let q = value * (1 - f * saturation);
+        let t = value * (1 - (1 - f) * saturation);
+
+        return match h {
+            0 => Color(c(value), c(t), c(p)),
+            1 => Color(c(q), c(value), c(p)),
+            2 => Color(c(p), c(value), c(t)),
+            3 => Color(c(p), c(q), c(value)),
+            4 => Color(c(t), c(p), c(value)),
+            5 => Color(c(value), c(p), c(q)),
+            _ => Color::BLACK,
+        }
+    }
+}

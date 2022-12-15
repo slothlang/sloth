@@ -1,0 +1,68 @@
+# Types can be inferred. 
+# If inferrence fails it will be set to "any" unless strict mode is on 
+pub fn add(lhs, rhs) {
+    let result = lhs + rhs;
+    return result;
+}
+
+# ...or manually specified
+pub fn mul(lhs: i32, rhs: i32) -> i32 {
+    let result = lhs * rhs;
+    return result;
+}
+
+## Docstrings can be used with 2 pound signs
+## 
+## lhs: Left hand side of subtraction
+## rhs: Right hand side of subtraction
+pub fn sub(lhs: i32, rhs: i32) -> i32 {
+    let result = lhs - rhs;
+    return result;
+}
+
+## Fizzbuzz implementation from 1 through 100
+fn fizzbuzz() {
+    for x in 1..=100 {
+        let message = match (x % 5, x % 3) {
+            (0, 0) => "FizzBuzz",
+            (0, _) => "Fizz",
+            (_, 0) => "Buzz",
+            _ => x,
+        };
+
+        print(message);
+    }
+}
+
+## Fizzbuzz implementation using a generator and a range passed into the function
+##
+## Generator functions are convenient ways to create iterators. Whatever the
+## return type is will automatically be wrapped in an Iterator. In the following
+## example the function return type would become `Iterator<String>`.
+##
+## Unlike a normal function you use a yield statement which pauses the function
+## call until the next element is requested. Return can still be used in a
+## generator function, however it will be used to enact a full stop
+generator fn fizzbuzz(range: Range<i32>) -> String {
+    for i in range {
+        yield match (i % 5, i % 3) {
+            (0, 0) => "FizzBuzz",
+            (0, _) => "Fizz",
+            (_, 0) => "Buzz",
+            _ => i,
+        };
+    }
+}
+
+fn print_fizzbuzz() {
+    for message in fizzbuzz(1..=100) {
+        print(message)
+    }
+}
+
+pub fn splitting() {
+    # You are able to call .split and pass in anything that implements Into<Pattern>
+    "Ylc xsBDSv4e BL5m 1BgDSjv dbQj".split(' ');
+    "Ylc xsBDSv4e BL5m 1BgDSjv dbQj".split("DS");
+    "Ylc xsBDSv4e BL5m 1BgDSjv dbQj".split(/[0-9A-F]{2}/);
+}

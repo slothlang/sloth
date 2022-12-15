@@ -1,0 +1,24 @@
+# Annotations can be used to provide metadata used by the interpreter or via 
+# code using reflection (?). 
+#
+# Annotations are scoped with the closest scopes take precedence, so if you 
+# had a package scoped annotation with strict mode enabled, but then a locally 
+# scoped annotation on a function with strict mode disabled strict mode would 
+# be disabled for that function.
+# 
+# Scopes available:
+#     - package   :: the current module and all other modules in the package
+#     - module    :: only the current module
+#     - local     :: only the current scope (default)
+#     - expr      :: only the following expression
+@package:name("Example Sloth program");
+@package:author("Cody <cody@codyq.dev>");
+@package:summary("This program is a little tour de Sloth");
+@package:license("MIT");
+
+# Similarly to TypeScript Sloth is a hybrid between a dyncmially typed and 
+# statically typed language, however if you would like to enforce static typing 
+# you can enable strict mode.
+#
+# Using strict mode is required for publishing to canopy.
+@package:strict(true);
