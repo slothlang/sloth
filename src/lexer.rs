@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use itertools::Itertools;
-
 #[derive(Debug, Eq, PartialEq)]
 pub enum TokenType {
     // Short
@@ -78,9 +76,9 @@ pub enum Literal {
 }
 
 #[derive(Debug)]
-pub struct Token {
+pub struct Token<'a> {
     pub tt: TokenType,
-    pub lexeme: String,
+    pub lexeme: &'a str,
 
     start: usize,
     length: usize,
@@ -137,7 +135,7 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
+    type Item = Token<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Ignore all whitespace & comments
@@ -267,12 +265,11 @@ impl<'a> Iterator for Lexer<'a> {
             _ => panic!("Failed to parse"),
         };
 
-        // Getting the lexeme and then making the token to be returned
-        // let lexeme = self.source[self.start..self.pos].iter().join("");
-        let lexeme = self.source[self.start..self.pos]
-            .iter()
-            .map(|it| *it as char)
-            .join("");
+        let lexeme = unsafe {
+            // If it got to this point we know the slice is valid UTF-8. The only area in
+            // the language that UTF-8 characters are recognized is within strings.
+            std::str::from_utf8_unchecked(&self.source[self.start..self.pos])
+        };
 
         let token = Token {
             tt,

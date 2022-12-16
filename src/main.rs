@@ -6,6 +6,7 @@
     unused_lifetimes
 )]
 
+pub mod ast;
 pub mod lexer;
 
 use lexer::Lexer;
