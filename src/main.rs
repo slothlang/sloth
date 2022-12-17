@@ -1,3 +1,4 @@
+#![feature(test, let_chains)]
 #![warn(
     clippy::wildcard_imports,
     clippy::string_add,
@@ -24,6 +25,6 @@ if variable >= 7 {
 fn main() {
     let lexer = Lexer::new(SOURCE);
     for token in lexer {
-        print!("({}) ", token.lexeme);
+        print!("{} ", token.lexeme);
     }
 }
