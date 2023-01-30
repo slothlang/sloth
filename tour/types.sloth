@@ -32,11 +32,23 @@ type Option<T> =
 type Class = Archer | Mage | Tank;
 
 type Operation = 
-    | Add     = (Operation, Operation)
-    | Literal = i32; 
+    | Add = (Operation, Operation)
+    | Lit = i32; 
+
+# Untagged Union Type
+#
+# Unlike tagged unions if all variants of a untagged union implement a specific
+# trait you will be able to call those trait methods without getting the variant
+# first.
+type Untagged = i32 + String;
 
 # Type Alias
 type OptionPos = Option<Position>;
+
+# You can define untagged union types and tuple types inline without a name, this 
+# may be useful for one-off types only used by a single function.
+val example: String + i32 = 52;
+val example: (i32, i32) = (5, 5); 
 
 # Functions can be associated with types using 'impl' blocks. 
 type Color = (f64, f64, f64);

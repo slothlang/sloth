@@ -1,0 +1,15 @@
+# Root module - Run this to start program
+
+pub use extern "logging";
+pub use extern "dotenv";
+pub use extern "slowcord";
+pub use extern "sqlite";
+
+use logging::LogLevel;
+use bot::Bot;
+
+logging::set_loglevel(LogLevel::WARN);
+
+val token = dotenv::get("TOKEN");
+val bot = Bot::new();
+bot.start(token);

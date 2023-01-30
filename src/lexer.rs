@@ -3,6 +3,7 @@
 #[derive(Debug, Eq, PartialEq)]
 pub enum TokenType {
     // Utility
+    DocComment(String),
     Comment(String),
 
     // Short
@@ -156,6 +157,15 @@ impl<'a> Iterator for Lexer<'a> {
 
         let tt = match character {
             // Whitespace & Comments
+            '#' if self.advance_if_eq(Some('#')) => {
+                let mut value = String::new();
+                while self.peek() != Some('\n') {
+                    value.push(self.advance().unwrap());
+                }
+
+                TokenType::DocComment(value)
+            }
+
             '#' => {
                 let mut value = String::new();
                 while self.peek() != Some('\n') {

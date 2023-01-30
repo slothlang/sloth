@@ -24,18 +24,49 @@ use extern "git://github.com/CatDevz/AdventOfCode.git" as spookylib;
 use extern "ftp://codyq.dev/libs/spookylib.sloth" as spookylib;
 use extern "https://codyq.dev/libs/spookylib.sloth" as spookylib;
 
-# In order to use modules or members of modules without quantifying the entire
-# path you must include them using a `use` statement. Star imports do not exist
-# because they fucking suck.
+# In sloth files will automatically become modules. Files named `mod.sloth` will
+# become the module for the directory. If you have a project with multiple files
+# the root module will be `mod.sloth`. Anything exposed in this can just strait up
+# be used. 
 #
+# If no `mod.sloth` exists, for example when running single file scripts, it will
+# be trated as if there is one but its empty.
+
+# /mod.sloth
+pub fn fib(n: i32) -> i32 {
+    match n {
+        0 | 1 => n,
+        _ => fib(n - 1) + fib(n - 2),
+    }
+}
+
+# /foo.sloth
+use fib; # TODO:
+
+fib(5); # Works because everything inside of mod.sloth is fair game
+
+# This means if you want an extern library to be available in every module you just
+# need to add a `pub(pkg) use extern "lib"`
+
+# In order to use modules or members of modules without quantifying the entire
+# path you must include them using a `use` statement. 
+use foo::bar;
+
+# Sloth will use your root module (the one used as your entrypoint) for imports.
+# In order to import from modules relative to your own you must prefix the use
+# with a `::`
+use ::from::relative;
+
+# If you would live to traverse up the module tree you can use the `super`
+# psudo-module.
+use 
+
+# TODO:
 # Sloth will automatically turn files relative to your own and directories
 # relative to your own with a `mod.sloth` into modules. In order to traverse
-# up the module tree you can use the `super` and `pkg` psudo-modules.
-#
-# The super psudo-module will go up a single module in the module tree whereas
-# the pkg psudo-module will go to the root module in the module tree.
-use pkg::a; 
-use pkg::b;
+# up the module tree you can use the `super` psudo-module.
+use super::a;
+use super::b;
 
 use std::rand::random;
 use std::uuid;

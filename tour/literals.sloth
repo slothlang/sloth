@@ -31,14 +31,46 @@ val maps: Map<String, i32> = {
     "bar": 97, 
 };
 
-# `value?` Can be used to bubble up an Option or Result
-# `value!` Can be used to panic on None or Error
+# Types can be 'any' and be assigned to anything
+var anything: any = "I'm a string right now";
+anything = 53;
+anything = "I was a number- but now I'm a string again";
 
-maps["foo"]   # Option<i32>
-maps["foo"]!  # 48
-maps["foo"]?  # 48 - Caller of function is responsible for None case
-maps.keys()   # ["foo", "bar"]
-maps.values() # [48, 97]
+# You can use the `is` keyword to check if a type is something
+if anything is String {
+    # Now I can call functions that take a String
+    anything.split('-');
+}
+
+# TODO: HMMMMMMM-
+if anything is Some(it) {}
+
+# You can use the `in` keyword to check if something is in a collection
+if "hello" in ["hello", "hola"] {
+    # 
+}
+
+# ... or a range
+if 5 in 2..17 {
+    # 
+}
+
+# ... or anything that implements Contains<T>
+if 'p' in "Apple" {}   # impl Contains<char> for String
+if "ppl" in "Apple" {} # impl Contains<String> for String
+if /[0-9]/ in "24" {}  # impl Contains<Regex> for String
+
+# `value!`     Can be used to bubble up an Option or Result
+# `value!!`    Can be used to panic on None or Error
+# `value?`     Can be used to optionally chain
+# `value ?: 0` Can be used to provide a default
+
+maps["foo"]                # Option<i32>
+maps["foo"]!!              # 48 - Panics in None case
+maps["foo"]!               # 48 - Caller of function is responsible for None case
+maps["foo"]?.signum() ?: 0 # 1  - Provide a default for None case
+maps.keys()                # ["foo", "bar"]
+maps.values()              # [48, 97]
 
 # Spreading
 val lhs = [1, 2, 3];
