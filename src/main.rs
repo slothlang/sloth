@@ -43,9 +43,6 @@ fn main() {
     let mut parser = AstParser::new(tokens);
     let ast = parser.parse();
 
-    println!("--- Abstract Syntax Tree ---");
-    println!("{ast:#?}");
-
     println!("--- Program Output ---");
 
     let mut interpreter = AstInterpreter::default();
