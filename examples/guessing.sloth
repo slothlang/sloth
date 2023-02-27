@@ -4,7 +4,7 @@ var tries = 0;
 var correct = false;
 
 while !correct {
-    print("\nPick a number between 1 and 5: ");
+    print("\nPick a number between 1 and 10: ");
     val human = parse_int(readln());
 
     if human == computer {

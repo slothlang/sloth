@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::{Debug, Display};
+use std::fmt::Display;
 
 use itertools::Itertools;
 
@@ -42,10 +42,10 @@ impl AstVisitor<Value> for AstInterpreter {
                 self.memory.insert(ident.clone(), (value, true));
             }
             Stmt::Function {
-                ident: name,
-                arguments,
-                return_type,
-                body,
+                ident: _,
+                arguments: _,
+                return_type: _,
+                body: _,
             } => todo!(),
             Stmt::If { condition, body } => {
                 let result = self.visit_expr(condition);
@@ -74,7 +74,7 @@ impl AstVisitor<Value> for AstInterpreter {
                     self.interpret(body);
                 }
             }
-            Stmt::Return { value } => todo!(),
+            Stmt::Return { value: _ } => todo!(),
         };
 
         // FIXME: Honestly should probably abandon this "visitor" pattern. 2 functions
@@ -168,7 +168,6 @@ impl AstVisitor<Value> for AstInterpreter {
                 self.callables.insert(ident.clone(), callable);
                 result
             }
-            _ => unimplemented!("{:?}", expr),
         }
     }
 }
@@ -196,7 +195,7 @@ pub trait SlothCallable {
 pub struct InternalFunction<'a>(pub &'a dyn Fn(&[Value]) -> Value);
 
 impl<'a> SlothCallable for InternalFunction<'a> {
-    fn call(&self, interpreter: &mut AstInterpreter, args: &[Value]) -> Value {
+    fn call(&self, _interpreter: &mut AstInterpreter, args: &[Value]) -> Value {
         self.0(args)
     }
 }

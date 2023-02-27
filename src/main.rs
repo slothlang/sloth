@@ -6,20 +6,18 @@
     clippy::manual_ok_or,
     unused_lifetimes
 )]
-#![allow(unused)]
 
 pub mod ast;
 pub mod interpreter;
 pub mod lexer;
 
-use std::io::{self, BufRead, Read, Write};
-use std::{env, fs};
+use std::io::{BufRead, Write};
+use std::{env, fs, io};
 
 use itertools::Itertools;
 use rand::Rng;
 
 use crate::ast::parser::AstParser;
-use crate::ast::AstVisitor;
 use crate::interpreter::{AstInterpreter, InternalFunction, Value};
 use crate::lexer::Lexer;
 
@@ -55,12 +53,12 @@ fn main() {
 
             let mut buffer = String::new();
             for arg in args {
-                write!(&mut buffer, "{}", arg);
+                write!(&mut buffer, "{}", arg).unwrap();
             }
 
             let mut stdout = io::stdout();
-            stdout.lock().write_all(buffer.as_bytes());
-            stdout.flush();
+            stdout.lock().write_all(buffer.as_bytes()).unwrap();
+            stdout.flush().unwrap();
 
             Value::Nil
         })),
@@ -73,13 +71,13 @@ fn main() {
 
             let mut buffer = String::new();
             for arg in args {
-                write!(&mut buffer, "{}", arg);
+                write!(&mut buffer, "{}", arg).unwrap();
             }
-            writeln!(&mut buffer);
+            writeln!(&mut buffer).unwrap();
 
             let mut stdout = io::stdout();
-            stdout.lock().write_all(buffer.as_bytes());
-            stdout.flush();
+            stdout.lock().write_all(buffer.as_bytes()).unwrap();
+            stdout.flush().unwrap();
 
             Value::Nil
         })),
@@ -87,7 +85,7 @@ fn main() {
 
     interpreter.callables.insert(
         "readln".to_owned(),
-        Box::new(InternalFunction(&|args| {
+        Box::new(InternalFunction(&|_| {
             let stdin = io::stdin();
             let mut line = String::new();
             stdin

@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::lexer::{Literal, TokenType};
 
 pub mod parser;
