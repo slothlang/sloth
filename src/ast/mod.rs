@@ -39,9 +39,6 @@ pub enum Stmt {
     Return {
         value: Expr,
     },
-    Print {
-        value: Expr,
-    },
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -55,6 +52,10 @@ pub enum Expr {
     Literal(Literal),
     Variable(String),
     Grouping(Box<Expr>),
+    Call {
+        ident: String,
+        arguments: Vec<Expr>,
+    },
     Binary {
         operator: TokenType,
         lhs: Box<Expr>,

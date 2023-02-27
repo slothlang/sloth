@@ -1,11 +1,14 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
+
+use itertools::Itertools;
 
 use crate::ast::{AstVisitor, Expr, Stmt};
 use crate::lexer::{Literal, TokenType};
 
 #[derive(Default)]
 pub struct AstInterpreter {
+    pub callables: HashMap<String, Box<dyn SlothCallable>>,
     memory: HashMap<String, (Value, bool)>,
 }
 
@@ -54,11 +57,19 @@ impl AstVisitor<Value> for AstInterpreter {
                 binding,
                 range,
                 body,
-            } => todo!(),
-            Stmt::Return { value } => todo!(),
-            Stmt::Print { value } => {
-                println!("{}", self.visit_expr(value));
+            } => {
+                let Value::Number(lower_range) = self.visit_expr(&range.0) else { panic!("Lower range must be number") };
+                let Value::Number(upper_range) = self.visit_expr(&range.1) else { panic!("Upper range must be number") };
+
+                for i in lower_range..upper_range {
+                    self.memory
+                        .insert(binding.clone(), (Value::Number(i), false));
+                    self.interpret(body);
+                }
+
+                self.memory.remove(binding);
             }
+            Stmt::Return { value } => todo!(),
         };
 
         // FIXME: Honestly should probably abandon this "visitor" pattern. 2 functions
@@ -142,6 +153,16 @@ impl AstVisitor<Value> for AstInterpreter {
                     _ => panic!(),
                 }
             }
+            Expr::Call { ident, arguments } => {
+                let argument_values = arguments.iter().map(|it| self.visit_expr(it)).collect_vec();
+                let Some(callable) = self.callables.remove(ident) else {
+                    panic!("Unkown callable '{ident}'");
+                };
+
+                let result = callable.call(self, &argument_values);
+                self.callables.insert(ident.clone(), callable);
+                result
+            }
             _ => unimplemented!("{:?}", expr),
         }
     }
@@ -155,13 +176,27 @@ impl AstInterpreter {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum Value {
     Number(i32),
     String(String),
     Bool(bool),
     Nil,
 }
+
+pub trait SlothCallable {
+    fn call(&self, interpreter: &mut AstInterpreter, args: &[Value]) -> Value;
+}
+
+pub struct InternalFunction<'a>(pub &'a dyn Fn(&[Value]) -> Value);
+
+impl<'a> SlothCallable for InternalFunction<'a> {
+    fn call(&self, interpreter: &mut AstInterpreter, args: &[Value]) -> Value {
+        self.0(args)
+    }
+}
+
+// pub struct SlothFunction(Vec<Stmt>);
 
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

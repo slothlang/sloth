@@ -70,8 +70,6 @@ pub enum TokenType {
     Loop,
     Break,
     Continue,
-
-    Print, // TODO: Change to std library function
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -251,6 +249,7 @@ impl<'a> Iterator for Lexer<'a> {
                         match self.advance().unwrap() {
                             '\\' => value.push('\\'),
                             '"' => value.push('"'),
+                            'n' => value.push('\n'),
                             _ => panic!(),
                         }
                         continue;
@@ -284,7 +283,6 @@ impl<'a> Iterator for Lexer<'a> {
                     "loop" => TokenType::Loop,
                     "break" => TokenType::Break,
                     "continue" => TokenType::Continue,
-                    "print" => TokenType::Print,
                     _ => TokenType::Identifier(value),
                 }
             }
@@ -323,16 +321,16 @@ mod tests {
 val variable = 5;
 
 if variable >= 7 {
-    print "Hello World";
+    print("Hello World");
 }
 
 if variable < 52 {
     variable += 1;
-    print "Hello ${variable}";
+    print("Hello ${variable}");
 }
 
 for person in ["Cody", "Johnny"] {
-    print "Hello ${person}";
+    print("Hello ${person}");
 }
 "#;
 
@@ -351,8 +349,10 @@ for person in ["Cody", "Johnny"] {
             TokenType::GtEq,
             TokenType::Literal(Literal::Number(7)),
             TokenType::LeftBrace,
-            TokenType::Print,
+            TokenType::Identifier("print".to_owned()),
+            TokenType::LeftParen,
             TokenType::Literal(Literal::String("Hello World".to_owned())),
+            TokenType::RightParen,
             TokenType::SemiColon,
             TokenType::RightBrace,
             // 2nd block
@@ -365,8 +365,10 @@ for person in ["Cody", "Johnny"] {
             TokenType::PlusEq,
             TokenType::Literal(Literal::Number(1)),
             TokenType::SemiColon,
-            TokenType::Print,
+            TokenType::Identifier("print".to_owned()),
+            TokenType::LeftParen,
             TokenType::Literal(Literal::String("Hello ${variable}".to_owned())),
+            TokenType::RightParen,
             TokenType::SemiColon,
             TokenType::RightBrace,
             // 3rd block
@@ -379,8 +381,10 @@ for person in ["Cody", "Johnny"] {
             TokenType::Literal(Literal::String("Johnny".to_owned())),
             TokenType::RightBracket,
             TokenType::LeftBrace,
-            TokenType::Print,
+            TokenType::Identifier("print".to_owned()),
+            TokenType::LeftParen,
             TokenType::Literal(Literal::String("Hello ${person}".to_owned())),
+            TokenType::RightParen,
             TokenType::SemiColon,
             TokenType::RightBrace,
         ];

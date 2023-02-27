@@ -5,6 +5,7 @@ Operating precedence in sloth from highest to lowest.
 | parentheses    | ()        | Left       |
 | member access  | . ! !! ?. | Left       |
 | defaulting     | ?:        | Right      |
+| function call  | ()        | Left       |
 | unary          | ! + -     | Right      |
 | multiplicative | \* / %    | Left       |
 | additive       | + -       | Left       |

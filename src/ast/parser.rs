@@ -102,10 +102,6 @@ impl<'a> AstParser<'a> {
             return Stmt::Block(self.block());
         }
 
-        if self.advance_if_eq(&TokenType::Print) {
-            return self.print_statement();
-        }
-
         if self.advance_if_eq(&TokenType::Var) {
             return self.var_statement();
         }
@@ -124,12 +120,6 @@ impl<'a> AstParser<'a> {
 
         // If we couldn't parse a statement return an expression statement
         self.expression_statement()
-    }
-
-    fn print_statement(&mut self) -> Stmt {
-        let value = self.expression();
-        self.consume(TokenType::SemiColon, "Expected ';' at end of statement");
-        Stmt::Print { value }
     }
 
     fn var_statement(&mut self) -> Stmt {
@@ -240,7 +230,35 @@ impl<'a> AstParser<'a> {
             };
         }
 
-        self.primary()
+        self.call()
+    }
+
+    fn call(&mut self) -> Expr {
+        let mut expr = self.primary();
+
+        if self.advance_if_eq(&TokenType::LeftParen) {
+            let mut arguments = Vec::<Expr>::new();
+
+            if self.peek().tt != TokenType::RightParen {
+                loop {
+                    arguments.push(self.expression());
+                    if !self.advance_if_eq(&TokenType::Comma) {
+                        break;
+                    }
+                }
+            }
+
+            self.consume(
+                TokenType::RightParen,
+                "Expected ')' to close off function call",
+            );
+
+            let Expr::Variable(ident) = expr else { panic!("uh oh spaghettio"); };
+
+            expr = Expr::Call { ident, arguments }
+        }
+
+        expr
     }
 
     fn primary(&mut self) -> Expr {
