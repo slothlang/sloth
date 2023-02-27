@@ -1,15 +1,24 @@
-## Calculate a specific number in the fibonacci sequence 
 fn fib(n: i32) -> i32 {
-    match n {
-        0 | 1 => n,
-        _ => fib(n - 1) + fib(n - 2),
+    if n == 0 || n == 1 {
+        return n;
     }
+
+    var grandparent = 0;
+    var parent = 1;
+    var me = 0;
+
+    for i in 0..n-1 {
+        me          = parent + grandparent;
+        grandparent = parent;
+        parent      = me;
+    }
+
+    return me;
 }
 
-generator fn fib_sequence(range: Range<i32>) -> i32 {
-    for n in range {
-        yield fib(n);
-    }
-}
-
-print(fib_sequence(0..20).join(", "))
+print fib(0);
+print fib(1);
+print fib(2);
+print fib(3);
+print fib(4);
+print fib(5);

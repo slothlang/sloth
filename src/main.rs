@@ -6,41 +6,58 @@
     clippy::manual_ok_or,
     unused_lifetimes
 )]
+#![allow(unused)]
 
 pub mod ast;
+pub mod interpreter;
 pub mod lexer;
 
-use ast::{Expression, Operation, Value};
-use lexer::Lexer;
+use itertools::Itertools;
 
-use crate::ast::Statement;
+use crate::ast::parser::AstParser;
+use crate::ast::AstVisitor;
+use crate::interpreter::AstInterpreter;
+use crate::lexer::Lexer;
 
 const SOURCE: &str = r#"
 
-val variable = 5;
+val variable = 5 + 6 * 2;
 
-if variable <= 7 {
+if variable == 17 {
     print "Hello World";
 }
+
+fn fib(n: i32) -> i32 {
+    if n == 0 || n == 1 {
+        return n;
+    }
+
+    var grandparent = 0;
+    var parent = 1;
+    var me = 0;
+
+    for i in 0..n-1 {
+        me          = parent + grandparent;
+        grandparent = parent;
+        parent      = me;
+    }
+
+    return me;
+}
+
+print fib(5);
 
 "#;
 
 fn main() {
-    let lexer = Lexer::new(SOURCE);
-    for token in lexer {
-        print!("{} ", token.lexeme);
-    }
+    let lexer = Lexer::new("for x in 0..5 {}");
+    let tokens = lexer.collect_vec();
+    let mut parser = AstParser::new(tokens);
+    let ast = parser.parse();
 
-    println!("-------");
+    println!("{ast:#?}");
+    println!("--- Program Output ---");
 
-    let a = Expression::Literal(Value(7));
-    let b = Expression::Binary {
-        operation: Operation::Add,
-        lhs: &Expression::Literal(Value(5)),
-        rhs: &a,
-    };
-
-    let stmt = Statement::Expression { expr: &b };
-
-    println!("{stmt}");
+    let mut interpreter = AstInterpreter::default();
+    interpreter.interpret(&ast);
 }

@@ -1,55 +1,72 @@
-#![allow(dead_code)]
+use std::fmt::Display;
 
-pub mod display;
+use crate::lexer::{Literal, TokenType};
 
-use crate::lexer::Token;
+pub mod parser;
+pub mod printer;
 
-#[derive(Clone)]
-pub enum Statement<'a> {
+#[derive(Debug, Eq, PartialEq)]
+pub enum Stmt {
+    Block(Vec<Stmt>),
+    Expr(Expr),
     Val {
-        identifier: &'a Token<'a>,
-        initializer: &'a Expression<'a>,
+        ident: String,
+        value: Expr,
     },
     Var {
-        identifier: &'a Token<'a>,
-        initializer: &'a Expression<'a>,
+        ident: String,
+        value: Expr,
     },
-    Expression {
-        expr: &'a Expression<'a>,
+    Assignment {
+        ident: String,
+        value: Expr,
+    },
+    Function {
+        ident: String,
+        arguments: Vec<FunctionArgument>,
+        return_type: String,
+        body: Vec<Stmt>,
+    },
+    If {
+        condition: Expr,
+        body: Vec<Stmt>,
+    },
+    For {
+        binding: String,
+        range: (Expr, Expr),
+        body: Vec<Stmt>,
+    },
+    Return {
+        value: Expr,
+    },
+    Print {
+        value: Expr,
     },
 }
 
-#[derive(Clone)]
-pub enum Expression<'a> {
-    // Basic
-    Literal(Value),
-    Unary {
-        operation: Operation,
-        expr: &'a Expression<'a>,
-    },
+#[derive(Debug, Eq, PartialEq)]
+pub struct FunctionArgument {
+    name: String,
+    types: String,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum Expr {
+    Literal(Literal),
+    Variable(String),
+    Grouping(Box<Expr>),
     Binary {
-        operation: Operation,
-        lhs: &'a Expression<'a>,
-        rhs: &'a Expression<'a>,
+        operator: TokenType,
+        lhs: Box<Expr>,
+        rhs: Box<Expr>,
     },
-    // Grouping
+    Unary {
+        operator: TokenType,
+        expr: Box<Expr>,
+    },
 }
 
-#[derive(Clone)]
-pub enum Operation {
-    Add,
-    Subtract,
-}
-
-#[derive(Clone)]
-pub struct Value(pub i32);
-
-#[test]
-fn test() {
-    let right = Expression::Literal(Value(7));
-    let _ = Expression::Binary {
-        operation: Operation::Add,
-        lhs: &Expression::Literal(Value(5)),
-        rhs: &right,
-    };
+pub trait AstVisitor<T = ()> {
+    fn visit_stmt(&mut self, stmt: &Stmt) -> T;
+    fn visit_expr(&mut self, expr: &Expr) -> T;
 }

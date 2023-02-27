@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TokenType {
     // Utility
     DocComment(String),
@@ -25,14 +25,18 @@ pub enum TokenType {
     BangEq, // !=
 
     Gt,   // >
+    GtGt, // >>
     GtEq, // >=
     Lt,   // <
+    LtLt, // <<
     LtEq, // <=
 
     Amp,      // &
     AmpAmp,   // &&
     Pipe,     // |
     PipePipe, // ||
+
+    DotDot, // .
 
     LeftParen,    // (
     RightParen,   // )
@@ -70,7 +74,7 @@ pub enum TokenType {
     Print, // TODO: Change to std library function
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Literal {
     String(String),
     Character(char),
@@ -190,11 +194,12 @@ impl<'a> Iterator for Lexer<'a> {
             '0'..='9' => {
                 let mut value = String::new();
                 value.push(character);
-                while ('0'..='9').contains(&self.peek().unwrap()) {
+                while let Some('0'..='9') = &self.peek() {
                     value.push(self.advance().unwrap());
                 }
 
-                if self.advance_if_eq(Some('.')) {
+                if self.peek() == Some('.') && self.peek_nth(1) != Some('.') {
+                    self.advance();
                     value.push('.');
                     while ('0'..='9').contains(&self.peek().unwrap()) {
                         value.push(self.advance().unwrap());
@@ -206,7 +211,9 @@ impl<'a> Iterator for Lexer<'a> {
             // Logical & Bitwise
             '!' if self.advance_if_eq(Some('=')) => TokenType::BangEq,
             '=' if self.advance_if_eq(Some('=')) => TokenType::EqEq,
+            '>' if self.advance_if_eq(Some('>')) => TokenType::GtGt,
             '>' if self.advance_if_eq(Some('=')) => TokenType::GtEq,
+            '<' if self.advance_if_eq(Some('<')) => TokenType::LtLt,
             '<' if self.advance_if_eq(Some('=')) => TokenType::LtEq,
             '!' => TokenType::Bang,
             '=' => TokenType::Eq,
@@ -217,6 +224,9 @@ impl<'a> Iterator for Lexer<'a> {
             '|' if self.advance_if_eq(Some('|')) => TokenType::PipePipe,
             '&' => TokenType::Amp,
             '|' => TokenType::Pipe,
+
+            // Misc. Operators
+            '.' if self.advance_if_eq(Some('.')) => TokenType::DotDot,
 
             // Scope
             '(' => TokenType::LeftParen,

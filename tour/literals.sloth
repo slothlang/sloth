@@ -1,6 +1,6 @@
 # Literals
 val number = 85; #TODO: Decide on default integer type
-val number = 85.0; # f64 is the default float type
+val number = 85.0; # f64 is the default decimal type
 
 val number: u16 = 27; # If you want more control over memory usage you can specify a integer type
 val number: u16 = 27u16;
