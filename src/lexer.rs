@@ -283,6 +283,8 @@ impl<'a> Iterator for Lexer<'a> {
                     "loop" => TokenType::Loop,
                     "break" => TokenType::Break,
                     "continue" => TokenType::Continue,
+                    "true" => TokenType::Literal(Literal::Bool(true)),
+                    "false" => TokenType::Literal(Literal::Bool(false)),
                     _ => TokenType::Identifier(value),
                 }
             }

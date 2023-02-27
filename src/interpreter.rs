@@ -69,6 +69,11 @@ impl AstVisitor<Value> for AstInterpreter {
 
                 self.memory.remove(binding);
             }
+            Stmt::While { condition, body } => {
+                while self.visit_expr(condition) == Value::Bool(true) {
+                    self.interpret(body);
+                }
+            }
             Stmt::Return { value } => todo!(),
         };
 

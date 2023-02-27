@@ -36,6 +36,10 @@ pub enum Stmt {
         range: (Expr, Expr),
         body: Vec<Stmt>,
     },
+    While {
+        condition: Expr,
+        body: Vec<Stmt>,
+    },
     Return {
         value: Expr,
     },

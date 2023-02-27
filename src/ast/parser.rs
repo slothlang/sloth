@@ -118,6 +118,10 @@ impl<'a> AstParser<'a> {
             return self.for_statement();
         }
 
+        if self.advance_if_eq(&TokenType::While) {
+            return self.while_statement();
+        }
+
         // If we couldn't parse a statement return an expression statement
         self.expression_statement()
     }
@@ -184,6 +188,13 @@ impl<'a> AstParser<'a> {
             range: (range_start, range_end),
             body,
         }
+    }
+
+    fn while_statement(&mut self) -> Stmt {
+        let condition = self.expression();
+        let body = self.block();
+
+        Stmt::While { condition, body }
     }
 
     fn expression_statement(&mut self) -> Stmt {
