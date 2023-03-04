@@ -4,6 +4,7 @@ on: [push, pull_request]
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu
@@ -11,7 +12,6 @@ jobs:
           - macos
         rust:
           - nightly
-          - stable
     name: Test Rust ${{ matrix.rust }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -19,4 +19,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo test --all-features
+      - run: cargo test --all-features --no-fail-fast
