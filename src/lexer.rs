@@ -199,7 +199,7 @@ impl<'a> Iterator for Lexer<'a> {
                 if self.peek() == Some('.') && self.peek_nth(1) != Some('.') {
                     self.advance();
                     value.push('.');
-                    while ('0'..='9').contains(&self.peek().unwrap()) {
+                    while self.peek().unwrap().is_ascii_digit() {
                         value.push(self.advance().unwrap());
                     }
                 }
