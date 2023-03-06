@@ -23,7 +23,10 @@
     {
       devShell = pkgs.mkShell rec {
         buildInputs = with pkgs; [
-          (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default))
+          (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+            targets = [ "wasm32-unknown-unknown" ];
+          }))
+
           rust-analyzer
           cargo-deny
           cargo-release
