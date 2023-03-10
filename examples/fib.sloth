@@ -1,4 +1,8 @@
-fn fib(n: i32) -> i32 {
+fn fib(n: i32): i32 {
+    val msg = if (n == 0)   "No points"   else    "Some points"
+    val msg = if  n == 0  { "No points" } else  { "Some points" } 
+    val msg = if  n == 0:   "No points"   else:   "Some points"
+
     if n == 0 || n == 1 {
         return n;
     }
@@ -16,9 +20,78 @@ fn fib(n: i32) -> i32 {
     return me;
 }
 
+pub type Button = {
+    pub x: i32,
+    pub y: i32,
+    text: String,
+}
+
+impl Button {
+    fn init(text) {
+        return Self(
+            x = 50,
+            y = 150,
+            text, # Pass in text
+        )
+    }
+}
+
+impl Constructor for Button {
+    fn init(text) {
+        Self(
+            x = 50,
+            y = 150,
+            text, # Pass in text
+        )
+    }
+}
+
+Button::init("Hello")
+Button("Hello")
+
 print(fib(0));
 print(fib(1));
 print(fib(2));
 print(fib(3));
 print(fib(4));
 print(fib(5));
+
+# Inferred as List
+val nums = read("input.txt")
+    .lines()
+    .filter(-> /$[0-9]+^/ in it)
+    .collect()
+
+fn T <- From<Self> = List collect(self): T {
+
+}
+
+# Statically typed with no type inference
+fn fib(n: i32) -> i32:
+    # ML
+    match n with
+    | 0 -> 0
+    | 1 -> 1
+    | n -> fib(n - 1) + fib(n - 2)
+
+    # Python
+    match n:
+        case 0 | 1: n 
+        case n:
+            val lhs = fib(n - 1)
+            val rhs = fib(n - 2)
+            
+            lhs + rhs
+
+    # Idea
+    match n:
+        0 | 1: n
+        n:
+            val lhs = fib(n - 1)
+            val rhs = fib(n - 2)
+
+            lhs + rhs
+
+# Statically typed but with type inference
+fn fib(n):
+    n + 1
