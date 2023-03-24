@@ -1,0 +1,56 @@
+use extern "ui"
+
+use ui::components::Button;
+use ui::components::Label;
+use ui::components::FlexView;
+
+type Action = 
+    | Increment 
+    | Decrement
+
+fn update(state, message) {
+    match message {
+        Action::Increment -> state + 1,
+        Action::Decrement -> state - 1,
+    }
+}
+
+fn render(state, dispatch) {
+    return FlexView([
+        Button("-", action: -> dispatch(Action::Decrement)),
+        Label(state),
+        Button("+", action: -> dispatch(Action::Increment)),
+
+        FlexView(
+            height: 500,
+            width: 220,
+            body: [
+                Label("List 1"),
+                Label("List 2"),
+                Label("List 3"),
+            ],
+        )
+
+        Button(
+            width: 100,
+            height: 20,
+            action: -> (),
+            body: Label("Sign up"),
+        )
+    ])
+}
+
+fn app() {
+    # Creating our state
+    val state = 0
+    
+    # Creating our app
+    val app = ui::App(
+        state,
+        on_update: update,
+        on_render: render,
+    )
+
+    # Starting our app
+    app.start()
+}

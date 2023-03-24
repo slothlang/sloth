@@ -29,8 +29,8 @@ pub type Button = {
 impl Button {
     fn init(text) {
         return Self(
-            x = 50,
-            y = 150,
+            x: 50,
+            y: 150,
             text, # Pass in text
         )
     }
@@ -39,8 +39,8 @@ impl Button {
 impl Constructor for Button {
     fn init(text) {
         Self(
-            x = 50,
-            y = 150,
+            x: 50,
+            y: 150,
             text, # Pass in text
         )
     }
@@ -59,39 +59,32 @@ print(fib(5));
 # Inferred as List
 val nums = read("input.txt")
     .lines()
-    .filter(-> /$[0-9]+^/ in it)
+    .filter(-> /$[0-9]+^/ in $0)
     .collect()
 
 fn T <- From<Self> = List collect(self): T {
 
 }
 
-# Statically typed with no type inference
-fn fib(n: i32) -> i32:
-    # ML
-    match n with
-    | 0 -> 0
-    | 1 -> 1
-    | n -> fib(n - 1) + fib(n - 2)
+fn collect(self): 'a
+where 
+    'a : From<Self>, # Type Constraints
+    'a = List,       # Generic Defaults
+    'a : From<Self> = List, # Combined
+{
+    # 
+}
 
-    # Python
-    match n:
-        case 0 | 1: n 
-        case n:
-            val lhs = fib(n - 1)
-            val rhs = fib(n - 2)
-            
-            lhs + rhs
+# This following code should
+fn add(lhs, rhs) {
+    return lhs + rhs;
+}
 
-    # Idea
-    match n:
-        0 | 1: n
-        n:
-            val lhs = fib(n - 1)
-            val rhs = fib(n - 2)
-
-            lhs + rhs
-
-# Statically typed but with type inference
-fn fib(n):
-    n + 1
+# Ideally infer to
+fn add(lhs: 'a, rhs: 'b): 'c 
+where
+    'a : Add<'b, 'c>,
+    'b = 'a,
+{
+    return lhs + rhs;
+}

@@ -6,7 +6,7 @@ type Person = {
     grades: Map<String, i32>,
 };
 
-val cody = Person {
+val cody = Person(
     name: "Cody Q",
     age: 17,
     hobbies: {
@@ -19,7 +19,7 @@ val cody = Person {
         "Physics": 93,
         "English": 78,
     },
-};
+);
 
 # Tuple Type
 type Position = (i32, i32);
