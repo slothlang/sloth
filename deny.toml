@@ -35,7 +35,9 @@ allow-osi-fsf-free = "neither"
 default = "deny"
 
 # Some crates require weird licenses, exceptions for those crates can be made here
-exceptions = []
+exceptions = [
+    { allow = ["Unicode-DFS-2016"], name = "unicode-ident", version = "*" },
+]
 
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the

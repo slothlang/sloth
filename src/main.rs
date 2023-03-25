@@ -23,7 +23,7 @@ fn main() {
     }
 
     let source_path = &args[1];
-    let Ok(source) = fs::read_to_string(source_path) else {
+    let Ok(_source) = fs::read_to_string(source_path) else {
         println!("Error while reading '{source_path}'");
         return;
     };
