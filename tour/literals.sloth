@@ -68,7 +68,7 @@ if /[0-9]/ in "24" {}  # impl Contains<Regex> for String
 maps["foo"]                # Option<i32>
 maps["foo"]!!              # 48 - Panics in None case
 maps["foo"]!               # 48 - Caller of function is responsible for None case
-maps["foo"]?.signum() ?: 0 # 1  - Provide a default for None case
+maps["foo"]?.signum() ?? 0 # 1  - Provide a default for None case
 maps.keys()                # ["foo", "bar"]
 maps.values()              # [48, 97]
 

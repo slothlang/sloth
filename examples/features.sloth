@@ -1,0 +1,42 @@
+fn calories(input) {
+    var elves = []
+    var current = 0
+
+    for line in input.lines() {
+        if line.empty() {
+            elves.append(current)
+	    current = 0
+	    continue
+	}
+
+	current += line as!! int
+    }
+
+    elves.sort()
+    elves.reverse()
+
+    return elves[0..3].sum()
+}
+
+fn fib(x: int) {
+    if x < 2 {
+        return x
+    }
+
+    return fib(x - 1) + fib (x - 2)
+}
+
+fn codes(input: String): List<String> {
+    val chars = input.chars()
+                     .windowed(4)
+		     .map(it -> it as Set)
+		     .filter(-> $0.len() == 4)
+		     .map(it -> it.join())
+    return chars
+}
+
+## Will convert celsius to fahrenheit
+fn fahrenheit(celsius) {
+    return 32.0 + celsius * 1.8
+}
+

@@ -14,18 +14,82 @@ pub enum TokenType {
     DocComment,
     Comment,
 
-    // Operatiors
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Perc,
+    // Brackets
+    OpeningParen,   // (
+    ClosingParen,   // )
+    OpeningBracket, // [
+    ClosingBracket, // ]
+    OpeningBrace,   // {
+    ClosingBrace,   // }
 
-    PlusEq,
-    MinusEq,
-    StarEq,
-    SlashEq,
-    PercEq,
+    // Operators
+    Plus,     // +
+    PlusPlus, // ++
+    Minus,    // -
+    Star,     // *
+    StarStar, // **
+    Slash,    // /
+    Perc,     // %
+    Tilde,    // ~
+
+    PlusEq,     // +=
+    PlusPlusEq, // ++=
+    MinusEq,    // -=
+    StarEq,     // *=
+    StarStarEq, // **=
+    SlashEq,    // /=
+    PercEq,     // %=
+
+    Amp,      // &
+    AmpAmp,   // &&
+    Pipe,     // |
+    PipePipe, // ||
+
+    Eq,       // =
+    EqEq,     // ==
+    Bang,     // !
+    BangBang, // !!
+    BangEq,   // !=
+
+    Lt,   // <
+    LtLt, // <<
+    LtEq, // <=
+    Gt,   // >
+    GtGt, // >>
+    GtEq, // >=
+
+    Comma,
+
+    Question,         // ?
+    QuestionDot,      // ?.
+    QuestionQuestion, // ??
+    Dot,              // .
+    DotDot,           // ..
+
+    Colon,      // :
+    ColonColon, // ::
+    SemiColon,  // ;
+
+    Arrow, // ->
+
+    // Keywords
+    Val,
+    Var,
+
+    Fn,
+
+    If,
+    Else,
+
+    While,
+    For,
+    In,
+
+    Loop,
+    Break,
+    Continue,
+
+    As,
 
     // Misc
     Literal(Literal),
@@ -77,5 +141,13 @@ impl<'a> Iterator for Lexer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn basic_test_a() {
+        //
     }
 }
