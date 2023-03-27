@@ -23,11 +23,11 @@
     {
       devShell = pkgs.mkShell rec {
         buildInputs = with pkgs; [
-          (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+          (rust-bin.nightly."2023-02-10".default.override {
+            extensions = [ "rust-src" "rust-analyzer" ];
             targets = [ "wasm32-unknown-unknown" ];
-          }))
+          })
 
-          rust-analyzer
           cargo-deny
           cargo-release
         ];
