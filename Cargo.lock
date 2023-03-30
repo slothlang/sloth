@@ -44,6 +44,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sloth_bytecode"
+version = "0.1.0"
+
+[[package]]
+name = "sloth_vm"
+version = "0.1.0"
+
+[[package]]
 name = "syn"
 version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

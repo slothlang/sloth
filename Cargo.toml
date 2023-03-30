@@ -1,13 +1,15 @@
-[package]
-name = "sloth"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = [
+    "crates/sloth",
+    "crates/sloth_bytecode",
+    "crates/sloth_vm",
+]
 
-[dependencies]
-itertools = "0.10.5"
-thiserror = "1.0.40"
+[profile.dev.package."*"]
+opt-level = 2
 
 [profile.release]
 strip = "debuginfo"
 lto = "thin"
-opt-level = "z"
+opt-level = 3
+

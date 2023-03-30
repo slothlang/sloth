@@ -36,4 +36,28 @@ unary               → ( "!" | "+" | "-" ) unary | call ;
 
 call                → primary ( "(" arguments? ")" )* ;
 primary             → "true" | "false" | NUMBER | STRING | IDENTIFIER | "(" expression ")" ;
+
+## Operations
+logical_or          : logical_and ( "||" logical_and )* ;
+logical_and         : bitwise ( "&&" bitwise )* ;
+bitwise             : equality ( ( "&" | "^" | "|" ) equality )* ;
+equality            : comparison ( ( "==" | "!=" ) comparison )* ;
+comparison          : bitwise_shift ( ( ">" | ">=" | "<" | "<=" ) bitwise_shift )*;
+bitwise_shift       : additive ( ( "<<" | ">>" ) additive )* ;
+additive            : multiplicative ( ( "+" | "-" ) multiplicative )* ;
+multiplicative      : unary ( ( "*" | "/" | "%" ) unary )* ;
+unary               : ( "!" | "+" | "-" ) unary | call ;
+
+## Related to calling of functions
+call                : primary ( "(" arguments ")" )* ;
+arguments           : ( "labeled"? IDENTIFIER ( ":" IDENTIFIER )? ","? )* ;
+
+## Represents a base value
+primary             : "true"
+                    | "false"
+                    | NUMBER
+                    | STRING
+                    | IDENTIFIER
+                    | "(" expression ")" ;
+
 ```
