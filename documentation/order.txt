@@ -8,11 +8,11 @@
 | multiplicative | * / %     | Left       |
 | additive       | + -       | Left       |
 | bitwise shift  | << >>     | Left       |
-| comparison     | < > <= >= | Left       |
-| equality       | == !=     | Left       |
 | bitwise and    | &         | Left       |
 | bitwise xor    | ^         | Left       |
 | bitwise or     | |         | Left       |
+| comparison     | < > <= >= | Left       |
+| equality       | == !=     | Left       |
 | logical and    | &&        | Left       |
 | logical or     | ||        | Left       |
 
