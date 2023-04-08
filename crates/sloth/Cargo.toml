@@ -1,7 +1,9 @@
 [package]
 name = "sloth"
-version = "0.1.0"
-edition = "2021"
+
+license.workspace = true
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 itertools = "0.10.5"

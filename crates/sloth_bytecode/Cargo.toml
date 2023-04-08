@@ -1,7 +1,9 @@
 [package]
 name = "sloth_bytecode"
-version = "0.1.0"
-edition = "2021"
+
+license.workspace = true
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 sloth_bytecode_macros = { path = "./macros" }
