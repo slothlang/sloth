@@ -2,3 +2,8 @@
 name = "sloth_bytecode"
 version = "0.1.0"
 edition = "2021"
+
+[dependencies]
+sloth_bytecode_macros = { path = "./macros" }
+
+byteorder = "1.4.3"

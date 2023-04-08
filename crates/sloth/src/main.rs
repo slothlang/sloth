@@ -1,4 +1,3 @@
-#![feature(test, let_chains)]
 #![warn(
     clippy::wildcard_imports,
     clippy::string_add,
@@ -8,10 +7,12 @@
 )]
 
 pub mod lexer;
+pub mod parser;
 
 use std::{env, fs};
 
 use itertools::Itertools;
+use lexer::Lexer;
 
 fn main() {
     let args = env::args().collect_vec();
@@ -23,10 +24,15 @@ fn main() {
     }
 
     let source_path = &args[1];
-    let Ok(_source) = fs::read_to_string(source_path) else {
+    let Ok(source) = fs::read_to_string(source_path) else {
         println!("Error while reading '{source_path}'");
         return;
     };
+
+    let lexer = Lexer::new(&source);
+    for token in lexer {
+        println!("{token:?}");
+    }
 
     // TODO:
 }

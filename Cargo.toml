@@ -2,6 +2,7 @@
 members = [
     "crates/sloth",
     "crates/sloth_bytecode",
+    "crates/sloth_bytecode/macros",
     "crates/sloth_vm",
 ]
 
