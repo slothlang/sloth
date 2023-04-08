@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 //! TODO: Lexing Regex Literals
-//! TODO: Lexing Character Literals
 
 use std::str::Chars;
 
@@ -50,6 +49,7 @@ pub enum TokenType {
     AmpAmp,   // &&
     Pipe,     // |
     PipePipe, // ||
+    Caret,    // ^
 
     Eq,       // =
     EqEq,     // ==
@@ -59,12 +59,12 @@ pub enum TokenType {
 
     Lt,     // <
     LtLt,   // <<
-    LtLtLt, // <<<
     LtEq,   // <=
+    LtLtEq, // <<=
     Gt,     // >
     GtGt,   // >>
-    GtGtGt, // >>>
     GtEq,   // >=
+    GtGtEq, // >>=
 
     Comma,
 
@@ -330,18 +330,20 @@ impl<'a> Iterator for Lexer<'a> {
             ['|', '|', ..] => self.advance_by_with(2, TokenType::PipePipe),
             ['|', ..] => self.advance_with(TokenType::Pipe),
 
+            ['^', ..] => self.advance_by_with(2, TokenType::Caret),
+
             ['=', '=', ..] => self.advance_by_with(2, TokenType::EqEq),
             ['!', '=', ..] => self.advance_by_with(2, TokenType::BangEq),
             ['!', '!', ..] => self.advance_by_with(2, TokenType::BangBang),
             ['=', ..] => self.advance_with(TokenType::Eq),
             ['!', ..] => self.advance_with(TokenType::Bang),
 
-            ['<', '<', '<'] => self.advance_by_with(3, TokenType::LtLtLt),
+            ['<', '<', '='] => self.advance_by_with(3, TokenType::LtLtEq),
             ['<', '<', ..] => self.advance_by_with(2, TokenType::LtLt),
             ['<', '=', ..] => self.advance_by_with(2, TokenType::LtEq),
             ['<', ..] => self.advance_with(TokenType::Lt),
 
-            ['>', '>', '>'] => self.advance_by_with(3, TokenType::GtGtGt),
+            ['>', '>', '='] => self.advance_by_with(3, TokenType::GtGtEq),
             ['>', '>', ..] => self.advance_by_with(2, TokenType::GtGt),
             ['>', '=', ..] => self.advance_by_with(2, TokenType::GtEq),
             ['>', ..] => self.advance_with(TokenType::Gt),
@@ -359,12 +361,13 @@ impl<'a> Iterator for Lexer<'a> {
             [':', ..] => self.advance_with(TokenType::Colon),
 
             // Literals
+            ['\'', c, '\''] => self.advance_by_with(3, TokenType::Character(c)),
             ['0'..='9', ..] => self.lex_number(),
             ['"', ..] => self.lex_string(),
 
-            ['a'..='z' | 'A'..='Z' | '_', ..] => {
+            ['a'..='z' | 'A'..='Z' | '_' | '$', ..] => {
                 let mut value = String::new();
-                while matches!(self.peek(), 'a'..='z' | 'A'..='Z' | '0'..='9' | '_') {
+                while matches!(self.peek(), 'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '$') {
                     value.push(self.advance());
                 }
 
@@ -415,8 +418,8 @@ mod tests {
 
     #[test]
     fn lex_operators() {
-        let source = "+ ++ - * ** / % ~ += ++= -= *= **= /= %= ~= & && | || = == ! !! != < << <<< \
-                      <= > >> >>> >= , ? ?. ?? . .. : :: ; -> =>";
+        let source = "+ ++ - * ** / % ~ += ++= -= *= **= /= %= ~= & && | || ^ = == ! !! != < << \
+                      <<= <= > >> >>= >= , ? ?. ?? . .. : :: ; -> =>";
         let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
 
         assert_eq!(&tokens, &[
@@ -440,6 +443,7 @@ mod tests {
             TokenType::AmpAmp,
             TokenType::Pipe,
             TokenType::PipePipe,
+            TokenType::Caret,
             TokenType::Eq,
             TokenType::EqEq,
             TokenType::Bang,
@@ -447,11 +451,11 @@ mod tests {
             TokenType::BangEq,
             TokenType::Lt,
             TokenType::LtLt,
-            TokenType::LtLtLt,
+            TokenType::LtLtEq,
             TokenType::LtEq,
             TokenType::Gt,
             TokenType::GtGt,
-            TokenType::GtGtGt,
+            TokenType::GtGtEq,
             TokenType::GtEq,
             TokenType::Comma,
             TokenType::Question,
@@ -492,18 +496,26 @@ mod tests {
 
     #[test]
     fn lex_literals_a() {
-        let source = "iden \"foo\" \"bar\" \"baz\" \"\\\"\" \"\\n\" \"\\t\" 93 3252 238 -382 -832 \
-                      83 -25 52.9 83.7 12.4 35.2 3.3";
+        let source = "foo bar _foo __bar $0 $$1 \"foo\" \"bar\" \"baz\" \"\\\"\" \"\\n\" \"\\t\" \
+                      'a' 'b' '\"' 93 3252 238 -382 -832 83 -25 52.9 83.7 12.4 35.2 3.3";
         let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
 
         assert_eq!(&tokens, &[
-            TokenType::Identifier("iden".to_owned()),
+            TokenType::Identifier("foo".to_owned()),
+            TokenType::Identifier("bar".to_owned()),
+            TokenType::Identifier("_foo".to_owned()),
+            TokenType::Identifier("__bar".to_owned()),
+            TokenType::Identifier("$0".to_owned()),
+            TokenType::Identifier("$$1".to_owned()),
             TokenType::String("foo".to_owned()),
             TokenType::String("bar".to_owned()),
             TokenType::String("baz".to_owned()),
             TokenType::String("\"".to_owned()),
             TokenType::String("\n".to_owned()),
             TokenType::String("\t".to_owned()),
+            TokenType::Character('a'),
+            TokenType::Character('b'),
+            TokenType::Character('"'),
             TokenType::Integer(93),
             TokenType::Integer(3252),
             TokenType::Integer(238),
