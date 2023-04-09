@@ -11,6 +11,7 @@ jobs:
           - windows
           - macos
         rust:
+          - stable
           - nightly
     name: Test Rust ${{ matrix.rust }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
