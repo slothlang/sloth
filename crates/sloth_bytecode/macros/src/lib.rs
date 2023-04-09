@@ -1,8 +1,10 @@
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::parse::Parse;
 use syn::punctuated::Punctuated;
 use syn::{bracketed, parse_macro_input, LitInt, LitStr, Token};
+
+// TODO: Rename args to operands?
 
 struct DslInstructionInput {
     opcode: LitInt,
@@ -53,9 +55,16 @@ fn into_enum_field(instruction: &DslInstructionInput) -> TokenStream {
 
     let args = args.iter();
 
-    quote! {
-        #[doc = #description]
-        #name ( #( #args ),*  ) = #opcode
+    if args.len() > 0 {
+        quote! {
+            #[doc = #description]
+            #name ( #( #args ),*  ) = #opcode
+        }
+    } else {
+        quote! {
+            #[doc = #description]
+            #name = #opcode
+        }
     }
 }
 
@@ -67,23 +76,44 @@ fn into_bytecode_parser(instruction: &DslInstructionInput) -> TokenStream {
         description: _,
     } = instruction;
 
-    let args = args.iter().map(|arg| {
-        let read_ident = format_ident!("read_{}", arg);
+    if args.is_empty() {
+        return quote! {
+            #opcode => Self :: #name
+        };
+    }
 
-        let _chunk_codes = arg;
+    let mut arg_params = Vec::new();
+    for arg in args {
+        let size = match arg.to_string().as_str() {
+            "u128" => 128,
+            "u64" => 64,
+            "u32" => 32,
+            "u16" => 16,
+            "u8" => 8,
+            typ => panic!("Unsupported instruction arg type '{typ}'"),
+        } as usize;
 
-        quote! {
-            {
-                let a: #arg = (chunk.code[*offset] << 56) + (chunk)
-                cursor . #read_ident ::<byteorder::LittleEndian>().unwrap()
-            }
+        let bytes = size / 8;
+
+        let mut chunks = Vec::new();
+        for byte in 0..bytes {
+            let shift_amount = size - (byte + 1) * bytes;
+            chunks.push(quote! {
+                ((chunk.code[*offset + #byte] as #arg) << #shift_amount)
+            });
         }
-    });
+
+        arg_params.push(quote! {
+            let value = #( #chunks )+* ;
+            *offset += #bytes ;
+            value
+        });
+    }
 
     quote! {
         #opcode => {
-            Self:: #name (
-                #( #args ),*
+            Self :: #name (
+                #( { #arg_params } ),*
             )
         }
     }
@@ -109,9 +139,9 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         .collect::<Vec<_>>();
 
     // Building out the expanded code
-    let expanded = quote! {
+    quote! {
         #[repr(u8)]
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, Eq, PartialEq)]
         enum #enum_name {
             #( #enum_fields ),*
         }
@@ -122,7 +152,7 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 *offset += 1;
 
                 let instruction = match opcode {
-                    #( #bytecode_parsers ),*
+                    #( #bytecode_parsers , )*
                     _ => panic!("Unknown bytecode encountered"),
                 };
 
@@ -133,21 +163,6 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 //
             }
         }
-
-        // impl #enum_name {
-        //     fn from_bytecode(cursor: &mut Cursor<Vec<u8>>) -> Self {
-        //         let bytecode = cursor.read_u8().unwrap();
-        //
-        //         let instruction = match bytecode {
-        //             #( #bytecode_parsers ),*
-        //             _ => panic!("Unknown bytecode encountered"),
-        //         };
-        //
-        //         instruction
-        //     }
-        // }
-    };
-
-    // Returning the proc_macro version of TokenStream
-    expanded.into()
+    }
+    .into()
 }

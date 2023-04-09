@@ -7,104 +7,12 @@
     unused_lifetimes
 )]
 
-use std::io::Cursor;
-
-use byteorder::ReadBytesExt;
-// use sloth_bytecode_macros::instructions;
+use sloth_bytecode_macros::instructions;
 
 pub struct Chunk {
     pub code: Vec<u8>,
     pub constants: Vec<u64>,
 }
-
-// instructions! {
-//     Instructions;
-//
-//     0x00 Constant   [u64]   "Push a constant value onto the stack",
-//
-//     0x01 Pop        []      "Pop a value from the stack",
-//     0x02 Dup        []      "Duplicate a value on the stack",
-//
-//     0x10 Add        []      "Add the last 2 values on the stack",
-//     0x11 Sub        []      "Subtract the last 2 values on the stack",
-//     0x12 Mul        []      "Multiply the last 2 values on the stack",
-//     0x13 Div        []      "Divide the last 2 values on the stack",
-//     0x14 Mod        []      "Modulo the last 2 values on the stack"
-// }
-
-// impl Instructions {
-//     fn disassemble(chunk: &Chunk, offset: &mut usize) {
-//         //
-//     }
-//
-//     fn assemble(chunk: &mut Chunk) {
-//         //
-//     }
-// }
-
-// #[test]
-// fn test() {
-//     let mut cursor = Cursor::new(vec![0, 1, 0, 0, 1, 0, 0, 0, 0]);
-//     let instruction = Instructions::from_bytecode(&mut cursor);
-//     println!("{instruction:?}");
-//     assert!(1 == 0);
-// }
-
-// macro_rules! instructions {
-//     ( $( $opcode:literal $name:ident [ $( $v_type:ident ),* ] $doc:literal
-// ),* ) => {         #[repr(u8)]
-//         enum Instruction {
-//             $(
-//                 #[doc = $doc]
-//                 $name ( $( $v_type ),* ) = $opcode
-//             ),*
-//         }
-//
-//         impl Instruction {
-//             fn opcode(&self) -> u8 {
-//                 match self {
-//                     $(
-//                         Self::$name ( $( _ ${ignore(v_type)} ),* ) => $opcode
-//                     ),*
-//                 }
-//             }
-//
-//             fn from_bytecode(bytecode: &[u8]) -> Option<Self> {
-//                 if bstecode.is_empty() {
-//                     return None;
-//                 }
-//
-//                 let opcode = bytecode[0];
-//                 let instruction = match opcode {
-//                     $(
-//                         $opcode => {
-//                             // TODO: Get the actual values
-//                             Some(Self::$name ( $( 0 ${ignore(v_type)} ),* ))
-//                         }
-//                     ),*,
-//                     _ => None,
-//                 };
-//
-//                 instruction
-//             }
-//         }
-//     }
-// }
-
-// instructions! {
-//     Instructions;
-//
-//     0x00 Constant   [u64]   "Push a constant value onto the stack",
-//
-//     0x01 Pop        []      "Pop a value from the stack",
-//     0x02 Dup        []      "Duplicate a value on the stack",
-//
-//     0x10 Add        []      "Add the last 2 values on the stack",
-//     0x11 Sub        []      "Subtract the last 2 values on the stack",
-//     0x12 Mul        []      "Multiply the last 2 values on the stack",
-//     0x13 Div        []      "Divide the last 2 values on the stack",
-//     0x14 Mod        []      "Modulo the last 2 values on the stack"
-// }
 
 pub enum Error {
     UnknownOpcode(u8),
@@ -112,59 +20,49 @@ pub enum Error {
     Eof,
 }
 
-pub enum Instruction {
-    Constant(u64),
+instructions! {
+    Instructions;
 
-    Pop(),
-    Dup(),
+    0x00 Constant   [u64]   "Push a constant value onto the stack",
 
-    Add(),
-    Sub(),
-    Mul(),
-    Div(),
-    Mod(),
+    0x01 Pop        []      "Pop a value from the stack",
+    0x02 Dup        []      "Duplicate a value on the stack",
+
+    0x10 Add        []      "Add the last 2 values on the stack",
+    0x11 Sub        []      "Subtract the last 2 values on the stack",
+    0x12 Mul        []      "Multiply the last 2 values on the stack",
+    0x13 Div        []      "Divide the last 2 values on the stack",
+    0x14 Mod        []      "Modulo the last 2 values on the stack"
 }
 
-// fn parse_bytecode(pos: usize, bc: &[u8]) -> Result<Bytecode, BytecodeError> {
-//     let Some(opcode) = bc.get(pos) else {
-//         return Err(BytecodeError::Eof);
-//     };
-//
-//     let instruction = match opcode {
-//         0x00 => {
-//             // let arg0: [u8; 8] = bc.get(1..1+size_of::<u64>()).unwrap();
-//             let arg0 = u64::from_ne_bytes(arg0);
-//         }
-//         _ => return Err(BytecodeError::UnknownOpcode(opcode)),
-//     }
-//
-//     todo!()
-// }
+#[cfg(test)]
+mod tests {
+    use crate::{Chunk, Instructions};
 
-fn parse_bytecode(cursor: &mut Cursor<&[u8]>) -> Result<Instruction, Error> {
-    let Ok(opcode) = cursor.read_u8() else {
-        return Err(Error::Eof);
-    };
+    #[test]
+    #[rustfmt::skip]
+    fn decompile_basic_instructions() {
+        let code = vec![
+            // Load constant 0
+            0x00, 0, 0, 0, 0, 0, 0, 0, 0, 
+            // Pop, Dup, Add, Sub, Mul, Div, Mod
+            0x01, 0x02, 0x10, 0x11, 0x12, 0x13, 0x14,
+        ];
 
-    let instruction = match opcode {
-        0x00 => {
-            let arg0 = cursor
-                .read_u64::<byteorder::LittleEndian>()
-                .map_err(|_| Error::InvalidArguments)?;
+        let chunk = Chunk {
+            code,
+            constants: Vec::new(),
+        };
 
-            Instruction::Constant(arg0)
-        }
-        _ => return Err(Error::UnknownOpcode(opcode)),
-    };
+        let mut offset = 0;
 
-    Ok(instruction)
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Constant(0));
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Pop);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Dup);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Add);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Sub);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Mul);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Div);
+        assert_eq!(Instructions::disassemble(&chunk, &mut offset), Instructions::Mod);
+    }
 }
-
-// impl<T: Iterator<Item = u8>> TryFrom<T> for Bytecode {
-//     type Error = BytecodeError;
-//
-//     fn try_from(value: T) -> Result<Self, Self::Error> {
-//         todo!()
-//         //
-//     }
-// }
