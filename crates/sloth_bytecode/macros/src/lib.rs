@@ -99,7 +99,7 @@ fn into_bytecode_parser(instruction: &DslInstructionInput) -> TokenStream {
         for byte in 0..bytes {
             let shift_amount = size - (byte + 1) * bytes;
             chunks.push(quote! {
-                ((chunk.code[*offset + #byte] as #arg) << #shift_amount)
+                ((chunk[*offset + #byte] as #arg) << #shift_amount)
             });
         }
 
@@ -147,8 +147,8 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
 
         impl #enum_name {
-            fn disassemble(chunk: &Chunk, offset: &mut usize) -> #enum_name {
-                let opcode = chunk.code[*offset];
+            fn disassemble(chunk: &[u8], offset: &mut usize) -> #enum_name {
+                let opcode = chunk[*offset];
                 *offset += 1;
 
                 let instruction = match opcode {
@@ -157,10 +157,6 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 };
 
                 instruction
-            }
-
-            fn assemble(chunk: &mut Chunk) {
-                //
             }
         }
     }
