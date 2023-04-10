@@ -6,7 +6,7 @@ use std::str::Chars;
 
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, PartialEq, Error)]
 pub enum LexerError {
     #[error("Unexpected token")]
     UnexpectedToken,
@@ -109,6 +109,9 @@ pub enum TokenType {
     Regex(String),
 
     Identifier(String),
+
+    // Utility
+    Error(LexerError),
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -146,6 +149,9 @@ pub struct Lexer<'a> {
 
     start: Location,
     current: Location,
+
+    // Keep track if the lexer has encountered an error to stop lexing asap
+    errored: bool,
 }
 
 impl<'a> Lexer<'a> {
@@ -163,6 +169,7 @@ impl<'a> Lexer<'a> {
             chars,
             start: Default::default(),
             current: Default::default(),
+            errored: false,
         }
     }
 }
@@ -276,8 +283,8 @@ impl<'a> Iterator for Lexer<'a> {
         self.advance_while(|it| it[0].is_whitespace());
         self.start = self.current;
 
-        // If were at the end of the file return nothing
-        if self.eof() {
+        // If were at the end of the file or an error has occurred return nothing
+        if self.eof() || self.errored {
             return None;
         }
 
@@ -390,7 +397,10 @@ impl<'a> Iterator for Lexer<'a> {
                 }
             }
 
-            _ => panic!("Error while parsing"),
+            _ => {
+                self.errored = true;
+                TokenType::Error(LexerError::UnexpectedToken)
+            }
         };
 
         let lexeme = unsafe {
@@ -415,6 +425,7 @@ mod tests {
     use itertools::Itertools;
 
     use super::{Lexer, TokenType};
+    use crate::lexer::LexerError;
 
     #[test]
     fn lex_operators() {
@@ -532,5 +543,13 @@ mod tests {
             TokenType::Float(35.2),
             TokenType::Float(3.3),
         ]);
+    }
+
+    #[test]
+    fn lex_errors() {
+        let source = "`";
+        let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
+
+        assert_eq!(&tokens, &[TokenType::Error(LexerError::UnexpectedToken)]);
     }
 }
