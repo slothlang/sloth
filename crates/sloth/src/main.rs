@@ -29,10 +29,8 @@ fn main() {
         return;
     };
 
-    let lexer = Lexer::new(&source);
-    for token in lexer {
-        println!("{token:?}");
-    }
+    let tokens = Lexer::new(&source).collect_vec();
 
-    // TODO:
+    // TODO: Write a parser
 }
+
