@@ -1,4 +1,4 @@
-use super::ast::{Expr, FuncArgs, Stmt};
+use super::ast::{FuncArgs, Stmt};
 use super::AstParser;
 use crate::lexer::TokenType;
 
@@ -204,6 +204,7 @@ impl<'a> AstParser<'a> {
 
     fn return_statement(&mut self) -> Stmt {
         let expr = self.expression();
+        self.consume(TokenType::SemiColon, "Expected ';' after return statement");
         Stmt::Return { value: (expr) }
     }
 }
@@ -212,9 +213,9 @@ impl<'a> AstParser<'a> {
 mod tests {
     use itertools::Itertools;
 
-    use super::{AstParser, Expr, Stmt};
+    use super::{AstParser, Stmt};
     use crate::lexer::Lexer;
-    use crate::parser::ast::{BinaryOp, FuncArgs, Literal};
+    use crate::parser::ast::{BinaryOp, Expr, FuncArgs, Literal};
 
     #[test]
     fn basic_statement_a() {
@@ -262,7 +263,7 @@ mod tests {
 
     #[test]
     fn basic_statement_c() {
-        let lexer = Lexer::new("fn test_c (a, b, c) {\nreturn (b + a * c);\n}");
+        let lexer = Lexer::new("fn test_c (a, b, c) {\nreturn (a + b * c);\n}");
         let tokens = lexer.collect_vec();
         println!("{tokens:?}");
 
@@ -283,7 +284,7 @@ mod tests {
                 },
             ]),
             body: (vec![Stmt::Return {
-                value: (Expr::BinaryOp {
+                value: (Expr::Grouping(Box::new(Expr::BinaryOp {
                     op: BinaryOp::Add,
                     lhs: Box::new(Expr::Variable("a".to_string())),
                     rhs: Box::new(Expr::BinaryOp {
@@ -291,7 +292,7 @@ mod tests {
                         lhs: Box::new(Expr::Variable("b".to_string())),
                         rhs: Box::new(Expr::Variable("c".to_string())),
                     }),
-                }),
+                }))),
             }]),
             return_type: (None),
         };
