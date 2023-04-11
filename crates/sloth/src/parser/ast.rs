@@ -1,6 +1,5 @@
 use crate::lexer::{Token, TokenType};
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum BinaryOp {
     Add,
     Con,
@@ -25,16 +24,14 @@ pub enum BinaryOp {
     LogAnd,
     LogOr,
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum UnaryOp {
     Not,
     Neg,
 
     BWComp,
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Literal {
     Integer(i128),
     Float(f64),
@@ -44,13 +41,12 @@ pub enum Literal {
     Regex(String),
     List(Vec<Expr>), // TODO: holy shit we forgor listys
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     Grouping(Box<Expr>),
     BinaryOp {
         op: BinaryOp,
-        lhs: Box<Expr>, 
+        lhs: Box<Expr>,
         rhs: Box<Expr>,
     },
     UnaryOp {

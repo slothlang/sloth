@@ -146,9 +146,10 @@ impl<'a> AstParser<'a> {
 #[cfg(test)]
 mod tests {
     use itertools::Itertools;
-    use super::{AstParser, BinaryOp, Expr, Literal};
 
-    use crate::{lexer::{Lexer}, parser::ast::UnaryOp};
+    use super::{AstParser, BinaryOp, Expr, Literal};
+    use crate::lexer::Lexer;
+    use crate::parser::ast::UnaryOp;
 
     #[test]
     fn basic_expression_a() {
