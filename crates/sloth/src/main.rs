@@ -29,7 +29,7 @@ fn main() {
         return;
     };
 
-    let tokens = Lexer::new(&source).collect_vec();
+    let _tokens = Lexer::new(&source).collect_vec();
 
     // TODO: Write a parser
 }
