@@ -27,6 +27,16 @@ impl VM {
         }
     }
 
+    fn execute(&mut self) {
+        loop {
+            self.execute_once();
+        }
+    }
+
+    fn execute_once(&mut self) {
+        //
+    }
+
     fn run(&mut self, chunk: &Chunk) {
         let mut pointer = 0;
 
