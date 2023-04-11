@@ -6,3 +6,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+sloth_bytecode = { path = "../sloth_bytecode" }
+

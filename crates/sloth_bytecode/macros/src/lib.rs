@@ -142,12 +142,12 @@ pub fn instructions(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     quote! {
         #[repr(u8)]
         #[derive(Clone, Debug, Eq, PartialEq)]
-        enum #enum_name {
+        pub enum #enum_name {
             #( #enum_fields ),*
         }
 
         impl #enum_name {
-            fn disassemble(chunk: &[u8], offset: &mut usize) -> #enum_name {
+            pub fn disassemble(chunk: &[u8], offset: &mut usize) -> #enum_name {
                 let opcode = chunk[*offset];
                 *offset += 1;
 

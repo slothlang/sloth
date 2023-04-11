@@ -16,7 +16,7 @@ pub enum Error {
 }
 
 instructions! {
-    Instructions;
+    Instruction;
 
     0x00 Constant   [u64]   "Push a constant value onto the stack",
     0x01 Load       [u64]   "Load a value from a variable",
@@ -31,12 +31,13 @@ instructions! {
     0x23 Div        []      "Divide the last 2 values on the stack",
     0x24 Mod        []      "Modulo the last 2 values on the stack",
 
-    0xF0 Print      []      "[DEBUG] Pop value from stack and print it"
+    0xF0 VMReturn   []      "[DEBUG] Pop value from stack and return it from the program",
+    0xF1 VMExit     []      "[DEBUG] Exit from the VM",
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::Instructions;
+    use crate::Instruction;
 
     #[test]
     #[rustfmt::skip]
@@ -50,13 +51,13 @@ mod tests {
 
         let mut offset = 0;
 
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Constant(0));
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Dup);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Pop);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Add);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Sub);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Mul);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Div);
-        assert_eq!(Instructions::disassemble(&code, &mut offset), Instructions::Mod);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Constant(0));
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Dup);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Pop);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Add);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Sub);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Mul);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Div);
+        assert_eq!(Instruction::disassemble(&code, &mut offset), Instruction::Mod);
     }
 }
