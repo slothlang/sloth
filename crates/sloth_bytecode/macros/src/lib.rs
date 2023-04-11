@@ -97,7 +97,7 @@ fn into_bytecode_parser(instruction: &DslInstructionInput) -> TokenStream {
 
         let mut chunks = Vec::new();
         for byte in 0..bytes {
-            let shift_amount = size - (byte + 1) * bytes;
+            let shift_amount = size - (byte + 1) * 8;
             chunks.push(quote! {
                 ((chunk[*offset + #byte] as #arg) << #shift_amount)
             });
