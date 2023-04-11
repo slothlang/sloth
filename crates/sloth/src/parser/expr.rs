@@ -1,4 +1,5 @@
-use super::ast::{AstParser, BinaryOp, Expr, Literal, UnaryOp};
+use super::ast::{BinaryOp, Expr, Literal, UnaryOp};
+use super::AstParser;
 use crate::lexer::TokenType;
 
 /// Implementation containing parsers internal components related to expressions
@@ -20,7 +21,7 @@ impl<'a> AstParser<'a> {
                 TokenType::Bang => UnaryOp::Not,
                 TokenType::Tilde => UnaryOp::BWComp,
                 TokenType::Minus => UnaryOp::Neg,
-                _ => UnaryOp::Neg, // TODO: Idk how to not have this shit
+                _ => panic!(), // TODO: Idk how to not have this shit
             };
 
             let rhs = self.unary();
@@ -72,7 +73,9 @@ impl<'a> AstParser<'a> {
             TokenType::Character(literal) => Expr::Literal(Literal::Char(literal)),
             TokenType::String(literal) => Expr::Literal(Literal::String(literal)),
             TokenType::Regex(literal) => Expr::Literal(Literal::Regex(literal)),
-            TokenType::Identifier(ident) => Expr::Variable(ident),
+            TokenType::Identifier(ident) => Expr::Variable(ident), /* TODO: make this shit check
+                                                                     * if it is calling a
+                                                                     * function dumbass */
             TokenType::OpeningParen => {
                 let expr = self.expression();
                 self.consume(TokenType::ClosingParen, "Must end expression with ')'");
@@ -114,7 +117,7 @@ macro_rules! binary_expr {
                     TokenType::BangEq => BinaryOp::NotEq,
                     TokenType::AmpAmp => BinaryOp::LogAnd,
                     TokenType::PipePipe => BinaryOp::LogOr,
-                    _ => BinaryOp::Add, // TODO: Idk how to not have this shit
+                    _ => panic!("fuck"), // TODO: Idk how to not have this shit
                 };
 
                 let rhs = self.$parent();
