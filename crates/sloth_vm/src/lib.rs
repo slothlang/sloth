@@ -11,6 +11,8 @@ pub mod native;
 pub mod value;
 pub mod vm;
 
+use std::ops::{Index, IndexMut};
+
 use value::{Object, ObjectType};
 
 use crate::value::Primitive;
@@ -25,8 +27,8 @@ const STACK_SIZE: usize = 1024;
 
 #[derive(Debug)]
 pub struct Stack {
-    top: usize,
     stack: [Primitive; STACK_SIZE],
+    top: usize,
 }
 
 impl Default for Stack {
@@ -67,6 +69,25 @@ impl Stack {
     #[inline(always)]
     pub fn peek(&self) -> Primitive {
         self.stack[self.top - 1]
+    }
+
+    #[inline(always)]
+    pub fn peek_nth(&self, nth: usize) -> Primitive {
+        self.stack[self.top - 1 - nth]
+    }
+}
+
+impl Index<usize> for Stack {
+    type Output = Primitive;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.stack[index]
+    }
+}
+
+impl IndexMut<usize> for Stack {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.stack[index]
     }
 }
 

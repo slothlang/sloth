@@ -45,7 +45,12 @@ opcodes! {
     0x02 Push       "Push a value to a variable",
 
     0x10 Dup        "Duplicate a value on the stack",
-    0x11 Del        "Delete a value from the stack",
+    0x11 Pop        "Pop a value from the stack",
+
+    0x12 GetGlobal  "Get a global value",
+    0x13 SetGlobal  "Set a global value",
+    0x14 GetLocal   "Get a local value",
+    0x15 SetLocal   "Set a local value",
 
     0x20 Add        "Add the last 2 values on the stack",
     0x21 Sub        "Subtract the last 2 values on the stack",
@@ -56,14 +61,14 @@ opcodes! {
     0x30 Eq         "Check if the last 2 values on the stack are equal",
     0x31 Ne         "Check if the last 2 values on the stack are not equal",
 
-    0x40 Jmp        "Jump to a specific point in the program",
-    0x41 JmpIf      "Jump to a specific point in the program if true is on the stack",
+    0x40 Jump       "Jump to a specific point in the program",
+    0x41 JumpIf     "Jump to a specific point in the program if true is on the stack",
 
     0x50 Call       "Call function on stack",
-    0x51 Return     "Return from function on stack",
+    0x51 CallNative "Call native function",
+    0x52 Return     "Return from function on stack",
 
-    0xE0 Hlt        "Halt the program",
-    0xE1 Exit       "Exit the program",
+    0xE0 Halt       "Halt the program",
 
     0xF0 VMReturn   "[DEBUG] Pop value from stack and return it fromthe program",
     0xF1 VMPrint    "[DEBUG] Print value to console"

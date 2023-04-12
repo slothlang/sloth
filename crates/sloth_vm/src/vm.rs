@@ -13,19 +13,17 @@ pub struct CallFrame {
 }
 
 impl CallFrame {
+    fn new(stack_offset: usize, function: &Function) -> Self {
+        Self {
+            pointer: 0,
+            stack_offset,
+            function: function as *const _,
+        }
+    }
+
     #[inline]
     fn function(&self) -> &Function {
         unsafe { &*self.function }
-    }
-}
-
-impl From<&Function> for CallFrame {
-    fn from(value: &Function) -> Self {
-        Self {
-            pointer: 0,
-            stack_offset: 0,
-            function: value as *const _,
-        }
     }
 }
 
@@ -89,8 +87,8 @@ impl VM {
         let mut this = Self::init(objects);
 
         // Allocating the root function
-        root.chunk.code.push(Opcode::Hlt as u8);
-        this.call_stack.push(CallFrame::from(&root));
+        root.chunk.code.push(Opcode::Halt as u8);
+        this.call_stack.push(CallFrame::new(0, &root));
         this.objects
             .allocate(Object::new(ObjectType::Function(root)));
 
@@ -104,8 +102,8 @@ impl VM {
 
         match Opcode::from_u8(opcode) {
             Opcode::Constant => {
-                let idx = self.read_u16();
-                let value = self.call_stack.peek().function().chunk.constants[idx as usize];
+                let idx = self.read_u16() as usize;
+                let value = self.call_stack.peek().function().chunk.constants[idx];
 
                 self.stack.push(value);
             }
@@ -114,8 +112,20 @@ impl VM {
                 self.stack.push(value);
                 self.stack.push(value);
             }
-            Opcode::Del => {
+            Opcode::Pop => {
                 self.stack.pop();
+            }
+            Opcode::GetLocal => {
+                let idx = self.read_u16() as usize;
+                let value = self.stack[self.call_stack.peek().stack_offset + idx];
+
+                self.stack.push(value);
+            }
+            Opcode::SetLocal => {
+                let idx = self.read_u16() as usize;
+                let value = self.stack.pop();
+
+                self.stack[self.call_stack.peek().stack_offset + idx] = value;
             }
 
             Opcode::Add => {
@@ -179,7 +189,7 @@ impl VM {
                 };
 
                 // Push the function onto the call stack
-                self.call_stack.push(CallFrame::from(function));
+                self.call_stack.push(CallFrame::new(0, function));
             }
 
             Opcode::Return => {
@@ -188,8 +198,7 @@ impl VM {
                 self.call_stack.pop();
             }
 
-            Opcode::Hlt => return false,
-            Opcode::Exit => return false,
+            Opcode::Halt => return false,
 
             _ => unimplemented!(),
         }
@@ -199,6 +208,14 @@ impl VM {
 
     pub fn run(&mut self) {
         while self.step() {}
+    }
+
+    fn call(&mut self, function: &Function) {
+        self.call_stack.push(CallFrame {
+            pointer: 0,
+            stack_offset: self.stack.top - 1 - (function.arity as usize),
+            function,
+        });
     }
 
     #[inline(always)]
@@ -274,7 +291,7 @@ mod tests {
                     name: Some("foo".to_string()),
                     chunk: Chunk {
                         constants: vec![Primitive::Integer(7)],
-                        code: vec![0x00, 0, 0, 0x10, 0x20, 0x51],
+                        code: vec![0x00, 0, 0, 0x10, 0x20, 0x52],
                     },
                     arity: 0,
                 })),
