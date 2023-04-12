@@ -3,7 +3,7 @@ pub mod expr;
 pub mod stmt;
 
 use crate::lexer::{Token, TokenType};
-
+#[derive(Debug)]
 pub struct AstParser<'a> {
     tokens: Vec<Token<'a>>,
     index: usize,
@@ -46,7 +46,7 @@ impl<'a> AstParser<'a> {
 
     pub fn consume(&mut self, next: TokenType, error: &str) {
         if std::mem::discriminant(&self.peek().tt) != std::mem::discriminant(&next) {
-            panic!("{error}");
+            panic!("{error} at index {:?}", self.index);
         }
         self.advance();
     }

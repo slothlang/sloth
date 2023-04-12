@@ -9,7 +9,7 @@ while !correct {
 
     if human == computer {
         println("You guessed the same number as me!");
-        correct = true;
+        var correct = true;
     }
     
     if human > computer {
@@ -20,7 +20,7 @@ while !correct {
         println("Your guess was too low.");
     }
     
-    tries = tries + 1;
+    var tries = tries + 1;
 }
 
 println("\nIt took you ", tries, " tries to guess correctly!");

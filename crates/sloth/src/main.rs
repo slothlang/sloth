@@ -31,5 +31,12 @@ fn main() {
     };
 
     let tokens = Lexer::new(&source).collect_vec();
-    let _parser = AstParser::new(tokens);
+    // for t in &tokens{
+    //     println!("{:#?}", t);
+    // }
+    let mut parser = AstParser::new(tokens);
+    // println!("{:#?}", parser);
+    let parsed = &parser.parse();
+
+    println!("{:?}", parsed);
 }

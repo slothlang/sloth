@@ -52,7 +52,7 @@ impl<'a> AstParser<'a> {
         };
 
         self.advance(); // Advancing from the identifier TODO: Check for type
-        self.consume(TokenType::Eq, "Expected '=' after identifier");
+        self.consume(TokenType::Eq, "Expected '=' after identifier at ");
 
         let value = self.expression();
 
@@ -95,7 +95,7 @@ impl<'a> AstParser<'a> {
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
             body.push(self.statement());
         }
-
+        self.advance();
         Stmt::If {
             expr: (condition),
             body: (body),
@@ -141,7 +141,7 @@ impl<'a> AstParser<'a> {
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
             body.push(self.statement());
         }
-
+        self.advance();
         Stmt::While { condition, body }
     }
 
@@ -215,7 +215,7 @@ mod tests {
 
     use super::{AstParser, Stmt};
     use crate::lexer::Lexer;
-    use crate::parser::ast::{BinaryOp, Expr, FuncArgs, Literal};
+    use crate::parser::ast::{BinaryOp, Expr, FuncArgs, Literal, UnaryOp};
 
     #[test]
     fn basic_statement_a() {
@@ -307,16 +307,33 @@ mod tests {
     }
     #[test]
     fn basic_statement_d() {
-        let lexer = Lexer::new("while true {\nprint(\"Hello World\");}");
+        let lexer = Lexer::new("while true {\nprint(\"Hello World\");\n\nprintln(5 + 7/-3);}");
         let tokens = lexer.collect_vec();
         println!("{tokens:?}");
 
         let expected_ast = Stmt::While {
             condition: (Expr::Literal(Literal::Bool(true))),
-            body: (vec![Stmt::ExprStmt(Expr::Call {
-                ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
-                args: (vec![Expr::Literal(Literal::String("Hello World".to_string()))]),
-            })]),
+            body: (vec![
+                Stmt::ExprStmt(Expr::Call {
+                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    args: (vec![Expr::Literal(Literal::String("Hello World".to_string()))]),
+                }),
+                Stmt::ExprStmt(Expr::Call {
+                    ident: (Box::new(Expr::Literal(Literal::String("println".to_string())))),
+                    args: (vec![Expr::BinaryOp {
+                        op: (BinaryOp::Add),
+                        lhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                        rhs: (Box::new(Expr::BinaryOp {
+                            op: (BinaryOp::Div),
+                            lhs: (Box::new(Expr::Literal(Literal::Integer(7)))),
+                            rhs: (Box::new(Expr::UnaryOp {
+                                op: (UnaryOp::Neg),
+                                value: (Box::new(Expr::Literal(Literal::Integer(3)))),
+                            })),
+                        })),
+                    }]),
+                }),
+            ]),
         };
 
         let mut parser = AstParser::new(tokens);
@@ -329,30 +346,49 @@ mod tests {
     }
     #[test]
     fn basic_statement_e() {
-        let lexer = Lexer::new("if a+5 > 10 {\nprint(a);\n}");
+        let lexer = Lexer::new("if a+5 > 10 {\nprint(a);\n}\nif a+5 < 10 {\nprint(10);\n}");
         let tokens = lexer.collect_vec();
         println!("{tokens:?}");
 
-        let expected_ast = Stmt::If {
-            expr: (Expr::BinaryOp {
-                op: (BinaryOp::Gt),
-                lhs: (Box::new(Expr::BinaryOp {
-                    op: (BinaryOp::Add),
-                    lhs: (Box::new(Expr::Variable("a".to_string()))),
-                    rhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
-                })),
-                rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
-            }),
-            body: (vec![Stmt::ExprStmt(Expr::Call {
-                ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
-                args: (vec![Expr::Variable("a".to_string())]),
-            })]),
-            else_if: (Vec::new()),
-            els: (None),
-        };
+        let expected_ast = vec![
+            Stmt::If {
+                expr: (Expr::BinaryOp {
+                    op: (BinaryOp::Gt),
+                    lhs: (Box::new(Expr::BinaryOp {
+                        op: (BinaryOp::Add),
+                        lhs: (Box::new(Expr::Variable("a".to_string()))),
+                        rhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                    })),
+                    rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
+                }),
+                body: (vec![Stmt::ExprStmt(Expr::Call {
+                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    args: (vec![Expr::Variable("a".to_string())]),
+                })]),
+                else_if: (Vec::new()),
+                els: (None),
+            },
+            Stmt::If {
+                expr: (Expr::BinaryOp {
+                    op: (BinaryOp::Lt),
+                    lhs: (Box::new(Expr::BinaryOp {
+                        op: (BinaryOp::Add),
+                        lhs: (Box::new(Expr::Variable("a".to_string()))),
+                        rhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                    })),
+                    rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
+                }),
+                body: (vec![Stmt::ExprStmt(Expr::Call {
+                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    args: (vec![Expr::Literal(Literal::Integer(10))]),
+                })]),
+                else_if: (Vec::new()),
+                els: (None),
+            },
+        ];
 
         let mut parser = AstParser::new(tokens);
-        let generated_ast = parser.statement();
+        let generated_ast = parser.parse();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");
         println!("Generated AST:\n{generated_ast:#?}\n\n");
