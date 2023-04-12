@@ -1,26 +1,16 @@
 val computer = random(1, 10);
-
 var tries = 0;
 var correct = false;
-
 while !correct {
     print("\nPick a number between 1 and 10: ");
     val human = parse_int(readln());
-
-    if human == computer {
-        println("You guessed the same number as me!");
-        var correct = true;
+    if human == computer {println("You guessed the same number as me!");
+    correct = true;
     }
+    if human > computer {println("Your guess was too high.");}
+    if human < computer {println("Your guess was too low.");}
     
-    if human > computer {
-        println("Your guess was too high.");
-    }
-    
-    if human < computer {
-        println("Your guess was too low.");
-    }
-    
-    var tries = tries + 1;
+    tries = tries + 1;
 }
 
 println("\nIt took you ", tries, " tries to guess correctly!");

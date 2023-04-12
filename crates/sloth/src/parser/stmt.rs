@@ -1,6 +1,7 @@
-use super::ast::{FuncArgs, Stmt};
+use super::ast::{Expr, FuncArgs, Stmt};
 use super::AstParser;
 use crate::lexer::TokenType;
+use crate::parser::ast::Literal;
 
 impl<'a> AstParser<'a> {
     pub fn parse(&mut self) -> Vec<Stmt> {
@@ -42,13 +43,56 @@ impl<'a> AstParser<'a> {
             return self.return_statement();
         }
 
+        self.mut_statement()
+
         // If we couldn't parse a statement return an expression statement
+        // self.expression_statement()
+    }
+
+    fn mut_statement(&mut self) -> Stmt {
+        let TokenType::Identifier(ident) = self.peek().tt.clone() else {
+            panic!("uh oh {:?}", self.peek());
+        };
+
+        self.advance();
+        let next = self.advance().unwrap().tt.clone();
+        if next == TokenType::Eq {
+            let value = self.expression();
+            self.consume(TokenType::SemiColon, "No semi colon for me i guess");
+            return Stmt::DefineVariable {
+                name: (ident),
+                value: (value),
+                typ: (None),
+            };
+        } else if next == TokenType::OpeningParen {
+            let mut arguments = Vec::<Expr>::new();
+
+            if self.peek().tt != TokenType::ClosingParen {
+                loop {
+                    arguments.push(self.expression());
+                    if !self.advance_if_eq(&TokenType::Comma) {
+                        break;
+                    }
+                }
+            }
+
+            self.consume(
+                TokenType::ClosingParen,
+                "Expected ')' to close off function call",
+            );
+
+            self.consume(TokenType::SemiColon, "No semi colon for me i guess");
+            return Stmt::ExprStmt(Expr::Call {
+                ident: (Box::new(Expr::Literal(Literal::String(ident)))),
+                args: (arguments),
+            });
+        }
         self.expression_statement()
     }
 
     fn var_statement(&mut self) -> Stmt {
         let TokenType::Identifier(ident) = self.peek().tt.clone() else {
-            panic!("Identifier expected after 'var'");
+            panic!("Identifier expected after 'var', not {:?}", self.peek());
         };
 
         self.advance(); // Advancing from the identifier TODO: Check for type
@@ -346,9 +390,12 @@ mod tests {
     }
     #[test]
     fn basic_statement_e() {
-        let lexer = Lexer::new("if a+5 > 10 {\nprint(a);\n}\nif a+5 < 10 {\nprint(10);\n}");
+        let lexer = Lexer::new(
+            "if a+5 > 10 {\nprint(a);\n}\nif a+5 < 10 {\nprintln(10);\n}\nif a+5 == 10 \
+             {\nprint(toString(10));\na = true;\n}",
+        );
         let tokens = lexer.collect_vec();
-        println!("{tokens:?}");
+        // println!("{tokens:?}");
 
         let expected_ast = vec![
             Stmt::If {
@@ -379,9 +426,37 @@ mod tests {
                     rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
                 }),
                 body: (vec![Stmt::ExprStmt(Expr::Call {
-                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    ident: (Box::new(Expr::Literal(Literal::String("println".to_string())))),
                     args: (vec![Expr::Literal(Literal::Integer(10))]),
                 })]),
+                else_if: (Vec::new()),
+                els: (None),
+            },
+            Stmt::If {
+                expr: (Expr::BinaryOp {
+                    op: (BinaryOp::EqEq),
+                    lhs: (Box::new(Expr::BinaryOp {
+                        op: (BinaryOp::Add),
+                        lhs: (Box::new(Expr::Variable("a".to_string()))),
+                        rhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                    })),
+                    rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
+                }),
+                body: (vec![
+                    Stmt::ExprStmt(Expr::Call {
+                        ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                        args: (vec![Expr::Call {
+                            ident: Box::new(Expr::Literal(Literal::String("toString".to_string()))),
+                            args: vec![Expr::Literal(Literal::Integer(10))],
+                        }]),
+                    }),
+                    Stmt::DefineVariable {
+                        name: ("a".to_string()),
+                        value: (Expr::Literal(Literal::Bool(true))),
+                        typ: (None),
+                    },
+                ]),
+
                 else_if: (Vec::new()),
                 els: (None),
             },
@@ -389,6 +464,30 @@ mod tests {
 
         let mut parser = AstParser::new(tokens);
         let generated_ast = parser.parse();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+
+    #[test]
+    fn basic_statement_f() {
+        let lexer = Lexer::new("test_a = 5 + 3;");
+        let tokens = lexer.collect_vec();
+
+        let expected_ast = Stmt::DefineVariable {
+            name: ("test_a".to_string()),
+            value: (Expr::BinaryOp {
+                op: (BinaryOp::Add),
+                lhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                rhs: (Box::new(Expr::Literal(Literal::Integer(3)))),
+            }),
+            typ: (None),
+        };
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");
         println!("Generated AST:\n{generated_ast:#?}\n\n");

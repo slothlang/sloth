@@ -21,7 +21,7 @@ impl<'a> AstParser<'a> {
                 TokenType::Bang => UnaryOp::Not,
                 TokenType::Tilde => UnaryOp::BWComp,
                 TokenType::Minus => UnaryOp::Neg,
-                _ => panic!(), // TODO: Idk how to not have this shit
+                _ => panic!(),
             };
 
             let rhs = self.unary();
