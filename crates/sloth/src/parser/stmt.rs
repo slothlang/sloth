@@ -327,4 +327,36 @@ mod tests {
 
         assert_eq!(expected_ast, generated_ast);
     }
+    #[test]
+    fn basic_statement_e() {
+        let lexer = Lexer::new("if a+5 > 10 {\nprint(a);\n}");
+        let tokens = lexer.collect_vec();
+        println!("{tokens:?}");
+
+        let expected_ast = Stmt::If {
+            expr: (Expr::BinaryOp {
+                op: (BinaryOp::Gt),
+                lhs: (Box::new(Expr::BinaryOp {
+                    op: (BinaryOp::Add),
+                    lhs: (Box::new(Expr::Variable("a".to_string()))),
+                    rhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
+                })),
+                rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
+            }),
+            body: (vec![Stmt::ExprStmt(Expr::Call {
+                ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                args: (vec![Expr::Variable("a".to_string())]),
+            })]),
+            else_if: (Vec::new()),
+            els: (None),
+        };
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
 }
