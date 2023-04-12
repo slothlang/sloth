@@ -1,140 +1,301 @@
-use sloth_bytecode::Instruction;
+use std::mem::MaybeUninit;
 
-use crate::{Chunk, Data, Stack};
+use sloth_bytecode::Opcode;
+
+use crate::value::{Function, Object, ObjectType, Primitive};
+use crate::{ObjectMap, Stack};
+
+#[derive(Clone, Copy)]
+pub struct CallFrame {
+    pointer: usize,
+    stack_offset: usize,
+    function: *const Function, // TODO: Safety
+}
+
+impl CallFrame {
+    #[inline]
+    fn function(&self) -> &Function {
+        unsafe { &*self.function }
+    }
+}
+
+impl From<&Function> for CallFrame {
+    fn from(value: &Function) -> Self {
+        Self {
+            pointer: 0,
+            stack_offset: 0,
+            function: value as *const _,
+        }
+    }
+}
+
+const CALL_STACK_SIZE: usize = 1024;
+
+pub struct CallStack {
+    top: usize,
+    frames: [MaybeUninit<CallFrame>; CALL_STACK_SIZE],
+}
+
+impl Default for CallStack {
+    fn default() -> Self {
+        Self {
+            top: 0,
+            frames: [MaybeUninit::uninit(); CALL_STACK_SIZE],
+        }
+    }
+}
+
+impl CallStack {
+    fn push(&mut self, frame: CallFrame) {
+        self.frames[self.top].write(frame);
+        self.top += 1;
+    }
+
+    fn pop(&mut self) {
+        self.top -= 1;
+    }
+
+    fn peek(&self) -> &CallFrame {
+        unsafe { self.frames[self.top - 1].assume_init_ref() }
+    }
+
+    fn peek_mut(&mut self) -> &mut CallFrame {
+        unsafe { self.frames[self.top - 1].assume_init_mut() }
+    }
+}
 
 pub struct VM {
-    vm_return: Option<Data>,
     stack: Stack,
+    call_stack: CallStack,
+    objects: ObjectMap,
+}
+
+impl Default for VM {
+    fn default() -> Self {
+        Self::init(ObjectMap::default())
+    }
 }
 
 impl VM {
-    fn new() -> Self {
+    pub fn init(objects: ObjectMap) -> Self {
         Self {
-            vm_return: None,
             stack: Stack::default(),
+            call_stack: CallStack::default(),
+            objects,
         }
     }
 
-    fn execute(&mut self) {
-        loop {
-            self.execute_once();
-        }
+    pub fn new(objects: ObjectMap, mut root: Function) -> Self {
+        let mut this = Self::init(objects);
+
+        // Allocating the root function
+        root.chunk.code.push(Opcode::Hlt as u8);
+        this.call_stack.push(CallFrame::from(&root));
+        this.objects
+            .allocate(Object::new(ObjectType::Function(root)));
+
+        this
     }
 
-    fn execute_once(&mut self) {
-        //
-    }
+    pub fn step(&mut self) -> bool {
+        use Primitive::*;
 
-    fn run(&mut self, chunk: &Chunk) {
-        let mut pointer = 0;
+        let opcode = self.read_u8();
 
-        loop {
-            let instruction = Instruction::disassemble(&chunk.code, &mut pointer);
+        match Opcode::from_u8(opcode) {
+            Opcode::Constant => {
+                let idx = self.read_u16();
+                let value = self.call_stack.peek().function().chunk.constants[idx as usize];
 
-            match instruction {
-                Instruction::Constant(idx) => {
-                    let value = chunk.constants[idx as usize];
-                    self.stack.push(value);
-                }
-                Instruction::Load(_) => todo!(),
-                Instruction::Push(_) => todo!(),
-                Instruction::Dup => {
-                    let value = self.stack.pop();
-                    self.stack.push(value);
-                    self.stack.push(value);
-                }
-                Instruction::Del => {
-                    self.stack.pop();
-                }
-                Instruction::Add => {
-                    let value = match self.stack.pop2() {
-                        (Data::Integer(lhs), Data::Integer(rhs)) => Data::Integer(lhs + rhs),
-                        (Data::Float(lhs), Data::Float(rhs)) => Data::Float(lhs + rhs),
-                        _ => panic!(),
-                    };
-
-                    self.stack.push(value);
-                }
-                Instruction::Sub => {
-                    let value = match self.stack.pop2() {
-                        (Data::Integer(lhs), Data::Integer(rhs)) => Data::Integer(lhs - rhs),
-                        (Data::Float(lhs), Data::Float(rhs)) => Data::Float(lhs - rhs),
-                        _ => panic!(),
-                    };
-
-                    self.stack.push(value);
-                }
-                Instruction::Mul => {
-                    let value = match self.stack.pop2() {
-                        (Data::Integer(lhs), Data::Integer(rhs)) => Data::Integer(lhs * rhs),
-                        (Data::Float(lhs), Data::Float(rhs)) => Data::Float(lhs * rhs),
-                        _ => panic!(),
-                    };
-
-                    self.stack.push(value);
-                }
-                Instruction::Div => {
-                    let value = match self.stack.pop2() {
-                        (Data::Integer(lhs), Data::Integer(rhs)) => Data::Integer(lhs / rhs),
-                        (Data::Float(lhs), Data::Float(rhs)) => Data::Float(lhs / rhs),
-                        _ => panic!(),
-                    };
-
-                    self.stack.push(value);
-                }
-                Instruction::Mod => {
-                    let value = match self.stack.pop2() {
-                        (Data::Integer(lhs), Data::Integer(rhs)) => Data::Integer(lhs % rhs),
-                        (Data::Float(lhs), Data::Float(rhs)) => Data::Float(lhs % rhs),
-                        _ => panic!(),
-                    };
-
-                    self.stack.push(value);
-                }
-                Instruction::Hlt => break,
-                Instruction::Exit => break,
-                Instruction::VMReturn => {
-                    let value = self.stack.pop();
-                    self.vm_return = Some(value);
-                    break;
-                }
-                _ => unimplemented!(),
+                self.stack.push(value);
             }
+            Opcode::Dup => {
+                let value = self.stack.pop();
+                self.stack.push(value);
+                self.stack.push(value);
+            }
+            Opcode::Del => {
+                self.stack.pop();
+            }
+
+            Opcode::Add => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Integer(lhs + rhs),
+                    (Float(lhs), Float(rhs)) => Float(lhs + rhs),
+                    _ => panic!(),
+                };
+
+                self.stack.push(value);
+            }
+            Opcode::Sub => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Integer(lhs - rhs),
+                    (Float(lhs), Float(rhs)) => Float(lhs - rhs),
+                    _ => panic!(),
+                };
+
+                self.stack.push(value);
+            }
+            Opcode::Mul => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Integer(lhs * rhs),
+                    (Float(lhs), Float(rhs)) => Float(lhs * rhs),
+                    _ => panic!(),
+                };
+
+                self.stack.push(value);
+            }
+            Opcode::Div => {
+                let value = match self.stack.pop2() {
+                    (Integer(_), Integer(0)) => panic!("Divide by 0"),
+                    (Integer(lhs), Integer(rhs)) => Integer(lhs / rhs),
+                    (Float(lhs), Float(rhs)) => Float(lhs / rhs),
+                    _ => panic!(),
+                };
+
+                self.stack.push(value);
+            }
+            Opcode::Mod => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Integer(lhs % rhs),
+                    (Float(lhs), Float(rhs)) => Float(lhs % rhs),
+                    _ => panic!(),
+                };
+
+                self.stack.push(value);
+            }
+
+            Opcode::Call => {
+                let Primitive::Object(ptr) = self.stack.pop() else {
+                    panic!("Last element on stack was not an object");
+                };
+
+                let Some(obj) = self.objects.get(ptr as usize) else {
+                    panic!("Pointer referenced nothing");
+                };
+
+                let ObjectType::Function(function) = &obj.typ else {
+                    panic!("Object was not a function");
+                };
+
+                // Push the function onto the call stack
+                self.call_stack.push(CallFrame::from(function));
+            }
+
+            Opcode::Return => {
+                // TODO: Return values
+
+                self.call_stack.pop();
+            }
+
+            Opcode::Hlt => return false,
+            Opcode::Exit => return false,
+
+            _ => unimplemented!(),
         }
+
+        true
+    }
+
+    pub fn run(&mut self) {
+        while self.step() {}
+    }
+
+    #[inline(always)]
+    fn read_u8(&mut self) -> u8 {
+        let frame = self.call_stack.peek_mut();
+        let function = frame.function();
+        let byte = function.chunk.code[frame.pointer];
+        frame.pointer += 1;
+        byte
+    }
+
+    #[inline(always)]
+    fn read_u16(&mut self) -> u16 {
+        let frame = self.call_stack.peek_mut();
+        let chunk = &frame.function().chunk;
+
+        let bytes = (chunk.code[frame.pointer], chunk.code[frame.pointer + 1]);
+
+        frame.pointer += 2;
+
+        ((bytes.0 as u16) << 8) + (bytes.1 as u16)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Chunk, Data, VM};
+    use crate::value::{Function, Object, ObjectType, Primitive};
+    use crate::{Chunk, ObjectMap, VM};
 
     #[test]
     fn arithmetic_ops() {
-        let mut vm = VM::new();
-
         // Addition
-        vm.run(&Chunk {
-            constants: vec![Data::Integer(7)],
-            code: vec![
-                0x00, 0, 0, 0, 0,    // Load constant from 0
-                0x10, // Duplicate
-                0x20, // Add
-                0xF0, // Return VM
-            ],
-        });
+        let mut vm = VM::new(
+            ObjectMap::default(),
+            Function::root(Chunk {
+                constants: vec![Primitive::Integer(7)],
+                code: vec![
+                    0x00, 0, 0,    // Load constant from 0
+                    0x10, // Duplicate
+                    0x20, // Add
+                    0xE0,
+                ],
+            }),
+        );
 
-        assert_eq!(vm.vm_return, Some(Data::Integer(14)));
+        vm.run();
+        assert_eq!(vm.stack.peek(), Primitive::Integer(14));
 
-        vm.run(&Chunk {
-            constants: vec![Data::Integer(2), Data::Integer(11)],
-            code: vec![
-                0x00, 0, 0, 0, 0, // Load constant from 0
-                0x00, 0, 0, 0, 1,    // Load constant from 1
-                0x20, // Add
-                0xF0, // Return VM
-            ],
-        });
+        let mut vm = VM::new(
+            ObjectMap::default(),
+            Function::root(Chunk {
+                constants: vec![Primitive::Integer(2), Primitive::Integer(11)],
+                code: vec![
+                    0x00, 0, 0, // Load constant from 0
+                    0x00, 0, 1,    // Load constant from 1
+                    0x20, // Add
+                    0xE0,
+                ],
+            }),
+        );
 
-        assert_eq!(vm.vm_return, Some(Data::Integer(13)));
+        vm.run();
+        assert_eq!(vm.stack.peek(), Primitive::Integer(13));
+    }
+
+    #[test]
+    fn allocation() {
+        let mut vm = VM::new(
+            ObjectMap::from(vec![
+                Object::new(ObjectType::String("Hello World!".to_owned())),
+                Object::new(ObjectType::String("Hello Slothlang!".to_owned())),
+                Object::new(ObjectType::Function(Function {
+                    name: Some("foo".to_string()),
+                    chunk: Chunk {
+                        constants: vec![Primitive::Integer(7)],
+                        code: vec![0x00, 0, 0, 0x10, 0x20, 0x51],
+                    },
+                    arity: 0,
+                })),
+            ]),
+            Function::root(Chunk {
+                constants: vec![
+                    Primitive::Object(0),
+                    Primitive::Object(1),
+                    Primitive::Object(2),
+                ],
+                code: vec![
+                    0x00, 0, 0, // Load constant from 0
+                    0x00, 0, 1, // Load constant from 1
+                    0x00, 0, 2, // Load constant from 2
+                    0x50, 0xE0,
+                ],
+            }),
+        );
+
+        vm.run();
+
+        assert_eq!(vm.stack.peek(), Primitive::Integer(14));
     }
 }
