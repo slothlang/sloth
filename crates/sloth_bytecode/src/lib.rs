@@ -16,7 +16,7 @@ pub enum Error {
 macro_rules! opcodes {
     ( $( $code:literal $name:ident $docs:literal ),* ) => {
         #[repr(u8)]
-        #[derive(Clone, Copy, Eq, PartialEq)]
+        #[derive(Debug, Clone, Copy, Eq, PartialEq)]
         pub enum Opcode {
             $(
                 #[doc = $docs]

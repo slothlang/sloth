@@ -107,6 +107,7 @@ impl VM {
 
                 self.stack.push(value);
             }
+
             Opcode::Dup => {
                 let value = self.stack.pop();
                 self.stack.push(value);
@@ -175,32 +176,59 @@ impl VM {
                 self.stack.push(value);
             }
 
+            Opcode::Eq => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Bool(lhs == rhs),
+                    (Float(lhs), Float(rhs)) => Bool(lhs == rhs),
+                    (Bool(lhs), Bool(rhs)) => Bool(lhs == rhs),
+                    (Object(lhs), Object(rhs)) => Bool(lhs == rhs),
+                    (Empty, Empty) => Bool(true),
+                    _ => Bool(false),
+                };
+
+                self.stack.push(value);
+            }
+            Opcode::Ne => {
+                let value = match self.stack.pop2() {
+                    (Integer(lhs), Integer(rhs)) => Bool(lhs != rhs),
+                    (Float(lhs), Float(rhs)) => Bool(lhs != rhs),
+                    (Bool(lhs), Bool(rhs)) => Bool(lhs != rhs),
+                    (Object(lhs), Object(rhs)) => Bool(lhs != rhs),
+                    (Empty, Empty) => Bool(false),
+                    _ => Bool(false),
+                };
+
+                self.stack.push(value);
+            }
+
+            Opcode::Jump => {
+                let to = self.read_u16();
+                self.call_stack.peek_mut().pointer = to as usize;
+            }
+            Opcode::JumpIf => {
+                let to = self.read_u16();
+                let value = self.stack.pop();
+
+                if let Bool(true) = value {
+                    self.call_stack.peek_mut().pointer = to as usize;
+                }
+            }
+
             Opcode::Call => {
                 let Primitive::Object(ptr) = self.stack.pop() else {
                     panic!("Last element on stack was not an object");
                 };
 
-                let Some(obj) = self.objects.get(ptr as usize) else {
-                    panic!("Pointer referenced nothing");
-                };
-
-                let ObjectType::Function(function) = &obj.typ else {
-                    panic!("Object was not a function");
-                };
-
-                // Push the function onto the call stack
-                self.call_stack.push(CallFrame::new(0, function));
+                self.call(ptr as usize);
             }
 
             Opcode::Return => {
-                // TODO: Return values
-
-                self.call_stack.pop();
+                self.call_return();
             }
 
             Opcode::Halt => return false,
 
-            _ => unimplemented!(),
+            opcode => unimplemented!("Opcode {:?} unimplemented", opcode),
         }
 
         true
@@ -210,12 +238,41 @@ impl VM {
         while self.step() {}
     }
 
-    fn call(&mut self, function: &Function) {
-        self.call_stack.push(CallFrame {
-            pointer: 0,
-            stack_offset: self.stack.top - 1 - (function.arity as usize),
-            function,
-        });
+    fn call(&mut self, ptr: usize) {
+        let Some(obj) = self.objects.get(ptr) else {
+            panic!("Pointer referenced nothing");
+        };
+
+        let ObjectType::Function(function) = &obj.typ else {
+            panic!("Object was not a function");
+        };
+
+        // Add a callstack entry for the function
+        let offset = self.stack.top - (function.arity as usize);
+        self.call_stack.push(CallFrame::new(offset, function));
+    }
+
+    fn call_return(&mut self) {
+        let function = self.call_stack.peek().function();
+        let stack_offset = self.call_stack.peek().stack_offset;
+
+        let return_value = if function.returns_value {
+            Some(self.stack.pop())
+        } else {
+            None
+        };
+
+        self.stack.top = stack_offset;
+
+        if let Some(return_value) = return_value {
+            self.stack.push(return_value);
+        }
+
+        self.call_stack.pop();
+    }
+
+    fn unwind(&mut self) {
+        unimplemented!("Implement unwinding for error handling");
     }
 
     #[inline(always)]
@@ -282,37 +339,175 @@ mod tests {
     }
 
     #[test]
-    fn allocation() {
+    fn basic_function() {
         let mut vm = VM::new(
-            ObjectMap::from(vec![
-                Object::new(ObjectType::String("Hello World!".to_owned())),
-                Object::new(ObjectType::String("Hello Slothlang!".to_owned())),
-                Object::new(ObjectType::Function(Function {
-                    name: Some("foo".to_string()),
-                    chunk: Chunk {
-                        constants: vec![Primitive::Integer(7)],
-                        code: vec![0x00, 0, 0, 0x10, 0x20, 0x52],
-                    },
-                    arity: 0,
-                })),
-            ]),
+            ObjectMap::from(vec![Object::new(ObjectType::Function(Function {
+                name: Some("add".to_string()),
+                chunk: Chunk {
+                    constants: vec![],
+                    code: vec![0x14, 0, 0, 0x14, 0, 1, 0x20, 0x52],
+                },
+                arity: 2,
+                returns_value: true,
+            }))]),
             Function::root(Chunk {
                 constants: vec![
+                    Primitive::Integer(6),
+                    Primitive::Integer(3),
                     Primitive::Object(0),
-                    Primitive::Object(1),
-                    Primitive::Object(2),
                 ],
                 code: vec![
-                    0x00, 0, 0, // Load constant from 0
-                    0x00, 0, 1, // Load constant from 1
-                    0x00, 0, 2, // Load constant from 2
-                    0x50, 0xE0,
+                    0x00, 0, 0, // Load first function parameter from 0
+                    0x00, 0, 1, // Load second function parameter from 1
+                    0x00, 0, 2,    // Load function constant from 2
+                    0x50, // Call function
                 ],
             }),
         );
 
         vm.run();
 
-        assert_eq!(vm.stack.peek(), Primitive::Integer(14));
+        assert_eq!(vm.stack.peek(), Primitive::Integer(9));
+    }
+
+    #[test]
+    fn fibonacci() {
+        #[rustfmt::skip]
+        let mut vm = VM::new(
+            ObjectMap::default(),
+            Function::root(Chunk {
+                constants: vec![
+                    Primitive::Integer(0),
+                    Primitive::Integer(1),
+                    Primitive::Integer(10),
+                ],
+                code: vec![
+                    // Load variables
+                    0x00, 0, 0,  // 0  Index
+                    0x00, 0, 0,  // 3  Me
+                    0x00, 0, 0,  // 6  Parent
+                    0x00, 0, 1,  // 9  Grandparent
+
+                    // Load parent and grandparent, sum them and put the value in me
+                    0x14, 0, 2,  // 12
+                    0x14, 0, 3,  // 15
+                    0x20,        // 16
+                    0x15, 0, 1,  // 19
+                    
+                    // Set grandparent to parent
+                    0x14, 0, 2,  // 22
+                    0x15, 0, 3,  // 25
+                    
+                    // Set parent to me
+                    0x14, 0, 1,  // 28
+                    0x15, 0, 2,  // 31
+
+                    // Increment Index by 1
+                    0x00, 0, 1,  // 34
+                    0x14, 0, 0,  // 37 Index
+                    0x20,        // 40
+                    0x15, 0, 0,  // 41 Index
+
+                    // Load me
+                    0x14, 0, 1,  // 44
+                    0xE0,        // 47
+                    0x11,        // 48
+
+                    // Repeat until Index is 9
+                    0x00, 0, 2,  // 49 
+                    0x14, 0, 0,  // 52 Index
+                    0x31,        // 55
+                    0x41, 0, 12, // 56
+                ],
+            }),
+        );
+
+        let mut values = Vec::new();
+        for _ in 0..10 {
+            vm.run();
+            values.push(vm.stack.peek());
+        }
+
+        assert_eq!(&values, &[
+            Primitive::Integer(1),
+            Primitive::Integer(1),
+            Primitive::Integer(2),
+            Primitive::Integer(3),
+            Primitive::Integer(5),
+            Primitive::Integer(8),
+            Primitive::Integer(13),
+            Primitive::Integer(21),
+            Primitive::Integer(34),
+            Primitive::Integer(55),
+        ]);
+    }
+
+    #[test]
+    fn fibonacci_recursive() {
+        #[rustfmt::skip]
+        let mut vm = VM::new(
+            ObjectMap::from(vec![Object::new(ObjectType::Function(Function {
+                name: Some("fib".to_owned()),
+                chunk: Chunk {
+                    constants: vec![
+                        Primitive::Object(0),
+                        Primitive::Integer(0),
+                        Primitive::Integer(1),
+                        Primitive::Integer(2),
+                    ],
+                    code: vec![
+                        0x14, 0, 0,  // 0
+                        0x00, 0, 1,  // 3
+                        0x31,        // 6
+                        0x41, 0, 14, // 7
+                        0x00, 0, 1,  // 10
+                        0x52,        // 13
+
+                        0x14, 0, 0,  // 14
+                        0x00, 0, 2,  // 17
+                        0x31,        // 20
+                        0x41, 0, 28, // 21
+                        0x00, 0, 2,  // 24
+                        0x52,        // 27
+
+                        // fib(n - 1)
+                        0x00, 0, 2,  // 28
+                        0x14, 0, 0,  // 31
+                        0x21,        // 34
+                        0x00, 0, 0,  // 35
+                        0x50,        // 38
+                        
+                        // fib(n - 2)
+                        0x00, 0, 3,  // 39
+                        0x14, 0, 0,  // 42
+                        0x21,        // 45
+                        0x00, 0, 0,  // 46
+                        0x50,        // 49
+
+                        // add & return
+                        0x20,        // 50
+                        0x52,        // 51
+                    ],
+                },
+                arity: 1,
+                returns_value: true,
+            }))]),
+            Function::root(Chunk {
+                constants: vec![
+                    Primitive::Object(0),
+                    Primitive::Integer(10),
+                ],
+                code: vec![
+                    // Load n and the function and call it
+                    0x00, 0, 1, // 0
+                    0x00, 0, 0, // 3
+                    0x50,       // 6
+                ],
+            }),
+        );
+
+        vm.run();
+
+        assert_eq!(Primitive::Integer(55), vm.stack.peek());
     }
 }

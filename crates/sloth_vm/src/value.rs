@@ -36,6 +36,7 @@ pub struct Function {
     pub(crate) name: Option<String>,
     pub(crate) chunk: Chunk,
     pub(crate) arity: u8,
+    pub(crate) returns_value: bool,
 }
 
 impl Function {
@@ -44,6 +45,7 @@ impl Function {
             name: None,
             chunk,
             arity: 0,
+            returns_value: false,
         }
     }
 }
