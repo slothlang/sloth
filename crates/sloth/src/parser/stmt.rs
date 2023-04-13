@@ -59,10 +59,9 @@ impl<'a> AstParser<'a> {
         if next == TokenType::Eq {
             let value = self.expression();
             self.consume(TokenType::SemiColon, "No semi colon for me i guess");
-            return Stmt::DefineVariable {
+            return Stmt::AssignVariable {
                 name: (ident),
                 value: (value),
-                typ: (None),
             };
         } else if next == TokenType::OpeningParen {
             let mut arguments = Vec::<Expr>::new();
@@ -95,7 +94,18 @@ impl<'a> AstParser<'a> {
             panic!("Identifier expected after 'var', not {:?}", self.peek());
         };
 
-        self.advance(); // Advancing from the identifier TODO: Check for type
+        self.advance();
+
+        let mut typ: Option<String> = None;
+        if self.peek().tt.clone() == TokenType::Colon {
+            self.consume(TokenType::Colon, "How did you even get this error?");
+            let TokenType::Identifier(name) = self.peek().tt.clone() else {
+                panic!("Type expected after identifier, not {:?}", self.peek());
+            };
+            self.advance();
+            typ = Some(name);
+        }
+
         self.consume(TokenType::Eq, "Expected '=' after identifier at ");
 
         let value = self.expression();
@@ -105,7 +115,7 @@ impl<'a> AstParser<'a> {
         Stmt::DefineVariable {
             name: (ident),
             value: (value),
-            typ: (None),
+            typ: (typ),
         }
     }
 
@@ -115,6 +125,17 @@ impl<'a> AstParser<'a> {
         };
 
         self.advance(); // Advancing from the identifier
+
+        let mut typ: Option<String> = None;
+        if self.peek().tt.clone() == TokenType::Colon {
+            self.consume(TokenType::Colon, "How did you even get this error?");
+            let TokenType::Identifier(name) = self.peek().tt.clone() else {
+                panic!("Type expected after identifier, not {:?}", self.peek());
+            };
+            self.advance();
+            typ = Some(name);
+        }
+
         self.consume(TokenType::Eq, "Expected '=' after identifier");
 
         let value = self.expression();
@@ -124,7 +145,7 @@ impl<'a> AstParser<'a> {
         Stmt::DefineValue {
             name: (ident),
             value: (value),
-            typ: (None),
+            typ: (typ),
         }
     }
 
@@ -223,15 +244,35 @@ impl<'a> AstParser<'a> {
                 panic!("Identifier expected after '('");
             };
 
+            let mut typ: Option<String> = None;
+
+            if self.peek().tt.clone() == TokenType::Colon {
+                self.consume(TokenType::Colon, "How did you even get this error?");
+                let TokenType::Identifier(name) = self.peek().tt.clone() else {
+                    panic!("Type expected after ':', not {:?}", self.peek());
+                };
+                self.advance();
+                typ = Some(name);
+            }
+
             self.advance_if_eq(&TokenType::Comma);
 
             let arg = FuncArgs {
                 name: (name),
-                typ: (None),
+                typ: (typ),
             };
             args.push(arg);
         }
         self.advance();
+        let mut typ: Option<String> = None;
+        if self.peek().tt.clone() == TokenType::Arrow {
+            self.advance();
+            let TokenType::Identifier(name) = self.peek().tt.clone() else {
+                panic!("Type expected after ':', not {:?}", self.peek());
+            };
+            typ = Some(name);
+            self.advance();
+        }
         self.consume(TokenType::OpeningBrace, "Expected '{' after parameters");
         let mut body = Vec::new();
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
@@ -242,7 +283,7 @@ impl<'a> AstParser<'a> {
             ident: (ident),
             args: (Some(args)),
             body: (body),
-            return_type: (None),
+            return_type: (typ),
         }
     }
 
@@ -307,7 +348,10 @@ mod tests {
 
     #[test]
     fn basic_statement_c() {
-        let lexer = Lexer::new("fn test_c (a, b, c) {\nreturn (a + b * c);\n}");
+        let lexer = Lexer::new(
+            "\
+        fn test_c (a, b, c) {\nreturn (a + b * c);\n}",
+        );
         let tokens = lexer.collect_vec();
         println!("{tokens:?}");
 
@@ -351,7 +395,10 @@ mod tests {
     }
     #[test]
     fn basic_statement_d() {
-        let lexer = Lexer::new("while true {\nprint(\"Hello World\");\n\nprintln(5 + 7/-3);}");
+        let lexer = Lexer::new(
+            "\
+            while true {\nprint(\"Hello World\");\nprintln(5 + 7/-3);\n}",
+        );
         let tokens = lexer.collect_vec();
         println!("{tokens:?}");
 
@@ -391,7 +438,8 @@ mod tests {
     #[test]
     fn basic_statement_e() {
         let lexer = Lexer::new(
-            "if a+5 > 10 {\nprint(a);\n}\nif a+5 < 10 {\nprintln(10);\n}\nif a+5 == 10 \
+            "\
+            if a+5 > 10 {\nprint(a);\n}\nif a+5 < 10 {\nprintln(10);\n}\nif a+5 == 10 \
              {\nprint(toString(10));\na = true;\n}",
         );
         let tokens = lexer.collect_vec();
@@ -450,10 +498,9 @@ mod tests {
                             args: vec![Expr::Literal(Literal::Integer(10))],
                         }]),
                     }),
-                    Stmt::DefineVariable {
+                    Stmt::AssignVariable {
                         name: ("a".to_string()),
                         value: (Expr::Literal(Literal::Bool(true))),
-                        typ: (None),
                     },
                 ]),
 
@@ -476,14 +523,53 @@ mod tests {
         let lexer = Lexer::new("test_a = 5 + 3;");
         let tokens = lexer.collect_vec();
 
-        let expected_ast = Stmt::DefineVariable {
+        let expected_ast = Stmt::AssignVariable {
             name: ("test_a".to_string()),
             value: (Expr::BinaryOp {
                 op: (BinaryOp::Add),
                 lhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
                 rhs: (Box::new(Expr::Literal(Literal::Integer(3)))),
             }),
-            typ: (None),
+        };
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+    #[test]
+    fn basic_statement_g() {
+        let lexer = Lexer::new(
+            "\
+        fn times_two(x: int) -> int {\nval y: int = x*2;\nreturn y;\n}",
+        );
+        let tokens = lexer.collect_vec();
+
+        let expected_ast = Stmt::DefineFunction {
+            ident: ("times_two".to_string()),
+            args: (Some(vec![FuncArgs {
+                name: ("x".to_string()),
+                typ: (Some("int".to_string())),
+            }])),
+            body: (vec![
+                Stmt::DefineValue {
+                    name: "y".to_string(),
+                    value: (Expr::BinaryOp {
+                        op: (BinaryOp::Mul),
+                        lhs: (Box::new(Expr::Variable("x".to_string()))),
+                        rhs: (Box::new(Expr::Literal(Literal::Integer(2)))),
+                    }),
+                    typ: Some("int".to_string()),
+                },
+                Stmt::Return {
+                    value: (Expr::Variable("y".to_string())),
+                },
+            ]),
+
+            return_type: Some("int".to_string()),
         };
 
         let mut parser = AstParser::new(tokens);

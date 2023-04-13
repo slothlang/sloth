@@ -84,6 +84,10 @@ pub enum Stmt {
         value: Expr,
         typ: Option<String>,
     },
+    AssignVariable {
+        name: String,
+        value: Expr,
+    },
     If {
         expr: Expr,
         body: Vec<Stmt>,
