@@ -39,7 +39,7 @@ pub enum Literal {
     Char(char),
     String(String),
     Regex(String),
-    List(Vec<Expr>), // TODO: holy shit we forgor listys
+    List(Vec<Expr>),
 }
 #[derive(Debug, PartialEq)]
 pub enum Expr {
@@ -59,7 +59,7 @@ pub enum Expr {
     },
     Variable(String),
     Literal(Literal),
-    Lambda, // TODO: Lambda bitch
+    Lambda, // TODO: Lambda
 }
 #[derive(PartialEq, Debug)]
 pub struct FuncArgs {

@@ -51,7 +51,7 @@ impl<'a> AstParser<'a> {
 
     fn mut_statement(&mut self) -> Stmt {
         let TokenType::Identifier(ident) = self.peek().tt.clone() else {
-            panic!("uh oh {:?}", self.peek());
+            panic!("Identifier error  {:?}", self.peek());
         };
 
         self.advance();
@@ -195,6 +195,7 @@ impl<'a> AstParser<'a> {
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
             body.push(self.statement());
         }
+        self.advance();
 
         Stmt::For {
             name: (binding),

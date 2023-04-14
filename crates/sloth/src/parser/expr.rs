@@ -134,7 +134,7 @@ macro_rules! binary_expr {
                     TokenType::BangEq => BinaryOp::NotEq,
                     TokenType::AmpAmp => BinaryOp::LogAnd,
                     TokenType::PipePipe => BinaryOp::LogOr,
-                    _ => panic!("uh oh spagghetio"), // TODO: Idk how to not have this shit
+                    _ => panic!("uh oh spagghetio"),
                 };
 
                 let rhs = self.$parent();
