@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use sloth_bytecode::Opcode;
 
 use crate::value::{Function, Object, ObjectType, Primitive};
-use crate::{ObjectMap, Stack};
+use crate::{native, ObjectMap, Stack};
 
 #[derive(Clone, Copy)]
 pub struct CallFrame {
@@ -238,18 +238,47 @@ impl VM {
         while self.step() {}
     }
 
-    fn call(&mut self, ptr: usize) {
+    pub fn call(&mut self, ptr: usize) {
         let Some(obj) = self.objects.get(ptr) else {
             panic!("Pointer referenced nothing");
         };
 
-        let ObjectType::Function(function) = &obj.typ else {
-            panic!("Object was not a function");
-        };
+        match &obj.typ {
+            ObjectType::Function(function) => {
+                // Add a callstack entry for the function
+                let offset = self.stack.top - (function.arity as usize);
+                self.call_stack.push(CallFrame::new(offset, function));
+            }
+            ObjectType::NativeFunction(function) => {
+                let mut args = Vec::with_capacity(function.arity as usize);
+                for _ in 0..function.arity {
+                    args.push(self.stack.pop());
+                }
 
-        // Add a callstack entry for the function
-        let offset = self.stack.top - (function.arity as usize);
-        self.call_stack.push(CallFrame::new(offset, function));
+                let name = function.name;
+                let returns_value = function.returns_value;
+
+                let internal = function.function;
+                let result = internal(self, &args);
+
+                match result {
+                    Ok(value) => {
+                        if returns_value {
+                            self.stack.push(value);
+                        }
+                    }
+                    Err(error) => match error {
+                        native::Error::InvalidArgument => {
+                            panic!("Invalid argument provided to '{name}'");
+                        }
+                        native::Error::Unknown(msg) => {
+                            panic!("Native function '{name}' failed due to '{msg}'");
+                        }
+                    },
+                }
+            }
+            _ => panic!("Object was not a function"),
+        }
     }
 
     fn call_return(&mut self) {
@@ -295,12 +324,22 @@ impl VM {
 
         ((bytes.0 as u16) << 8) + (bytes.1 as u16)
     }
+
+    #[inline(always)]
+    pub fn objects(&self) -> &ObjectMap {
+        &self.objects
+    }
+
+    #[inline(always)]
+    pub fn objects_mut(&mut self) -> &mut ObjectMap {
+        &mut self.objects
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::value::{Function, Object, ObjectType, Primitive};
-    use crate::{Chunk, ObjectMap, VM};
+    use crate::{sloth_std, Chunk, ObjectMap, VM};
 
     #[test]
     fn arithmetic_ops() {
@@ -355,6 +394,8 @@ mod tests {
                     Primitive::Integer(6),
                     Primitive::Integer(3),
                     Primitive::Object(0),
+                    Primitive::Object(1),
+                    Primitive::Object(2),
                 ],
                 code: vec![
                     0x00, 0, 0, // Load first function parameter from 0
@@ -368,6 +409,51 @@ mod tests {
         vm.run();
 
         assert_eq!(vm.stack.peek(), Primitive::Integer(9));
+    }
+
+    #[test]
+    fn native_function() {
+        let mut vm = VM::new(
+            ObjectMap::from(vec![
+                Object::new(ObjectType::NativeFunction(sloth_std::rand::GEN_FUNCTION)),
+                Object::new(ObjectType::NativeFunction(
+                    sloth_std::rand::GEN_RANGE_FUNCTION,
+                )),
+            ]),
+            Function::root(Chunk {
+                constants: vec![
+                    Primitive::Object(0),
+                    Primitive::Object(1),
+                    Primitive::Integer(5),
+                    Primitive::Integer(10),
+                ],
+                code: vec![
+                    // First part
+                    0x00, 0, 0,    //
+                    0x50, //
+                    0xE0, //
+                    // Second part
+                    0x00, 0, 3, //
+                    0x00, 0, 2, //
+                    0x00, 0, 1,    //
+                    0x50, //
+                ],
+            }),
+        );
+
+        vm.run();
+
+        assert!({
+            let Primitive::Float(i) = vm.stack.peek() else { panic!(); };
+            (0.0..=1.0).contains(&i)
+        });
+
+        vm.run();
+
+        assert!({
+            let Primitive::Integer(i) = vm.stack.peek() else { panic!(); };
+            (5..10).contains(&i)
+        });
     }
 
     #[test]

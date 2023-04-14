@@ -8,6 +8,7 @@
 )]
 
 pub mod native;
+pub mod sloth_std;
 pub mod value;
 pub mod vm;
 

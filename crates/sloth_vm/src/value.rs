@@ -1,3 +1,4 @@
+use crate::native::NativeFunction;
 use crate::Chunk;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -28,6 +29,7 @@ pub enum ObjectType {
     List(Vec<Primitive>),
 
     Function(Function),
+    NativeFunction(NativeFunction),
 
     Free { next: usize },
 }
