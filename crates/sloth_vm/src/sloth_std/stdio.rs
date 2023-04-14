@@ -18,7 +18,7 @@ fn write(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
         return Err(native::Error::InvalidArgument);
     };
 
-    println!("{str}");
+    print!("{str}");
 
     Ok(Primitive::Empty)
 }
@@ -26,6 +26,32 @@ fn write(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
 pub const WRITE_FUNCTION: NativeFunction = NativeFunction {
     name: "write",
     function: write,
+    arity: 1,
+    returns_value: false,
+};
+
+fn writeln(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
+    let Some(Primitive::Object(ptr)) = args.get(0).cloned() else {
+        return Err(native::Error::InvalidArgument);
+    };
+
+    let object = vm
+        .objects()
+        .get(ptr as usize)
+        .ok_or(native::Error::InvalidArgument)?;
+
+    let ObjectType::String(str) = &object.typ else {
+        return Err(native::Error::InvalidArgument);
+    };
+
+    println!("{str}");
+
+    Ok(Primitive::Empty)
+}
+
+pub const WRITELN_FUNCTION: NativeFunction = NativeFunction {
+    name: "writeln",
+    function: writeln,
     arity: 1,
     returns_value: false,
 };
