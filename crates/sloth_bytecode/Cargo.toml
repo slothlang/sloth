@@ -6,6 +6,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-sloth_bytecode_macros = { path = "./macros" }
-
 byteorder = "1.4.3"
