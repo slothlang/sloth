@@ -13,6 +13,7 @@ use std::{env, fs};
 
 use itertools::Itertools;
 use lexer::Lexer;
+use parser::AstParser;
 
 fn main() {
     let args = env::args().collect_vec();
@@ -29,10 +30,13 @@ fn main() {
         return;
     };
 
-    let lexer = Lexer::new(&source);
-    for token in lexer {
-        println!("{token:?}");
-    }
+    let tokens = Lexer::new(&source).collect_vec();
+    // for t in &tokens{
+    //     println!("{:#?}", t);
+    // }
+    let mut parser = AstParser::new(tokens);
+    // println!("{:#?}", parser);
+    let parsed = &parser.parse();
 
-    // TODO:
+    println!("{:?}", parsed);
 }

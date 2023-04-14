@@ -86,6 +86,7 @@ pub enum TokenType {
     Var,
 
     Fn,
+    Return,
 
     If,
     Else,
@@ -292,12 +293,14 @@ impl<'a> Iterator for Lexer<'a> {
         let tt = match self.window {
             ['#', '#', ..] => {
                 self.advance_while(|it| it[0] != '\n');
-                TokenType::DocComment
+                // TODO: TokenType::DocComment
+                return self.next();
             }
 
             ['#', ..] => {
                 self.advance_while(|it| it[0] != '\n');
-                TokenType::Comment
+                // TODO: okenType::Comment
+                return self.next();
             }
 
             // Blocks
@@ -382,6 +385,7 @@ impl<'a> Iterator for Lexer<'a> {
                     "val" => TokenType::Val,
                     "var" => TokenType::Var,
                     "fn" => TokenType::Fn,
+                    "return" => TokenType::Return,
                     "if" => TokenType::If,
                     "else" => TokenType::Else,
                     "while" => TokenType::While,

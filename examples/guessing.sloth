@@ -1,11 +1,11 @@
-val computer = random(1, 10);
+val computer: int = random(1, 10);
 
-var tries = 0;
-var correct = false;
+var tries: int = 0;
+var correct: bool = false;
 
 while !correct {
     print("\nPick a number between 1 and 10: ");
-    val human = parse_int(readln());
+    val human: int = parse_int(readln());
 
     if human == computer {
         println("You guessed the same number as me!");
