@@ -212,8 +212,14 @@ impl<'a> AstParser<'a> {
         );
         let mut body = Vec::new();
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
+            println!("{:?}", self.peek().tt);
             body.push(self.statement());
         }
+        self.consume(
+            TokenType::ClosingBrace,
+            "Expected '}' after block on while loop",
+        );
+
         self.advance();
         Stmt::While { condition, body }
     }
@@ -226,17 +232,23 @@ impl<'a> AstParser<'a> {
         //     if let Expr::Literal(_ident) = &expr {
         //         let value = self.expression();
 
-        //         self.consume(TokenType::SemiColon, "Expected ';' at end of
-        // statement");         // return Stmt::DefineVariable {
-        //         //     name: (ident.clone()),
-        //         //     value: (value),
-        //         //     typ: (None),
-        //         // };
+        //         self.consume(
+        //             TokenType::SemiColon,
+        //             "Expected ';' at end of
+        // statement",
+        //         ); // return Stmt::DefineVariable {
+        //            //     name: (ident.clone()),
+        //            //     value: (value),
+        //            //     typ: (None),
+        //            // };
         //         return Stmt::ExprStmt(expr);
         //     }
         // }
 
-        self.consume(TokenType::SemiColon, "Expected ';' at end of statement");
+        self.consume(
+            TokenType::SemiColon,
+            "Expected ';' at end of expr statement",
+        );
         Stmt::ExprStmt(expr)
     }
 
@@ -366,7 +378,7 @@ mod tests {
 
         let expected_ast = Stmt::DefineFunction {
             ident: ("test_c".to_string()),
-            args: Some(vec![
+            args: (vec![
                 FuncArgs {
                     name: ("a".to_string()),
                     typ: None,
@@ -562,10 +574,10 @@ mod tests {
 
         let expected_ast = Stmt::DefineFunction {
             ident: ("times_two".to_string()),
-            args: (Some(vec![FuncArgs {
+            args: (vec![FuncArgs {
                 name: ("x".to_string()),
                 typ: (Some("int".to_string())),
-            }])),
+            }]),
             body: (vec![
                 Stmt::DefineValue {
                     name: "y".to_string(),
