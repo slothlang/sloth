@@ -8,6 +8,7 @@ pub mod file;
 pub mod rand;
 pub mod stdio;
 pub mod term;
+pub mod time;
 
 pub static NATIVE_LIBRARY: Lazy<HashMap<&'static str, NativeFunction>> = Lazy::new(|| {
     let mut map = HashMap::new();
@@ -28,6 +29,9 @@ pub static NATIVE_LIBRARY: Lazy<HashMap<&'static str, NativeFunction>> = Lazy::n
     // filesystem
     map.insert("file$read", file::FILE_READ);
     map.insert("file$write", file::FILE_WRITE);
+
+    // time
+    map.insert("wait", time::WAIT);
 
     map
 });
