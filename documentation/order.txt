@@ -13,6 +13,7 @@
 | bitwise or     | |         | Left       |
 | comparison     | < > <= >= | Left       |
 | equality       | == !=     | Left       |
+| range          | ..        | Left       |
 | logical and    | &&        | Left       |
 | logical or     | ||        | Left       |
 

@@ -22,6 +22,7 @@ pub enum BinaryOp {
     NotEq,
     LogAnd,
     LogOr,
+    Range,
 }
 #[derive(Debug, PartialEq)]
 pub enum UnaryOp {

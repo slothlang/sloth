@@ -85,6 +85,18 @@ impl<'a> AstParser<'a> {
                 self.consume(TokenType::ClosingParen, "Must end expression with ')'");
                 Expr::Grouping(Box::new(expr))
             }
+            TokenType::OpeningBracket => {
+                let mut expr: Vec<Expr> = Vec::new();
+
+                while !self.eof() && self.peek().tt != TokenType::ClosingBracket {
+                    let exp = self.expression();
+                    expr.push(exp);
+
+                    self.advance_if_eq(&TokenType::Comma);
+                }
+                self.consume(TokenType::ClosingBracket, "Expected ']' at end of list");
+                Expr::Literal(Literal::List(expr))
+            }
             _ => unimplemented!("{:?}", self.peek()),
         }
     }
@@ -106,6 +118,7 @@ macro_rules! binary_expr {
                     TokenType::StarStar => BinaryOp::Pow,
                     TokenType::Slash => BinaryOp::Div,
                     TokenType::Perc => BinaryOp::Mod,
+                    TokenType::DotDot => BinaryOp::Range,
 
                     TokenType::LtLt => BinaryOp::BWSftRight,
                     TokenType::GtGt => BinaryOp::BWSftLeft,
@@ -121,7 +134,7 @@ macro_rules! binary_expr {
                     TokenType::BangEq => BinaryOp::NotEq,
                     TokenType::AmpAmp => BinaryOp::LogAnd,
                     TokenType::PipePipe => BinaryOp::LogOr,
-                    _ => panic!("fuck"), // TODO: Idk how to not have this shit
+                    _ => panic!("uh oh spagghetio"), // TODO: Idk how to not have this shit
                 };
 
                 let rhs = self.$parent();
@@ -142,7 +155,8 @@ macro_rules! binary_expr {
 impl<'a> AstParser<'a> {
     // Binary expressions in order of precedence from lowest to highest.
     binary_expr!(logical_or      , logical_and     , (TokenType::PipePipe));
-    binary_expr!(logical_and     , equality        , (TokenType::AmpAmp));
+    binary_expr!(logical_and     , range           , (TokenType::AmpAmp));
+    binary_expr!(range           , equality         , (TokenType::DotDot));
     binary_expr!(equality        , comparison      , (TokenType::BangEq | TokenType::EqEq));
     binary_expr!(comparison      , bitwise_shifting, (TokenType::Lt     | TokenType::Gt    | TokenType::LtEq | TokenType::GtEq));
     binary_expr!(bitwise_shifting, additive        , (TokenType::LtLt   | TokenType::GtGt));
@@ -202,6 +216,44 @@ mod tests {
                 }))),
                 rhs: Box::new(Expr::Literal(Literal::Integer(6))),
             }),
+        };
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.expression();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+    #[test]
+    fn basic_expression_c() {
+        let lexer = Lexer::new("[1, 2, 3]");
+        let tokens = lexer.collect_vec();
+
+        let expected_ast = Expr::Literal(Literal::List(vec![
+            Expr::Literal(Literal::Integer(1)),
+            Expr::Literal(Literal::Integer(2)),
+            Expr::Literal(Literal::Integer(3)),
+        ]));
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.expression();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+    #[test]
+    fn basic_expression_d() {
+        let lexer = Lexer::new("1 .. 17");
+        let tokens = lexer.collect_vec();
+
+        let expected_ast = Expr::BinaryOp {
+            op: (BinaryOp::Range),
+            lhs: (Box::new(Expr::Literal(Literal::Integer(1)))),
+            rhs: (Box::new(Expr::Literal(Literal::Integer(17)))),
         };
 
         let mut parser = AstParser::new(tokens);

@@ -27,9 +27,9 @@ impl<'a> AstParser<'a> {
             return self.if_statement();
         }
 
-        // if self.advance_if_eq(&TokenType::For) {
-        //     return self.for_statement();
-        // }
+        if self.advance_if_eq(&TokenType::For) {
+            return self.for_statement();
+        }
 
         if self.advance_if_eq(&TokenType::While) {
             return self.while_statement();
@@ -169,31 +169,39 @@ impl<'a> AstParser<'a> {
         } // TODO: implement else if and else
     }
 
-    // fn for_statement(&mut self) -> Stmt {
-    //     let binding = self.expression();
-    //     let Expr::Variable(binding) = binding else {
-    //         panic!("Left side of for statement must be identifier");
-    //     };
+    fn for_statement(&mut self) -> Stmt {
+        let binding = self.expression();
+        let Expr::Variable(binding) = binding else {
+            panic!("Left side of for statement must be identifier");
+        };
 
-    //     self.consume(
-    //         TokenType::In,
-    //         "Expected 'in' in between identifier and range",
-    //     );
+        self.consume(
+            TokenType::In,
+            "Expected 'in' in between identifier and range",
+        );
 
-    //     let range_start = self.expression();
-    //     self.consume(
-    //         TokenType::DotDot,
-    //         "Expected '..' denoting min and max of range",
-    //     );
-    //     let range_end = self.expression();
+        // let range_start = self.expression();
+        // self.consume(
+        //     TokenType::DotDot,
+        //     "Expected '..' denoting min and max of range",
+        // );
+        // let range_end = self.expression();
 
-    //     let mut body = Vec::new();
-    //     while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
-    //         body.push(self.statement());
-    //     }
+        let expr = self.expression();
 
-    //     Stmt::For { name: (binding), iter: (), body: (body) }
-    // } // TODO: Fix this garbage
+        self.consume(TokenType::OpeningBrace, "Expected '{' after iterator");
+
+        let mut body = Vec::new();
+        while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
+            body.push(self.statement());
+        }
+
+        Stmt::For {
+            name: (binding),
+            iter: (expr),
+            body: (body),
+        }
+    } // TODO: Fix this garbage
 
     fn while_statement(&mut self) -> Stmt {
         let condition = self.expression();
@@ -241,7 +249,7 @@ impl<'a> AstParser<'a> {
         let mut args: Vec<FuncArgs> = Vec::new();
         while !self.eof() && self.peek().tt != TokenType::ClosingParen {
             let TokenType::Identifier(name) = self.advance().unwrap().tt.clone() else {
-                panic!("Identifier expected after '('");
+                panic!("parameter expected after '('");
             };
 
             let mut typ: Option<String> = None;
@@ -570,6 +578,45 @@ mod tests {
             ]),
 
             return_type: Some("int".to_string()),
+        };
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+
+    #[test]
+    fn basic_statement_h() {
+        let lexer = Lexer::new("for i in 1 .. 3 {\nfor j in [1, 2, 3] {\nprint(j*i);}}");
+        let tokens = lexer.collect_vec();
+
+        let expected_ast = Stmt::For {
+            name: ("i".to_string()),
+            iter: (Expr::BinaryOp {
+                op: (BinaryOp::Range),
+                lhs: (Box::new(Expr::Literal(Literal::Integer(1)))),
+                rhs: (Box::new(Expr::Literal(Literal::Integer(3)))),
+            }),
+            body: (vec![Stmt::For {
+                name: ("j".to_string()),
+                iter: (Expr::Literal(Literal::List(vec![
+                    Expr::Literal(Literal::Integer(1)),
+                    Expr::Literal(Literal::Integer(2)),
+                    Expr::Literal(Literal::Integer(3)),
+                ]))),
+                body: (vec![Stmt::ExprStmt(Expr::Call {
+                    ident: Box::new(Expr::Literal(Literal::String("print".to_string()))),
+                    args: (vec![Expr::BinaryOp {
+                        op: (BinaryOp::Mul),
+                        lhs: (Box::new(Expr::Variable("j".to_string()))),
+                        rhs: (Box::new(Expr::Variable("i".to_string()))),
+                    }]),
+                })]),
+            }]),
         };
 
         let mut parser = AstParser::new(tokens);
