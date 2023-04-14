@@ -73,13 +73,7 @@ impl<'a> AstParser<'a> {
             TokenType::Character(literal) => Expr::Literal(Literal::Char(literal)),
             TokenType::String(literal) => Expr::Literal(Literal::String(literal)),
             TokenType::Regex(literal) => Expr::Literal(Literal::Regex(literal)),
-            TokenType::Identifier(ident) => {
-                if self.peek().tt.clone() != TokenType::OpeningParen {
-                    Expr::Variable(ident)
-                } else {
-                    Expr::Literal(Literal::String(ident))
-                }
-            }
+            TokenType::Identifier(ident) => Expr::Variable(ident),
             TokenType::OpeningParen => {
                 let expr = self.expression();
                 self.consume(TokenType::ClosingParen, "Must end expression with ')'");

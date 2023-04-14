@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use sloth_bytecode::Opcode;
 
 use crate::value::{Function, Object, ObjectType, Primitive};
-use crate::{native, ObjectMap, Stack};
+use crate::{native, vm, ObjectMap, Stack};
 
 #[derive(Clone, Copy)]
 pub struct CallFrame {
@@ -62,10 +62,11 @@ impl CallStack {
     }
 }
 
+// TODO: Fix visibility
 pub struct VM {
-    stack: Stack,
+    pub stack: Stack,
     call_stack: CallStack,
-    objects: ObjectMap,
+    pub objects: ObjectMap,
 }
 
 impl Default for VM {
@@ -127,6 +128,16 @@ impl VM {
                 let value = self.stack.pop();
 
                 self.stack[self.call_stack.peek().stack_offset + idx] = value;
+            }
+            Opcode::Box => {
+                // FIXME: TODO: MEGA CURSED
+                let pos = self.read_u16() as usize;
+                let value = self.stack.pop();
+
+                let object = vm::Object::new(ObjectType::Box(value));
+
+                self.objects.heap[pos] = object;
+                self.stack.push(Object(pos as u32));
             }
 
             Opcode::Add => {

@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOp {
     Add,
     Con,
@@ -24,14 +24,14 @@ pub enum BinaryOp {
     LogOr,
     Range,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnaryOp {
     Not,
     Neg,
 
     BWComp,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Integer(i128),
     Float(f64),
@@ -41,7 +41,7 @@ pub enum Literal {
     Regex(String),
     List(Vec<Expr>),
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Grouping(Box<Expr>),
     BinaryOp {
@@ -61,17 +61,17 @@ pub enum Expr {
     Literal(Literal),
     Lambda, // TODO: Lambda
 }
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct FuncArgs {
     pub name: String,
     pub typ: Option<String>,
 }
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Stmt {
     ExprStmt(Expr),
     DefineFunction {
         ident: String,
-        args: Option<Vec<FuncArgs>>,
+        args: Vec<FuncArgs>,
         body: Vec<Stmt>,
         return_type: Option<String>,
     },

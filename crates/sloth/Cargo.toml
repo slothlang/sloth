@@ -6,5 +6,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+sloth_vm = { path = "../sloth_vm" }
+sloth_bytecode = { path = "../sloth_bytecode" }
+
 itertools = "0.10.5"
 thiserror = "1.0.40"

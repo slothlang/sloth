@@ -51,6 +51,7 @@ opcodes! {
     0x13 SetGlobal  "Set a global value",
     0x14 GetLocal   "Get a local value",
     0x15 SetLocal   "Set a local value",
+    0x16 Box        "Box a value on the stack",
 
     0x20 Add        "Add the last 2 values on the stack",
     0x21 Sub        "Subtract the last 2 values on the stack",

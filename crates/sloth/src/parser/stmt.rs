@@ -1,7 +1,6 @@
 use super::ast::{Expr, FuncArgs, Stmt};
 use super::AstParser;
 use crate::lexer::TokenType;
-use crate::parser::ast::Literal;
 
 impl<'a> AstParser<'a> {
     pub fn parse(&mut self) -> Vec<Stmt> {
@@ -82,7 +81,7 @@ impl<'a> AstParser<'a> {
 
             self.consume(TokenType::SemiColon, "No semi colon for me i guess");
             return Stmt::ExprStmt(Expr::Call {
-                ident: (Box::new(Expr::Literal(Literal::String(ident)))),
+                ident: Box::new(Expr::Variable(ident)),
                 args: (arguments),
             });
         }
@@ -287,10 +286,11 @@ impl<'a> AstParser<'a> {
         while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
             body.push(self.statement());
         }
+        self.consume(TokenType::ClosingBrace, "Expected '}' after body");
 
         Stmt::DefineFunction {
             ident: (ident),
-            args: (Some(args)),
+            args: (args),
             body: (body),
             return_type: (typ),
         }
@@ -415,11 +415,11 @@ mod tests {
             condition: (Expr::Literal(Literal::Bool(true))),
             body: (vec![
                 Stmt::ExprStmt(Expr::Call {
-                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    ident: Box::new(Expr::Variable("print".to_string())),
                     args: (vec![Expr::Literal(Literal::String("Hello World".to_string()))]),
                 }),
                 Stmt::ExprStmt(Expr::Call {
-                    ident: (Box::new(Expr::Literal(Literal::String("println".to_string())))),
+                    ident: Box::new(Expr::Variable("println".to_string())),
                     args: (vec![Expr::BinaryOp {
                         op: (BinaryOp::Add),
                         lhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
@@ -466,7 +466,7 @@ mod tests {
                     rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
                 }),
                 body: (vec![Stmt::ExprStmt(Expr::Call {
-                    ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                    ident: (Box::new(Expr::Variable("print".to_string()))),
                     args: (vec![Expr::Variable("a".to_string())]),
                 })]),
                 else_if: (Vec::new()),
@@ -483,7 +483,7 @@ mod tests {
                     rhs: (Box::new(Expr::Literal(Literal::Integer(10)))),
                 }),
                 body: (vec![Stmt::ExprStmt(Expr::Call {
-                    ident: (Box::new(Expr::Literal(Literal::String("println".to_string())))),
+                    ident: (Box::new(Expr::Variable("println".to_string()))),
                     args: (vec![Expr::Literal(Literal::Integer(10))]),
                 })]),
                 else_if: (Vec::new()),
@@ -501,9 +501,12 @@ mod tests {
                 }),
                 body: (vec![
                     Stmt::ExprStmt(Expr::Call {
-                        ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
+                        ident: (Box::new(Expr::Variable("print".to_string()))),
+                        // ident: (Box::new(Expr::Literal(Literal::String("print".to_string())))),
                         args: (vec![Expr::Call {
-                            ident: Box::new(Expr::Literal(Literal::String("toString".to_string()))),
+                            ident: (Box::new(Expr::Variable("toString".to_string()))),
+                            // ident: Box::new(Expr::Literal(Literal::String("toString".
+                            // to_string()))),
                             args: vec![Expr::Literal(Literal::Integer(10))],
                         }]),
                     }),
@@ -610,7 +613,7 @@ mod tests {
                     Expr::Literal(Literal::Integer(3)),
                 ]))),
                 body: (vec![Stmt::ExprStmt(Expr::Call {
-                    ident: Box::new(Expr::Literal(Literal::String("print".to_string()))),
+                    ident: Box::new(Expr::Variable("print".to_string())),
                     args: (vec![Expr::BinaryOp {
                         op: (BinaryOp::Mul),
                         lhs: (Box::new(Expr::Variable("j".to_string()))),

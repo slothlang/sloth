@@ -35,14 +35,14 @@ pub enum ObjectType {
 }
 
 pub struct Function {
-    pub(crate) name: Option<String>,
-    pub(crate) chunk: Chunk,
-    pub(crate) arity: u8,
-    pub(crate) returns_value: bool,
+    pub name: Option<String>,
+    pub chunk: Chunk,
+    pub arity: u8,
+    pub returns_value: bool,
 }
 
 impl Function {
-    pub(crate) fn root(chunk: Chunk) -> Self {
+    pub fn root(chunk: Chunk) -> Self {
         Self {
             name: None,
             chunk,

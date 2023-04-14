@@ -19,9 +19,10 @@ use value::{Object, ObjectType};
 use crate::value::Primitive;
 pub use crate::vm::VM;
 
+#[derive(Default)]
 pub struct Chunk {
-    constants: Vec<Primitive>,
-    code: Vec<u8>,
+    pub constants: Vec<Primitive>,
+    pub code: Vec<u8>,
 }
 
 const STACK_SIZE: usize = 1024;
