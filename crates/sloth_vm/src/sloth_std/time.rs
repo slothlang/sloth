@@ -22,5 +22,5 @@ pub const WAIT: NativeFunction = NativeFunction {
     function: wait,
     arity: 1,
     returns_value: false,
-    doc: None,
+    doc: Some("Use `wait(sec: int)` to sleep for `sec` time"),
 };
