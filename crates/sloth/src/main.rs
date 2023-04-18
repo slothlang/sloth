@@ -11,8 +11,8 @@ pub mod lexer;
 pub mod parser;
 
 use std::collections::HashMap;
-use std::{env, fs};
 
+// use std::{env, fs};
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
@@ -35,21 +35,21 @@ fn main() {
     //     println!("Error while reading '{source_path}'");
     //     return;
     // };
-    let source = " 3 + 7 ;";
-    let source = r#"
-    
-        fn hello() -> int {
-            return 3 + 7;
-        }
+    // let source = " 3 + 7 ;";
+    // let source = r#"
 
-        hello();
-        hello();
-        hello();
-        hello();
-        hello();
-        hello();
-    
-    "#;
+    //     fn hello() -> int {
+    //         return 3 + 7;
+    //     }
+
+    //     hello();
+    //     hello();
+    //     hello();
+    //     hello();
+    //     hello();
+    //     hello();
+
+    // "#;
     let source = r#"
 
         fn hello() -> int {
