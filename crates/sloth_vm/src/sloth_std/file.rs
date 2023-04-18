@@ -31,7 +31,11 @@ pub const FILE_READ: NativeFunction = NativeFunction {
     function: file_read,
     arity: 1,
     returns_value: true,
-    doc: None,
+    doc: Some(
+        "NativeFunction file_read: \n\targs: path (str)\n\tdesc: Returns the contents of a file \
+         at <path>\n\tExample: `var todo = file_read('/home/sloth/todo.txt'); # Assuming the \
+         contents of todo.txt are 'Take a nap' then todo = 'Take a nap'`",
+    ),
 };
 
 fn file_write(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -71,5 +75,9 @@ pub const FILE_WRITE: NativeFunction = NativeFunction {
     function: file_write,
     arity: 2,
     returns_value: false,
-    doc: None,
+    doc: Some(
+        "NativeFunction file_write: \n\targs: path (str), content (str)\n\tdesc: Writes <content> \
+         to file at <path>\n\tExample: `file_write('/home/sloth/todo.txt', 'Take a nap'); # \
+         todo.txt now contains the string 'Take a nap'`",
+    ),
 };

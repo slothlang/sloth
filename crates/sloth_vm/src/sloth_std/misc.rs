@@ -35,5 +35,9 @@ pub const GET_DOC: NativeFunction = NativeFunction {
     function: get_doc,
     arity: 1,
     returns_value: true,
-    doc: None,
+    doc: Some(
+        "NativeFunction get_doc: \n\targs: name (str)\n\tdesc: Returns documentaiton on a \
+         function with name <str>\n\tExample: `var doc = get_doc('wait'); # Returns the \
+         documentation of the 'wait' function to doc`",
+    ),
 };

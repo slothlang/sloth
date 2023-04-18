@@ -28,7 +28,10 @@ pub const WRITE_FUNCTION: NativeFunction = NativeFunction {
     function: write,
     arity: 1,
     returns_value: false,
-    doc: None,
+    doc: Some(
+        "NativeFunction write: \n\targs: string (str)\n\tdesc: Writes <string> to the \
+         terminal.\n\tExample: `write(\"I'm sleepy...\"); # Output: I'm sleepy...`",
+    ),
 };
 
 fn writeln(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -55,7 +58,11 @@ pub const WRITELN_FUNCTION: NativeFunction = NativeFunction {
     function: writeln,
     arity: 1,
     returns_value: false,
-    doc: None,
+    doc: Some(
+        "NativeFunction writeln: \n\targs: string (str)\n\tdesc: Writes <string> to the terminal \
+         and starts a new line.\n\tExample: `writeln(\"I'm sleepy...\"); # Output: I'm \
+         sleepy...\n # This is a new line`",
+    ),
 };
 
 fn read(vm: &mut VM, _args: &[Primitive]) -> NativeFunctionResult {
@@ -76,5 +83,9 @@ pub const READ_FUNCTION: NativeFunction = NativeFunction {
     function: read,
     arity: 0,
     returns_value: true,
-    doc: None,
+    doc: Some(
+        "NativeFunction read:\n\tdesc: Reads input from the terminal and returns what was \
+         read.\n\tExample: `var input = read(); # Hello World <execute code> input = 'Hello \
+         World'`",
+    ),
 };
