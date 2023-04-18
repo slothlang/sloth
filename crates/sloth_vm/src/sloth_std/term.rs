@@ -11,6 +11,7 @@ pub const TERM_CLEAR: NativeFunction = NativeFunction {
     },
     arity: 0,
     returns_value: false,
+    doc: None,
 };
 
 fn term_setpos(_vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -29,4 +30,5 @@ pub const TERM_SETPOS: NativeFunction = NativeFunction {
     function: term_setpos,
     arity: 2,
     returns_value: false,
+    doc: None,
 };

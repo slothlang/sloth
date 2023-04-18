@@ -5,6 +5,7 @@ use once_cell::sync::Lazy;
 use crate::native::NativeFunction;
 
 pub mod file;
+pub mod misc;
 pub mod rand;
 pub mod stdio;
 pub mod term;
@@ -27,6 +28,8 @@ pub static NATIVE_LIBRARY: Lazy<HashMap<&'static str, NativeFunction>> = Lazy::n
     map.insert("term$setpos", term::TERM_SETPOS);
 
     // filesystem
+    // TODO: Make the files commands work by making a global file variable with
+    // certain permissions created by 'file.open' instead of just reading the file.
     map.insert("file$read", file::FILE_READ);
     map.insert("file$write", file::FILE_WRITE);
 

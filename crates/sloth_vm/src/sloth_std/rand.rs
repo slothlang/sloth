@@ -16,6 +16,7 @@ pub const GEN_FUNCTION: NativeFunction = NativeFunction {
     function: gen,
     arity: 0,
     returns_value: true,
+    doc: None,
 };
 
 fn gen_range(_vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -36,4 +37,5 @@ pub const GEN_RANGE_FUNCTION: NativeFunction = NativeFunction {
     function: gen_range,
     arity: 2,
     returns_value: true,
+    doc: None,
 };

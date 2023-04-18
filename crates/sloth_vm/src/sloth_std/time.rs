@@ -22,4 +22,5 @@ pub const WAIT: NativeFunction = NativeFunction {
     function: wait,
     arity: 1,
     returns_value: false,
+    doc: None,
 };

@@ -31,6 +31,7 @@ pub const FILE_READ: NativeFunction = NativeFunction {
     function: file_read,
     arity: 1,
     returns_value: true,
+    doc: None,
 };
 
 fn file_write(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -70,4 +71,5 @@ pub const FILE_WRITE: NativeFunction = NativeFunction {
     function: file_write,
     arity: 2,
     returns_value: false,
+    doc: None,
 };

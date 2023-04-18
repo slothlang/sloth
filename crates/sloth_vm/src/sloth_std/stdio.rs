@@ -28,6 +28,7 @@ pub const WRITE_FUNCTION: NativeFunction = NativeFunction {
     function: write,
     arity: 1,
     returns_value: false,
+    doc: None,
 };
 
 fn writeln(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
@@ -54,6 +55,7 @@ pub const WRITELN_FUNCTION: NativeFunction = NativeFunction {
     function: writeln,
     arity: 1,
     returns_value: false,
+    doc: None,
 };
 
 fn read(vm: &mut VM, _args: &[Primitive]) -> NativeFunctionResult {
@@ -74,4 +76,5 @@ pub const READ_FUNCTION: NativeFunction = NativeFunction {
     function: read,
     arity: 0,
     returns_value: true,
+    doc: None,
 };
