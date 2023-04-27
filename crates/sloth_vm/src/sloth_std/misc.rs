@@ -18,7 +18,7 @@ fn get_doc(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
     };
 
     let docs = NATIVE_LIBRARY
-        .get(fnc.name.clone())
+        .get(fnc.name)
         .ok_or(native::Error::InvalidArgument)?
         .doc
         .ok_or(native::Error::InvalidArgument)?
