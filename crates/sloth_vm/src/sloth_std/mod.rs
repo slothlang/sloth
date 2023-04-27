@@ -36,5 +36,8 @@ pub static NATIVE_LIBRARY: Lazy<HashMap<&'static str, NativeFunction>> = Lazy::n
     // time
     map.insert("wait", time::WAIT);
 
+    // doc
+    map.insert("docs", misc::DOCS);
+
     map
 });

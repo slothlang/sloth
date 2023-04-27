@@ -13,12 +13,12 @@ fn get_doc(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
         .get(ptr as usize)
         .ok_or(native::Error::InvalidArgument)?;
 
-    let ObjectType::String(str) = &object.typ else {
+    let ObjectType::NativeFunction(fnc) = &object.typ else {
         return Err(native::Error::InvalidArgument);
     };
 
     let docs = NATIVE_LIBRARY
-        .get(str.as_str())
+        .get(fnc.name.clone())
         .ok_or(native::Error::InvalidArgument)?
         .doc
         .ok_or(native::Error::InvalidArgument)?
@@ -30,8 +30,8 @@ fn get_doc(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
     Ok(Primitive::Object(ptr as u32))
 }
 
-pub const GET_DOC: NativeFunction = NativeFunction {
-    name: "get$doc",
+pub const DOCS: NativeFunction = NativeFunction {
+    name: "docs",
     function: get_doc,
     arity: 1,
     returns_value: true,
