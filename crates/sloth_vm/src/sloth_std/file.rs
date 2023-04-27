@@ -32,8 +32,8 @@ pub const FILE_READ: NativeFunction = NativeFunction {
     arity: 1,
     returns_value: true,
     doc: Some(
-        "NativeFunction file_read: \n\targs: path (str)\n\tdesc: Returns the contents of a file \
-         at <path>\n\tExample: `var todo = file_read('/home/sloth/todo.txt'); # Assuming the \
+        "NativeFunction file$read: \n\targs: path (str)\n\tdesc: Returns the contents of a file \
+         at <path>\n\tExample: `var todo = file$read('/home/sloth/todo.txt'); # Assuming the \
          contents of todo.txt are 'Take a nap' then todo = 'Take a nap'`",
     ),
 };
@@ -76,8 +76,8 @@ pub const FILE_WRITE: NativeFunction = NativeFunction {
     arity: 2,
     returns_value: false,
     doc: Some(
-        "NativeFunction file_write: \n\targs: path (str), content (str)\n\tdesc: Writes <content> \
-         to file at <path>\n\tExample: `file_write('/home/sloth/todo.txt', 'Take a nap'); # \
+        "NativeFunction file$write: \n\targs: path (str), content (str)\n\tdesc: Writes <content> \
+         to file at <path>\n\tExample: `file$write('/home/sloth/todo.txt', 'Take a nap'); # \
          todo.txt now contains the string 'Take a nap'`",
     ),
 };
