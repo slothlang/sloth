@@ -22,4 +22,8 @@ pub const WAIT: NativeFunction = NativeFunction {
     function: wait,
     arity: 1,
     returns_value: false,
+    doc: Some(
+        "NativeFunction wait: \n\targs: sec (int)\n\tdesc: Waits for <sec> seconds.\n\tExample: \
+         `wait(10); # Waits 10 seconds`",
+    ),
 };

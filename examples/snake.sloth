@@ -1,0 +1,40 @@
+var xPos = 0;
+var yPos = 0;
+# 0=right 1=down 2=left 3=up
+var direction = 0;
+
+while true {
+    if direction == 0{
+        var x = xPos + 1;
+        xPos = x;
+    }
+    if direction == 1 {
+        var y = yPos + 1;
+        yPos = y;
+    }
+    if direction == 2{
+        var x = xPos - 1;
+        xPos = x;
+    }
+    if direction == 3 {
+        var y = yPos - 1;
+        yPos = y;
+    }
+
+    var input = readln();
+    if input == "w" && direction != 1 {
+      direction = 3;
+    }
+    if input == "a" && direction != 0 {
+      direction = 2;
+    }
+    if input == "s" && direction != 3 {
+      direction = 1;
+    }
+    if input == "d" && direction != 2 {
+      direction = 0;
+    }
+
+    term_setpos(x, y);
+    print("*");
+}

@@ -15,4 +15,5 @@ pub struct NativeFunction {
     pub function: NativeFunctionInput,
     pub arity: u8,
     pub returns_value: bool,
+    pub doc: Option<&'static str>,
 }
