@@ -17,8 +17,8 @@ pub const GEN_FUNCTION: NativeFunction = NativeFunction {
     arity: 0,
     returns_value: true,
     doc: Some(
-        "NativeFunction rand_gen:\n\tdesc: Returns a random number in the range `0.0 .. \
-         1.0`\n\tExample: `var num = rand_gen(); # num could be any number from 0.0 to 1.0`",
+        "NativeFunction rand$gen:\n\tdesc: Returns a random number in the range `0.0 .. \
+         1.0`\n\tExample: `var num = rand$gen(); # num could be any number from 0.0 to 1.0`",
     ),
 };
 
