@@ -17,13 +17,7 @@ fn get_doc(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
         return Err(native::Error::InvalidArgument);
     };
 
-    let docs = NATIVE_LIBRARY
-        .get(fnc.name)
-        .ok_or(native::Error::InvalidArgument)?
-        .doc
-        .ok_or(native::Error::InvalidArgument)?
-        .to_string();
-
+    let docs = fnc.doc.expect("Oopsie Poopsie the stringy no worky").to_string();
     let object = Object::new(ObjectType::String(docs));
     let ptr = vm.objects_mut().allocate(object);
 
