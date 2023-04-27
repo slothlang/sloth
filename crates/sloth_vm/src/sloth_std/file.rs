@@ -32,8 +32,8 @@ pub const FILE_READ: NativeFunction = NativeFunction {
     arity: 1,
     returns_value: true,
     doc: Some(
-        "NativeFunction file_read: \n\targs: path (str)\n\tdesc: Returns the contents of a file \
-         at <path>\n\tExample: `var todo = file_read('/home/sloth/todo.txt'); # Assuming the \
+        "NativeFunction file$read: \n\targs: path (str)\n\tdesc: Returns the contents of a file \
+         at <path>\n\tExample: `var todo = file$read('/home/sloth/todo.txt'); # Assuming the \
          contents of todo.txt are 'Take a nap' then todo = 'Take a nap'`",
     ),
 };
