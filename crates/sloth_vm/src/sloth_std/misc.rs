@@ -29,8 +29,8 @@ pub const DOCS: NativeFunction = NativeFunction {
     arity: 1,
     returns_value: true,
     doc: Some(
-        "NativeFunction get$doc: \n\targs: name (str)\n\tdesc: Returns documentaiton on a \
-         function with name <str>\n\tExample: `var doc = get$doc('wait'); # Returns the \
+        "NativeFunction docs: \n\targs: name (str)\n\tdesc: Returns documentaiton on a \
+         function with name <str>\n\tExample: `var doc = docs('wait'); # Returns the \
          documentation of the 'wait' function to doc`",
     ),
 };
