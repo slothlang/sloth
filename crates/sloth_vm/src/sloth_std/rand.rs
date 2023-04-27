@@ -41,8 +41,8 @@ pub const GEN_RANGE_FUNCTION: NativeFunction = NativeFunction {
     arity: 2,
     returns_value: true,
     doc: Some(
-        "NativeFunction rand_gen_range: \n\targs: min (int), max (int)\n\tdesc: Returns a random \
-         numnber in the range <min> .. <max>\n\tExample: `var num = gen_range(20, 76); # num \
+        "NativeFunction rand$gen_range: \n\targs: min (int), max (int)\n\tdesc: Returns a random \
+         numnber in the range <min> .. <max>\n\tExample: `var num = rand$gen_range(20, 76); # num \
          could be any number from 20 to 76`",
     ),
 };
