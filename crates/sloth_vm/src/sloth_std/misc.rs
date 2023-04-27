@@ -16,7 +16,10 @@ fn get_doc(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
         return Err(native::Error::InvalidArgument);
     };
 
-    let docs = fnc.doc.expect("Oopsie Poopsie the stringy no worky").to_string();
+    let docs = fnc
+        .doc
+        .expect("Oopsie Poopsie the stringy no worky")
+        .to_string();
     let object = Object::new(ObjectType::String(docs));
     let ptr = vm.objects_mut().allocate(object);
 
@@ -29,8 +32,8 @@ pub const DOCS: NativeFunction = NativeFunction {
     arity: 1,
     returns_value: true,
     doc: Some(
-        "NativeFunction docs: \n\targs: name (str)\n\tdesc: Returns documentaiton on a \
-         function with name <str>\n\tExample: `var doc = docs('wait'); # Returns the \
-         documentation of the 'wait' function to doc`",
+        "NativeFunction docs: \n\targs: name (str)\n\tdesc: Returns documentaiton on a function \
+         with name <str>\n\tExample: `var doc = docs('wait'); # Returns the documentation of the \
+         'wait' function to doc`",
     ),
 };
