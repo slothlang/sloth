@@ -18,7 +18,7 @@ fn write(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
         return Err(native::Error::InvalidArgument);
     };
 
-    println!("{str}");
+    print!("{str}");
 
     Ok(Primitive::Empty)
 }
@@ -28,6 +28,41 @@ pub const WRITE_FUNCTION: NativeFunction = NativeFunction {
     function: write,
     arity: 1,
     returns_value: false,
+    doc: Some(
+        "NativeFunction write: \n\targs: string (str)\n\tdesc: Writes <string> to the \
+         terminal.\n\tExample: `write(\"I'm sleepy...\"); # Output: I'm sleepy...`",
+    ),
+};
+
+fn writeln(vm: &mut VM, args: &[Primitive]) -> NativeFunctionResult {
+    let Some(Primitive::Object(ptr)) = args.get(0).cloned() else {
+        return Err(native::Error::InvalidArgument);
+    };
+
+    let object = vm
+        .objects()
+        .get(ptr as usize)
+        .ok_or(native::Error::InvalidArgument)?;
+
+    let ObjectType::String(str) = &object.typ else {
+        return Err(native::Error::InvalidArgument);
+    };
+
+    println!("{str}");
+
+    Ok(Primitive::Empty)
+}
+
+pub const WRITELN_FUNCTION: NativeFunction = NativeFunction {
+    name: "writeln",
+    function: writeln,
+    arity: 1,
+    returns_value: false,
+    doc: Some(
+        "NativeFunction writeln: \n\targs: string (str)\n\tdesc: Writes <string> to the terminal \
+         and starts a new line.\n\tExample: `writeln(\"I'm sleepy...\"); # Output: I'm \
+         sleepy...\n # This is a new line`",
+    ),
 };
 
 fn read(vm: &mut VM, _args: &[Primitive]) -> NativeFunctionResult {
@@ -48,4 +83,9 @@ pub const READ_FUNCTION: NativeFunction = NativeFunction {
     function: read,
     arity: 0,
     returns_value: true,
+    doc: Some(
+        "NativeFunction read:\n\tdesc: Reads input from the terminal and returns what was \
+         read.\n\tExample: `var input = read(); # Hello World <execute code> input = 'Hello \
+         World'`",
+    ),
 };
