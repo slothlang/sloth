@@ -76,8 +76,8 @@ pub const FILE_WRITE: NativeFunction = NativeFunction {
     arity: 2,
     returns_value: false,
     doc: Some(
-        "NativeFunction file_write: \n\targs: path (str), content (str)\n\tdesc: Writes <content> \
-         to file at <path>\n\tExample: `file_write('/home/sloth/todo.txt', 'Take a nap'); # \
+        "NativeFunction file$write: \n\targs: path (str), content (str)\n\tdesc: Writes <content> \
+         to file at <path>\n\tExample: `file$write('/home/sloth/todo.txt', 'Take a nap'); # \
          todo.txt now contains the string 'Take a nap'`",
     ),
 };
