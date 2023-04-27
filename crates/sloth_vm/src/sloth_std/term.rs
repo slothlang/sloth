@@ -12,7 +12,7 @@ pub const TERM_CLEAR: NativeFunction = NativeFunction {
     arity: 0,
     returns_value: false,
     doc: Some(
-        "NativeFunction term_clear: \n\tdesc: Clears the terminal\n\tExample: `term_clear(); # \
+        "NativeFunction term$clear: \n\tdesc: Clears the terminal\n\tExample: `term$clear(); # \
          Clears the terminal`",
     ),
 };
