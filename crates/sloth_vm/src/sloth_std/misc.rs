@@ -1,4 +1,3 @@
-use super::NATIVE_LIBRARY;
 use crate::native::{self, NativeFunction, NativeFunctionResult};
 use crate::value::{Object, ObjectType, Primitive};
 use crate::VM;
