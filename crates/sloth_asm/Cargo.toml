@@ -1,11 +1,8 @@
 [package]
-name = "sloth"
+name = "sloth_asm"
 
 license.workspace = true
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-itertools = "0.10.5"
-libc = "0.2.142"
-thiserror = "1.0.40"

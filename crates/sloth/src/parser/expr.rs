@@ -156,7 +156,7 @@ impl<'a> AstParser<'a> {
     // Binary expressions in order of precedence from lowest to highest.
     binary_expr!(logical_or      , logical_and     , (TokenType::PipePipe));
     binary_expr!(logical_and     , range           , (TokenType::AmpAmp));
-    binary_expr!(range           , equality         , (TokenType::DotDot));
+    binary_expr!(range           , equality        , (TokenType::DotDot));
     binary_expr!(equality        , comparison      , (TokenType::BangEq | TokenType::EqEq));
     binary_expr!(comparison      , bitwise_shifting, (TokenType::Lt     | TokenType::Gt    | TokenType::LtEq | TokenType::GtEq));
     binary_expr!(bitwise_shifting, additive        , (TokenType::LtLt   | TokenType::GtGt));

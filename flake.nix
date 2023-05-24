@@ -53,6 +53,7 @@
               targets = [ "wasm32-unknown-unknown" ];
             })
 
+            cargo-watch
             cargo-deny
             cargo-release
           ];

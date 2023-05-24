@@ -38,5 +38,5 @@ fn main() {
     // println!("{:#?}", parser);
     let parsed = &parser.parse();
 
-    println!("{:#?}", parsed);
+    println!("{parsed:#?}");
 }
