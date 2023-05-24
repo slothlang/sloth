@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     fn basic_statement_a() {
-        let lexer = Lexer::new("var test_a = 5 + 3;");
+        let lexer = Lexer::new("var test_a: int = 5 + 3;");
         let tokens = lexer.collect_vec();
 
         let expected_ast = Stmt::DefineVariable {
@@ -335,7 +335,7 @@ mod tests {
                 lhs: (Box::new(Expr::Literal(Literal::Integer(5)))),
                 rhs: (Box::new(Expr::Literal(Literal::Integer(3)))),
             }),
-            typ: (None),
+            typ: Some("int".to_string()),
         };
 
         let mut parser = AstParser::new(tokens);

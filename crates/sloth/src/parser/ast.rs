@@ -24,6 +24,7 @@ pub enum BinaryOp {
     LogOr,
     Range,
 }
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnaryOp {
     Not,
@@ -31,6 +32,7 @@ pub enum UnaryOp {
 
     BWComp,
 }
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Integer(i128),
@@ -41,6 +43,7 @@ pub enum Literal {
     Regex(String),
     List(Vec<Expr>),
 }
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Grouping(Box<Expr>),
@@ -61,11 +64,13 @@ pub enum Expr {
     Literal(Literal),
     Lambda, // TODO: Lambda
 }
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct FuncArgs {
     pub name: String,
     pub typ: Option<String>,
 }
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Stmt {
     ExprStmt(Expr),

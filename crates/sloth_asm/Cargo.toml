@@ -1,0 +1,8 @@
+[package]
+name = "sloth_asm"
+
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
