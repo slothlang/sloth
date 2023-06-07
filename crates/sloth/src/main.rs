@@ -19,8 +19,6 @@ use parser::AstParser;
 use sloth_vm::value::Function;
 use sloth_vm::{ObjectMap, VM};
 
-use crate::compiler::Compiler;
-
 fn main() {
     // let args = env::args().collect_vec();
     //
@@ -65,13 +63,14 @@ fn main() {
     let tokens = Lexer::new(source).collect_vec();
     let ast = AstParser::new(tokens).parse();
     let mut object_map = ObjectMap::default();
-    let code = Compiler::compile(&mut object_map, HashMap::default(), ast.clone());
+    // let code = Compiler::compile(&mut object_map, HashMap::default(),
+    // ast.clone());
 
-    println!("{ast:?}\n\n");
-    println!("{:?}\n\n", code.constants);
-    println!("{:?}\n\n", code.code);
-
-    let mut vm = VM::new(object_map, Function::root(code));
-    vm.run();
-    println!("{:?}", vm.stack.peek());
+    // println!("{ast:?}\n\n");
+    // println!("{:?}\n\n", code.constants);
+    // println!("{:?}\n\n", code.code);
+    //
+    // let mut vm = VM::new(object_map, Function::root(code));
+    // vm.run();
+    // println!("{:?}", vm.stack.peek());
 }
