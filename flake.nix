@@ -56,6 +56,16 @@
             cargo-watch
             cargo-deny
             cargo-release
+
+            pkg-config
+
+            # Packages required for LLVM
+            llvmPackages_15.libllvm
+            libffi
+            libxml2
+
+            # C compiler for debugging
+            clang
           ];
         };
       }

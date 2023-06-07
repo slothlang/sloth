@@ -1,9 +1,0 @@
-[package]
-name = "sloth_bytecode"
-
-license.workspace = true
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-byteorder = "1.4.3"

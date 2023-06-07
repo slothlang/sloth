@@ -1,10 +1,5 @@
 [workspace]
-members = [
-    "crates/sloth",
-    "crates/sloth_asm",
-    "crates/sloth_bytecode",
-    "crates/sloth_vm",
-]
+members = [ "sloth" ]
 
 [workspace.package]
 license = "MIT OR Apache-2.0"

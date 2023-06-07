@@ -6,9 +6,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-sloth_vm = { path = "../sloth_vm" }
-sloth_bytecode = { path = "../sloth_bytecode" }
-
+inkwell = { version = "0.2.0", features = ["llvm15-0"] }
 itertools = "0.10.5"
-libc = "0.2.142"
 thiserror = "1.0.40"
