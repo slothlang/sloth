@@ -6,14 +6,15 @@
     unused_lifetimes
 )]
 
+pub mod codegen;
 pub mod compiler;
 pub mod lexer;
 pub mod parser;
+pub mod symbol;
 
 use std::{env, fs};
 
 use compiler::Compiler;
-use inkwell::context::Context;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
@@ -36,8 +37,10 @@ fn main() {
     let tokens = Lexer::new(&source).collect_vec();
     let ast = AstParser::new(tokens).parse();
 
-    let context = Context::create();
-    let compiler = Compiler::new(&context);
+    Compiler::compile(ast).unwrap();
 
-    compiler.compile(ast);
+    // let context = Context::create();
+    // let compiler = Compiler::new(&context);
+    //
+    // compiler.compile(ast);
 }
