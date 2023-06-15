@@ -1,9 +1,9 @@
-use super::ast::{FunctionInput, StmtKind};
+use super::ast::{FunctionInput, Stmt, StmtKind};
 use super::{AstParser, ParsingError};
 use crate::lexer::TokenType;
 
 impl<'a> AstParser<'a> {
-    pub(super) fn statement(&mut self) -> Result<StmtKind, ParsingError> {
+    pub(super) fn statement(&mut self) -> Result<Stmt, ParsingError> {
         match self.peek().tt {
             TokenType::OpeningBrace => self.block(),
 
@@ -18,7 +18,7 @@ impl<'a> AstParser<'a> {
         }
     }
 
-    fn if_stmt(&mut self) -> Result<StmtKind, ParsingError> {
+    fn if_stmt(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the if token
         self.consume(TokenType::If, "Expected if")?;
 
@@ -36,28 +36,32 @@ impl<'a> AstParser<'a> {
             }
         }
 
-        Ok(StmtKind::IfStmt {
+        let kind = StmtKind::IfStmt {
             condition,
             if_then: if_then.into(),
             else_then: else_then.map(|it| it.into()),
-        })
+        };
+
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
-    fn while_stmt(&mut self) -> Result<StmtKind, ParsingError> {
+    fn while_stmt(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the while token
         self.consume(TokenType::While, "Expected while")?;
 
         let condition = self.expression()?;
         let body = self.block()?;
 
-        Ok(StmtKind::WhileStmt {
+        let kind = StmtKind::WhileStmt {
             condition,
             body: body.into(),
-        })
+        };
+
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
     // TODO: Make variable types optional
-    fn define_variable(&mut self) -> Result<StmtKind, ParsingError> {
+    fn define_variable(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the var token
         self.consume(TokenType::Var, "Expected var")?;
 
@@ -72,15 +76,17 @@ impl<'a> AstParser<'a> {
 
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
 
-        Ok(StmtKind::DefineVariable {
+        let kind = StmtKind::DefineVariable {
             identifier,
             value,
             typ,
-        })
+        };
+
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
     // TODO: Make argument types optional
-    fn define_function(&mut self) -> Result<StmtKind, ParsingError> {
+    fn define_function(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the fn token
         self.consume(TokenType::Fn, "Expected fn")?;
 
@@ -113,36 +119,41 @@ impl<'a> AstParser<'a> {
         // Get the function body
         let body = self.block()?;
 
-        Ok(StmtKind::DefineFunction {
+        let kind = StmtKind::DefineFunction {
             identifier,
             inputs,
             output,
             body: body.into(),
-        })
+        };
+
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
-    fn return_stmt(&mut self) -> Result<StmtKind, ParsingError> {
+    fn return_stmt(&mut self) -> Result<Stmt, ParsingError> {
         self.consume(TokenType::Return, "Expected return")?;
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
-        Ok(StmtKind::Return(value))
+        let kind = StmtKind::Return(value);
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
-    fn assign_variable(&mut self) -> Result<StmtKind, ParsingError> {
+    fn assign_variable(&mut self) -> Result<Stmt, ParsingError> {
         let identifier = self.consume_identifier()?;
         self.consume(TokenType::Eq, "Expected '='")?;
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
-        Ok(StmtKind::AssignVariable { identifier, value })
+        let kind = StmtKind::AssignVariable { identifier, value };
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
-    fn expression_stmt(&mut self) -> Result<StmtKind, ParsingError> {
+    fn expression_stmt(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
-        Ok(StmtKind::ExprStmt(expr))
+        let kind = StmtKind::ExprStmt(expr);
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 
-    fn block(&mut self) -> Result<StmtKind, ParsingError> {
+    fn block(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the opening brace
         self.consume(TokenType::OpeningBrace, "Expected '{'")?;
 
@@ -155,7 +166,9 @@ impl<'a> AstParser<'a> {
         // Consume the closing brace
         self.consume(TokenType::ClosingBrace, "Expected '}'")?;
 
-        Ok(StmtKind::Block(body))
+        let kind = StmtKind::Block(body);
+
+        Ok(Stmt::new(self.reserve_id(), kind))
     }
 }
 

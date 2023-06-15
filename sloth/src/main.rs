@@ -10,11 +10,11 @@ pub mod codegen;
 pub mod compiler;
 pub mod lexer;
 pub mod parser;
+pub mod sloth_std;
 pub mod symbol;
 
 use std::{env, fs};
 
-use compiler::Compiler;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::graph::GraphBuilder;

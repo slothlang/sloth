@@ -1,16 +1,14 @@
 use std::fmt::{Error, Write};
 
-use super::ast::{ExprKind, StmtKind};
+use super::ast::{Expr, ExprKind, Stmt, StmtKind};
 
 pub struct GraphBuilder {
-    i: i32,
     graph: String,
 }
 
 impl GraphBuilder {
-    pub fn generate(ast: &[StmtKind]) -> Result<String, Error> {
+    pub fn generate(ast: &[Stmt]) -> Result<String, Error> {
         let mut this = Self {
-            i: 0,
             graph: String::new(),
         };
 
@@ -18,7 +16,6 @@ impl GraphBuilder {
         for stmt in ast.iter() {
             this.traverse_stmt0(stmt)?;
         }
-        this.i = 0;
         for stmt in ast.iter() {
             this.traverse_stmt(stmt)?;
         }
@@ -27,12 +24,10 @@ impl GraphBuilder {
         Ok(this.graph)
     }
 
-    fn traverse_stmt0(&mut self, stmt: &StmtKind) -> Result<(), Error> {
-        self.i += 1;
-
-        match stmt {
+    fn traverse_stmt0(&mut self, stmt: &Stmt) -> Result<(), Error> {
+        match &stmt.kind {
             StmtKind::Block(body) => {
-                writeln!(&mut self.graph, "N{} [shape=box label=\"Block\"];", self.i)?;
+                writeln!(&mut self.graph, "N{} [shape=box label=\"Block\"];", stmt.id)?;
                 for stmt in body.iter() {
                     self.traverse_stmt0(stmt)?;
                 }
@@ -41,17 +36,21 @@ impl GraphBuilder {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"ExprStmt\"];",
-                    self.i
+                    stmt.id,
                 )?;
-                // self.traverse_expr0(expr);
+                self.traverse_expr0(expr)?;
             }
             StmtKind::IfStmt {
                 condition,
                 if_then,
                 else_then,
             } => {
-                writeln!(&mut self.graph, "N{} [shape=box label=\"IfStmt\"];", self.i)?;
-                // self.traverse_expr0(condition);
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=box label=\"IfStmt\"];",
+                    stmt.id
+                )?;
+                self.traverse_expr0(condition)?;
                 self.traverse_stmt0(if_then)?;
                 if let Some(else_then) = else_then {
                     self.traverse_stmt0(else_then)?;
@@ -61,9 +60,9 @@ impl GraphBuilder {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"WhileStmt\"];",
-                    self.i
+                    stmt.id
                 )?;
-                // self.traverse_expr0(condition);
+                self.traverse_expr0(condition)?;
                 self.traverse_stmt0(body)?;
             }
             StmtKind::DefineVariable {
@@ -74,17 +73,17 @@ impl GraphBuilder {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"DefineVariable\\n\\nIdentifier={}\\nType={}\"];",
-                    self.i, identifier, typ
+                    stmt.id, identifier, typ
                 )?;
-                // self.traverse_expr0(value);
+                self.traverse_expr0(value)?;
             }
             StmtKind::AssignVariable { identifier, value } => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"AssignVariable\\n\\nIdentifier={}\"];",
-                    self.i, identifier
+                    stmt.id, identifier
                 )?;
-                // self.traverse_expr0(value);
+                self.traverse_expr0(value)?;
             }
             StmtKind::DefineFunction {
                 identifier,
@@ -96,7 +95,7 @@ impl GraphBuilder {
                     &mut self.graph,
                     "N{} [shape=box \
                      label=\"DefineFunction\\n\\nIdentifier={}\\nInputs={}\\nOutput={}\"];",
-                    self.i,
+                    stmt.id,
                     identifier,
                     inputs.len(),
                     output.is_some()
@@ -104,57 +103,137 @@ impl GraphBuilder {
                 self.traverse_stmt0(body)?;
             }
             StmtKind::Return(expr) => {
-                writeln!(&mut self.graph, "N{} [shape=box label=\"Return\"];", self.i)?;
-                // self.traverse_expr0(expr);
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=box label=\"Return\"];",
+                    stmt.id
+                )?;
+                self.traverse_expr0(expr)?;
             }
         }
 
         Ok(())
     }
 
-    fn traverse_expr0(&mut self, expr: &ExprKind) {
-        self.i += 1;
-        // match expr {
-        //     Expr::Grouping(_) => todo!(),
-        //     Expr::Literal(_) => todo!(),
-        //     Expr::Identifier(_) => todo!(),
-        //     Expr::BinaryOp { op, lhs, rhs } => todo!(),
-        //     Expr::UnaryOp { op, value } => todo!(),
-        //     Expr::Call { callee, args } => todo!(),
-        // }
-    }
-
-    fn traverse_stmt(&mut self, stmt: &StmtKind) -> Result<(), Error> {
-        self.i += 1;
-
-        match stmt {
-            StmtKind::Block(_) => todo!(),
-            StmtKind::ExprStmt(_) => todo!(),
-            StmtKind::IfStmt {
-                condition,
-                if_then,
-                else_then,
-            } => todo!(),
-            StmtKind::WhileStmt { condition, body } => todo!(),
-            StmtKind::DefineVariable {
-                identifier,
-                value,
-                typ,
-            } => todo!(),
-            StmtKind::AssignVariable { identifier, value } => todo!(),
-            StmtKind::DefineFunction {
-                identifier,
-                inputs,
-                output,
-                body,
-            } => todo!(),
-            StmtKind::Return(_) => todo!(),
+    fn traverse_expr0(&mut self, expr: &Expr) -> Result<(), Error> {
+        match &expr.kind {
+            ExprKind::Grouping(child) => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=diamond label=\"Grouping\"];",
+                    expr.id
+                )?;
+                self.traverse_expr0(child)?;
+            }
+            ExprKind::Literal(literal) => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=diamond label=\"Literal\\n\\nValue={}\"];",
+                    expr.id, literal
+                )?;
+            }
+            ExprKind::Identifier(identifier) => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=diamond label=\"Identifier\\n\\nIdentifier={}\"];",
+                    expr.id, identifier
+                )?;
+            }
+            ExprKind::BinaryOp { op, lhs, rhs } => {
+                self.traverse_expr0(lhs)?;
+                self.traverse_expr0(rhs)?;
+            }
+            ExprKind::UnaryOp { op, value } => {
+                self.traverse_expr0(value)?;
+            }
+            ExprKind::Call { callee, args } => (),
         }
 
         Ok(())
     }
 
-    fn traverse_expr(&mut self, expr: &ExprKind) {
-        //
+    fn traverse_stmt(&mut self, stmt: &Stmt) -> Result<(), Error> {
+        match &stmt.kind {
+            StmtKind::Block(children) => {
+                for child in children {
+                    writeln!(&mut self.graph, "N{} -> N{};", stmt.id, child.id)?;
+                    self.traverse_stmt(child)?;
+                }
+            }
+            StmtKind::ExprStmt(expr) => {
+                writeln!(&mut self.graph, "N{} -> N{};", stmt.id, expr.id)?;
+                self.traverse_expr(expr)?;
+            }
+            StmtKind::IfStmt {
+                if_then, else_then, ..
+            } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label = \"If Then\"];",
+                    stmt.id, if_then.id
+                )?;
+                self.traverse_stmt(if_then)?;
+                if let Some(else_then) = else_then {
+                    writeln!(
+                        &mut self.graph,
+                        "N{} -> N{} [label = \"Else Then\"];",
+                        stmt.id, else_then.id
+                    )?;
+                    self.traverse_stmt(else_then)?;
+                }
+            }
+            StmtKind::WhileStmt { condition, body } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label = \"Condition\"];",
+                    stmt.id, condition.id
+                )?;
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label = \"Body\"];",
+                    stmt.id, body.id
+                )?;
+                self.traverse_expr(condition)?;
+                self.traverse_stmt(body)?;
+            }
+            StmtKind::DefineVariable { value, .. } => {
+                writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
+                self.traverse_expr(value)?;
+            }
+            StmtKind::AssignVariable { value, .. } => {
+                writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
+                self.traverse_expr(value)?;
+            }
+            StmtKind::DefineFunction { body, .. } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label = \"Body\"];",
+                    stmt.id, body.id
+                )?;
+                self.traverse_stmt(body)?;
+            }
+            StmtKind::Return(_) => (),
+        }
+
+        Ok(())
+    }
+
+    fn traverse_expr(&mut self, expr: &Expr) -> Result<(), Error> {
+        match &expr.kind {
+            ExprKind::Grouping(children) => {
+                writeln!(&mut self.graph, "N{} -> N{};", expr.id, children.id)?;
+            }
+            ExprKind::BinaryOp { lhs, rhs, .. } => {
+                writeln!(&mut self.graph, "N{} -> N{};", expr.id, lhs.id)?;
+                writeln!(&mut self.graph, "N{} -> N{};", expr.id, rhs.id)?;
+            }
+            ExprKind::UnaryOp { value, .. } => {
+                writeln!(&mut self.graph, "N{} -> N{};", expr.id, value.id)?;
+            }
+            ExprKind::Call { callee, args } => (),
+            _ => (),
+        }
+
+        Ok(())
     }
 }

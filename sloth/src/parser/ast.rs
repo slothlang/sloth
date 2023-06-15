@@ -1,3 +1,5 @@
+use std::fmt::{format, Display};
+
 use crate::lexer::{self, TokenType};
 use crate::parser::ParsingError;
 
@@ -49,16 +51,16 @@ impl Stmt {
 // TODO: Values & Constants
 #[derive(PartialEq, Clone, Debug)]
 pub enum StmtKind {
-    Block(Vec<StmtKind>),
+    Block(Vec<Stmt>),
     ExprStmt(Expr),
     IfStmt {
         condition: Expr,
-        if_then: Box<StmtKind>,
-        else_then: Option<Box<StmtKind>>,
+        if_then: Box<Stmt>,
+        else_then: Option<Box<Stmt>>,
     },
     WhileStmt {
         condition: Expr,
-        body: Box<StmtKind>,
+        body: Box<Stmt>,
     },
     DefineVariable {
         identifier: String,
@@ -76,7 +78,7 @@ pub enum StmtKind {
         identifier: String,
         inputs: Vec<FunctionInput>,
         output: Option<String>,
-        body: Box<StmtKind>,
+        body: Box<Stmt>,
     },
     Return(Expr),
 }
@@ -114,6 +116,21 @@ impl From<lexer::Literal> for Literal {
 impl From<Literal> for ExprKind {
     fn from(value: Literal) -> Self {
         Self::Literal(value)
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = match self {
+            Literal::Integer(i) => format!("{i}"),
+            Literal::Float(f) => format!("{f}"),
+            Literal::Boolean(b) => format!("{b}"),
+            Literal::Character(c) => format!("'{c}'"),
+            Literal::String(s) => format!("\"{s}\""),
+            Literal::Array(a) => format!("<Array>"),
+        };
+
+        write!(f, "{value}")
     }
 }
 
