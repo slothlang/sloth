@@ -5,7 +5,7 @@ use inkwell::types::{AnyTypeEnum, BasicMetadataTypeEnum, BasicType, BasicTypeEnu
 use inkwell::values::FunctionValue;
 use itertools::Itertools;
 
-use crate::parser::ast::{FuncArgs, Stmt};
+use crate::parser::ast::{FunctionInput, Stmt};
 use crate::symbol::SymbolTableStack;
 
 /// A module codegen is a struct designated to compiling a single module
@@ -38,7 +38,7 @@ impl<'ctx, 'a> ModuleCodegen<'ctx, 'a> {
     pub fn compile_function(
         &mut self,
         ident: String,
-        args: Vec<FuncArgs>,
+        args: Vec<FunctionInput>,
         return_type: Option<String>,
         body: &[Stmt],
     ) {
@@ -52,15 +52,12 @@ impl<'ctx, 'a> ModuleCodegen<'ctx, 'a> {
 
     fn compile_function_type(
         &self,
-        args: &[FuncArgs],
+        args: &[FunctionInput],
         return_type: Option<&str>,
     ) -> FunctionType<'ctx> {
         let args = args
             .iter()
-            .map(|it| {
-                self.compile_basic_metadata_type(it.typ.as_ref().unwrap())
-                    .unwrap()
-            })
+            .map(|it| self.compile_basic_metadata_type(&it.typ).unwrap())
             .collect_vec();
 
         match return_type {

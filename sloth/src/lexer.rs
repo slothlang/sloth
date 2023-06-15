@@ -82,6 +82,7 @@ pub enum TokenType {
     FatArrow, // =>
 
     // Keywords
+    Const,
     Val,
     Var,
 
@@ -101,18 +102,27 @@ pub enum TokenType {
 
     As,
 
-    // Literals
-    Integer(i128),
-    Float(f64),
-    Boolean(bool),
-    Character(char),
-    String(String),
-    Regex(String),
-
+    // Other
+    Literal(Literal),
     Identifier(String),
 
     // Utility
     Error(LexerError),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+    Integer(i64),
+    Float(f64),
+    Boolean(bool),
+    Character(char),
+    String(String),
+}
+
+impl From<Literal> for TokenType {
+    fn from(value: Literal) -> Self {
+        Self::Literal(value)
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -237,9 +247,9 @@ impl<'a> Lexer<'a> {
                 value.push(self.advance());
             }
 
-            TokenType::Float(value.parse::<f64>().expect("Expected float"))
+            Literal::Float(value.parse::<f64>().expect("Expected float")).into()
         } else {
-            TokenType::Integer(value.parse::<i128>().expect("Expected integer"))
+            Literal::Integer(value.parse::<i64>().expect("Expected integer")).into()
         }
     }
 
@@ -272,7 +282,7 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        TokenType::String(value)
+        Literal::String(value).into()
     }
 }
 
@@ -371,7 +381,7 @@ impl<'a> Iterator for Lexer<'a> {
             [':', ..] => self.advance_with(TokenType::Colon),
 
             // Literals
-            ['\'', c, '\''] => self.advance_by_with(3, TokenType::Character(c)),
+            ['\'', c, '\''] => self.advance_by_with(3, Literal::Character(c).into()),
             ['0'..='9', ..] => self.lex_number(),
             ['"', ..] => self.lex_string(),
 
@@ -382,6 +392,7 @@ impl<'a> Iterator for Lexer<'a> {
                 }
 
                 match value.as_str() {
+                    "const" => TokenType::Const,
                     "val" => TokenType::Val,
                     "var" => TokenType::Var,
                     "fn" => TokenType::Fn,
@@ -395,8 +406,8 @@ impl<'a> Iterator for Lexer<'a> {
                     "break" => TokenType::Break,
                     "continue" => TokenType::Continue,
                     "as" => TokenType::As,
-                    "true" => TokenType::Boolean(true),
-                    "false" => TokenType::Boolean(false),
+                    "true" => Literal::Boolean(true).into(),
+                    "false" => Literal::Boolean(false).into(),
                     _ => TokenType::Identifier(value),
                 }
             }
@@ -428,7 +439,7 @@ impl<'a> Iterator for Lexer<'a> {
 mod tests {
     use itertools::Itertools;
 
-    use super::{Lexer, TokenType};
+    use super::{Lexer, Literal, TokenType};
     use crate::lexer::LexerError;
 
     #[test]
@@ -504,13 +515,13 @@ mod tests {
             TokenType::Break,
             TokenType::Continue,
             TokenType::As,
-            TokenType::Boolean(true),
-            TokenType::Boolean(false),
+            Literal::Boolean(true).into(),
+            Literal::Boolean(false).into(),
         ]);
     }
 
     #[test]
-    fn lex_literals_a() {
+    fn lex_literals() {
         let source = "foo bar _foo __bar $0 $$1 \"foo\" \"bar\" \"baz\" \"\\\"\" \"\\n\" \"\\t\" \
                       'a' 'b' '\"' 93 3252 238 -382 -832 83 -25 52.9 83.7 12.4 35.2 3.3";
         let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
@@ -522,30 +533,30 @@ mod tests {
             TokenType::Identifier("__bar".to_owned()),
             TokenType::Identifier("$0".to_owned()),
             TokenType::Identifier("$$1".to_owned()),
-            TokenType::String("foo".to_owned()),
-            TokenType::String("bar".to_owned()),
-            TokenType::String("baz".to_owned()),
-            TokenType::String("\"".to_owned()),
-            TokenType::String("\n".to_owned()),
-            TokenType::String("\t".to_owned()),
-            TokenType::Character('a'),
-            TokenType::Character('b'),
-            TokenType::Character('"'),
-            TokenType::Integer(93),
-            TokenType::Integer(3252),
-            TokenType::Integer(238),
+            Literal::String("foo".to_owned()).into(),
+            Literal::String("bar".to_owned()).into(),
+            Literal::String("baz".to_owned()).into(),
+            Literal::String("\"".to_owned()).into(),
+            Literal::String("\n".to_owned()).into(),
+            Literal::String("\t".to_owned()).into(),
+            Literal::Character('a').into(),
+            Literal::Character('b').into(),
+            Literal::Character('"').into(),
+            Literal::Integer(93).into(),
+            Literal::Integer(3252).into(),
+            Literal::Integer(238).into(),
             TokenType::Minus,
-            TokenType::Integer(382),
+            Literal::Integer(382).into(),
             TokenType::Minus,
-            TokenType::Integer(832),
-            TokenType::Integer(83),
+            Literal::Integer(832).into(),
+            Literal::Integer(83).into(),
             TokenType::Minus,
-            TokenType::Integer(25),
-            TokenType::Float(52.9),
-            TokenType::Float(83.7),
-            TokenType::Float(12.4),
-            TokenType::Float(35.2),
-            TokenType::Float(3.3),
+            Literal::Integer(25).into(),
+            Literal::Float(52.9).into(),
+            Literal::Float(83.7).into(),
+            Literal::Float(12.4).into(),
+            Literal::Float(35.2).into(),
+            Literal::Float(3.3).into(),
         ]);
     }
 

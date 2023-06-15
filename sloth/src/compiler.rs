@@ -41,13 +41,13 @@ impl Compiler {
 
     fn resolve_globals(&mut self, code: &[Stmt]) {
         for stmt in code.iter() {
-            if let Stmt::DefineFunction { ident, .. } = stmt {
-                let symbol = Symbol {
-                    typ: Some(SymbolType::Function),
-                };
-
-                self.symbol_table.insert(ident, symbol);
-            }
+            // if let Stmt::DefineFunction { ident, .. } = stmt {
+            //     let symbol = Symbol {
+            //         typ: Some(SymbolType::Function),
+            //     };
+            //
+            //     self.symbol_table.insert(ident, symbol);
+            // }
         }
     }
 }

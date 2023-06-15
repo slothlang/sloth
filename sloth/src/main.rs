@@ -17,6 +17,7 @@ use std::{env, fs};
 use compiler::Compiler;
 use itertools::Itertools;
 use lexer::Lexer;
+use parser::graph::GraphBuilder;
 use parser::AstParser;
 
 fn main() {
@@ -35,9 +36,12 @@ fn main() {
     };
 
     let tokens = Lexer::new(&source).collect_vec();
-    let ast = AstParser::new(tokens).parse();
+    let ast = AstParser::parse(tokens).unwrap();
 
-    Compiler::compile(ast).unwrap();
+    let graph = GraphBuilder::generate(&ast).unwrap();
+    println!("{graph}");
+
+    // Compiler::compile(ast).unwrap();
 
     // let context = Context::create();
     // let compiler = Compiler::new(&context);

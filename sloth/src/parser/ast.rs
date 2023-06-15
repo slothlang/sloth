@@ -1,52 +1,49 @@
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum BinaryOp {
-    Add,
-    Con,
-    Sub,
-    Mul,
-    Pow,
-    Div,
-    Mod,
+use crate::lexer::{self, TokenType};
+use crate::parser::ParsingError;
 
-    BWSftRight,
-    BWSftLeft,
-    BWAnd,
-    BWOr,
-    BWXor,
+// #[derive(PartialEq, Clone, Debug)]
+// pub struct Node {
+//     id: i32,
+//     kind: NodeKind,
+// }
+//
+// impl Node {
+//     pub fn new(id: i32, kind: NodeKind) -> Self {
+//         Self { id, kind }
+//     }
+// }
+//
+// #[derive(PartialEq, Clone, Debug)]
+// pub enum NodeKind {
+//     Expr(Expr),
+//     Stmt(Stmt),
+// }
+//
+// impl From<Expr> for NodeKind {
+//     fn from(value: Expr) -> Self {
+//         todo!()
+//     }
+// }
+//
+// impl From<Stmt> for NodeKind {}
 
-    Lt,
-    Gt,
-    LtEq,
-    GtEq,
-    EqEq,
-    NotEq,
-    LogAnd,
-    LogOr,
-    Range,
+#[derive(PartialEq, Clone, Debug)]
+pub struct Expr {
+    pub id: i32,
+    pub kind: ExprKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum UnaryOp {
-    Not,
-    Neg,
-
-    BWComp,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Literal {
-    Integer(i128),
-    Float(f64),
-    Bool(bool),
-    Char(char),
-    String(String),
-    Regex(String),
-    List(Vec<Expr>),
+impl Expr {
+    pub fn new(id: i32, kind: ExprKind) -> Self {
+        Self { id, kind }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expr {
+pub enum ExprKind {
     Grouping(Box<Expr>),
+    Literal(Literal),
+    Identifier(String),
     BinaryOp {
         op: BinaryOp,
         lhs: Box<Expr>,
@@ -57,59 +54,153 @@ pub enum Expr {
         value: Box<Expr>,
     },
     Call {
-        ident: Box<Expr>,
+        callee: Box<Expr>,
         args: Vec<Expr>,
     },
-    Variable(String),
-    Literal(Literal),
-    Lambda, // TODO: Lambda
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct FuncArgs {
-    pub name: String,
-    pub typ: Option<String>,
+pub struct FunctionInput {
+    pub identifier: String,
+    pub typ: String,
 }
 
+// TODO: For loops
+// TODO: Values & Constants
 #[derive(PartialEq, Clone, Debug)]
 pub enum Stmt {
+    Block(Vec<Stmt>),
     ExprStmt(Expr),
-    DefineFunction {
-        ident: String,
-        args: Vec<FuncArgs>,
-        body: Vec<Stmt>,
-        return_type: Option<String>,
+    IfStmt {
+        condition: Expr,
+        if_then: Box<Stmt>,
+        else_then: Option<Box<Stmt>>,
+    },
+    WhileStmt {
+        condition: Expr,
+        body: Box<Stmt>,
     },
     DefineVariable {
-        name: String,
+        identifier: String,
         value: Expr,
-        typ: Option<String>,
-    },
-    DefineValue {
-        name: String,
-        value: Expr,
-        typ: Option<String>,
+        typ: String,
     },
     AssignVariable {
-        name: String,
+        identifier: String,
         value: Expr,
     },
-    If {
-        expr: Expr,
-        body: Vec<Stmt>,
-        else_if: Vec<(Expr, Stmt)>,
-        els: Option<Box<Stmt>>,
+    /// A function definition. Output is None when the function returns nothing
+    /// meaning void, otherwise it is the name of the type the function
+    /// returns.
+    DefineFunction {
+        identifier: String,
+        inputs: Vec<FunctionInput>,
+        output: Option<String>,
+        body: Box<Stmt>,
     },
-    For {
-        name: String,
-        iter: Expr,
-        body: Vec<Stmt>,
-    },
-    While {
-        condition: Expr,
-        body: Vec<Stmt>,
-    },
-    Return {
-        value: Expr,
-    },
+    Return(Expr),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+    Integer(i64),
+    Float(f64),
+    Boolean(bool),
+    Character(char),
+    String(String),
+    Array(Vec<ExprKind>),
+}
+
+impl From<lexer::Literal> for Literal {
+    fn from(value: lexer::Literal) -> Self {
+        use lexer::Literal;
+
+        match value {
+            Literal::Integer(value) => Self::Integer(value),
+            Literal::Float(value) => Self::Float(value),
+            Literal::Boolean(value) => Self::Boolean(value),
+            Literal::Character(value) => Self::Character(value),
+            Literal::String(value) => Self::String(value),
+        }
+    }
+}
+
+impl From<Literal> for ExprKind {
+    fn from(value: Literal) -> Self {
+        Self::Literal(value)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BinaryOp {
+    Add,
+    Con,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+
+    Lt,
+    Gt,
+    LtEq,
+    GtEq,
+    EqEq,
+    NotEq,
+
+    LogicalAnd,
+    LogicalOr,
+
+    Range,
+}
+
+impl TryFrom<TokenType> for BinaryOp {
+    type Error = ParsingError;
+
+    fn try_from(value: TokenType) -> Result<Self, Self::Error> {
+        let operation = match value {
+            TokenType::Plus => Self::Add,
+            TokenType::PlusPlus => Self::Con,
+            TokenType::Minus => Self::Sub,
+            TokenType::Star => Self::Mul,
+            TokenType::Slash => Self::Div,
+            TokenType::Perc => Self::Mod,
+
+            TokenType::Lt => Self::Lt,
+            TokenType::Gt => Self::Gt,
+            TokenType::LtEq => Self::LtEq,
+            TokenType::GtEq => Self::GtEq,
+            TokenType::EqEq => Self::EqEq,
+            TokenType::BangEq => Self::NotEq,
+
+            TokenType::AmpAmp => Self::LogicalAnd,
+            TokenType::PipePipe => Self::LogicalOr,
+
+            TokenType::DotDot => Self::Range,
+
+            _ => return Err(ParsingError::InvalidOp),
+        };
+
+        Ok(operation)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum UnaryOp {
+    Not,
+    Neg,
+}
+
+impl TryFrom<TokenType> for UnaryOp {
+    type Error = ParsingError;
+
+    fn try_from(value: TokenType) -> Result<Self, Self::Error> {
+        let operation = match value {
+            TokenType::Bang => Self::Not,
+            TokenType::Minus => Self::Neg,
+
+            _ => return Err(ParsingError::InvalidOp),
+        };
+
+        Ok(operation)
+    }
 }

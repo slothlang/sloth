@@ -1,6 +1,7 @@
-print("Hello World!");
-
-# Comment
-for greeting in ["Hello", "Hola", "你好"] {
-    print(greeting + " World!");
+fn main() {
+    var i: Int = 10;
+    while i > 0 {
+        i = i - 1;
+    }
 }
+
