@@ -97,30 +97,30 @@ mod tests {
         let lexer = Lexer::new("3 + 5 * 4 - 9 / 3");
         let tokens = lexer.collect_vec();
 
-        // let expected_ast = Ok(ExprKind::BinaryOp {
-        //     op: BinaryOp::Sub,
-        //     lhs: Box::new(ExprKind::BinaryOp {
-        //         op: BinaryOp::Add,
-        //         lhs: Box::new(ExprKind::Literal(Literal::Integer(3))),
-        //         rhs: Box::new(ExprKind::BinaryOp {
-        //             op: BinaryOp::Mul,
-        //             lhs: Box::new(ExprKind::Literal(Literal::Integer(5))),
-        //             rhs: Box::new(ExprKind::Literal(Literal::Integer(4))),
-        //         }),
-        //     }),
-        //     rhs: Box::new(ExprKind::BinaryOp {
-        //         op: BinaryOp::Div,
-        //         lhs: Box::new(ExprKind::Literal(Literal::Integer(9))),
-        //         rhs: Box::new(ExprKind::Literal(Literal::Integer(3))),
-        //     }),
-        // });
+        let expected_ast = Ok(Expr::new(8, ExprKind::BinaryOp {
+            op: BinaryOp::Sub,
+            lhs: Box::new(Expr::new(4, ExprKind::BinaryOp {
+                op: BinaryOp::Add,
+                lhs: Box::new(Expr::new(0, ExprKind::Literal(Literal::Integer(3)))),
+                rhs: Box::new(Expr::new(3, ExprKind::BinaryOp {
+                    op: BinaryOp::Mul,
+                    lhs: Box::new(Expr::new(1, ExprKind::Literal(Literal::Integer(5)))),
+                    rhs: Box::new(Expr::new(2, ExprKind::Literal(Literal::Integer(4)))),
+                })),
+            })),
+            rhs: Box::new(Expr::new(7, ExprKind::BinaryOp {
+                op: BinaryOp::Div,
+                lhs: Box::new(Expr::new(5, ExprKind::Literal(Literal::Integer(9)))),
+                rhs: Box::new(Expr::new(6, ExprKind::Literal(Literal::Integer(3)))),
+            })),
+        }));
 
         let mut parser = AstParser::new(tokens);
         let generated_ast = parser.expression();
 
-        // println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
         println!("Generated AST:\n{generated_ast:#?}\n\n");
 
-        assert_eq!(Ok(Expr::new(0, Literal::Integer(0).into())), generated_ast);
+        assert_eq!(expected_ast, generated_ast);
     }
 }
