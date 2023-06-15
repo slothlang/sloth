@@ -1,32 +1,6 @@
 use crate::lexer::{self, TokenType};
 use crate::parser::ParsingError;
 
-// #[derive(PartialEq, Clone, Debug)]
-// pub struct Node {
-//     id: i32,
-//     kind: NodeKind,
-// }
-//
-// impl Node {
-//     pub fn new(id: i32, kind: NodeKind) -> Self {
-//         Self { id, kind }
-//     }
-// }
-//
-// #[derive(PartialEq, Clone, Debug)]
-// pub enum NodeKind {
-//     Expr(Expr),
-//     Stmt(Stmt),
-// }
-//
-// impl From<Expr> for NodeKind {
-//     fn from(value: Expr) -> Self {
-//         todo!()
-//     }
-// }
-//
-// impl From<Stmt> for NodeKind {}
-
 #[derive(PartialEq, Clone, Debug)]
 pub struct Expr {
     pub id: i32,
@@ -60,25 +34,31 @@ pub enum ExprKind {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct FunctionInput {
-    pub identifier: String,
-    pub typ: String,
+pub struct Stmt {
+    pub id: i32,
+    pub kind: StmtKind,
+}
+
+impl Stmt {
+    pub fn new(id: i32, kind: StmtKind) -> Self {
+        Self { id, kind }
+    }
 }
 
 // TODO: For loops
 // TODO: Values & Constants
 #[derive(PartialEq, Clone, Debug)]
-pub enum Stmt {
-    Block(Vec<Stmt>),
+pub enum StmtKind {
+    Block(Vec<StmtKind>),
     ExprStmt(Expr),
     IfStmt {
         condition: Expr,
-        if_then: Box<Stmt>,
-        else_then: Option<Box<Stmt>>,
+        if_then: Box<StmtKind>,
+        else_then: Option<Box<StmtKind>>,
     },
     WhileStmt {
         condition: Expr,
-        body: Box<Stmt>,
+        body: Box<StmtKind>,
     },
     DefineVariable {
         identifier: String,
@@ -96,9 +76,15 @@ pub enum Stmt {
         identifier: String,
         inputs: Vec<FunctionInput>,
         output: Option<String>,
-        body: Box<Stmt>,
+        body: Box<StmtKind>,
     },
     Return(Expr),
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct FunctionInput {
+    pub identifier: String,
+    pub typ: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]

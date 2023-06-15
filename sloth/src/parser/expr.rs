@@ -1,4 +1,4 @@
-use super::ast::{Expr, Literal, UnaryOp};
+use super::ast::{Expr, UnaryOp};
 use super::AstParser;
 use crate::lexer::TokenType;
 use crate::parser::ast::{BinaryOp, ExprKind};
@@ -88,9 +88,9 @@ impl<'a> AstParser<'a> {
 mod tests {
     use itertools::Itertools;
 
-    use super::{AstParser, BinaryOp, ExprKind, Literal};
     use crate::lexer::Lexer;
-    use crate::parser::ast::Expr;
+    use crate::parser::ast::{BinaryOp, Expr, ExprKind, Literal};
+    use crate::AstParser;
 
     #[test]
     fn basic_expression() {

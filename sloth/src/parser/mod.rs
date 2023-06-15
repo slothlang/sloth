@@ -3,7 +3,7 @@ pub mod expr;
 pub mod graph;
 pub mod stmt;
 
-use self::ast::{Literal, Stmt};
+use self::ast::{Literal, StmtKind};
 use crate::lexer::{Token, TokenType};
 
 #[derive(thiserror::Error, Debug, PartialEq)]
@@ -22,7 +22,7 @@ pub struct AstParser<'a> {
 }
 
 impl<'a> AstParser<'a> {
-    pub fn parse(tokens: Vec<Token<'a>>) -> Result<Vec<Stmt>, ParsingError> {
+    pub fn parse(tokens: Vec<Token<'a>>) -> Result<Vec<StmtKind>, ParsingError> {
         let mut parser = Self::new(tokens);
 
         let mut statements = Vec::new();

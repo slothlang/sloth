@@ -2,7 +2,7 @@ use inkwell::context::Context;
 use thiserror::Error;
 
 use crate::codegen::{self, ModuleCodegen};
-use crate::parser::ast::Stmt;
+use crate::parser::ast::StmtKind;
 use crate::symbol::{Symbol, SymbolTable, SymbolTableStack, SymbolType};
 
 #[derive(Debug, Error)]
@@ -18,7 +18,7 @@ pub struct Compiler {
 impl Compiler {
     /// Take in a AST in the form of a vector of statements and compile the
     /// program.
-    pub fn compile(code: Vec<Stmt>) -> Result<(), CompilerError> {
+    pub fn compile(code: Vec<StmtKind>) -> Result<(), CompilerError> {
         let mut compiler = Self {
             symbol_table: SymbolTableStack::new(),
         };
@@ -31,7 +31,7 @@ impl Compiler {
         let codegen = ModuleCodegen::new("root", &context, &mut compiler.symbol_table);
 
         for stmt in code.iter() {
-            if let Stmt::DefineFunction { body, .. } = stmt {
+            if let StmtKind::DefineFunction { body, .. } = stmt {
                 // compiler.compile_function(body);
             }
         }
@@ -39,7 +39,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn resolve_globals(&mut self, code: &[Stmt]) {
+    fn resolve_globals(&mut self, code: &[StmtKind]) {
         for stmt in code.iter() {
             // if let Stmt::DefineFunction { ident, .. } = stmt {
             //     let symbol = Symbol {

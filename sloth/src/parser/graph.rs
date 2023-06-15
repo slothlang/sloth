@@ -1,6 +1,6 @@
 use std::fmt::{Error, Write};
 
-use super::ast::{ExprKind, Stmt};
+use super::ast::{ExprKind, StmtKind};
 
 pub struct GraphBuilder {
     i: i32,
@@ -8,7 +8,7 @@ pub struct GraphBuilder {
 }
 
 impl GraphBuilder {
-    pub fn generate(ast: &[Stmt]) -> Result<String, Error> {
+    pub fn generate(ast: &[StmtKind]) -> Result<String, Error> {
         let mut this = Self {
             i: 0,
             graph: String::new(),
@@ -27,17 +27,17 @@ impl GraphBuilder {
         Ok(this.graph)
     }
 
-    fn traverse_stmt0(&mut self, stmt: &Stmt) -> Result<(), Error> {
+    fn traverse_stmt0(&mut self, stmt: &StmtKind) -> Result<(), Error> {
         self.i += 1;
 
         match stmt {
-            Stmt::Block(body) => {
+            StmtKind::Block(body) => {
                 writeln!(&mut self.graph, "N{} [shape=box label=\"Block\"];", self.i)?;
                 for stmt in body.iter() {
                     self.traverse_stmt0(stmt)?;
                 }
             }
-            Stmt::ExprStmt(expr) => {
+            StmtKind::ExprStmt(expr) => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"ExprStmt\"];",
@@ -45,7 +45,7 @@ impl GraphBuilder {
                 )?;
                 // self.traverse_expr0(expr);
             }
-            Stmt::IfStmt {
+            StmtKind::IfStmt {
                 condition,
                 if_then,
                 else_then,
@@ -57,7 +57,7 @@ impl GraphBuilder {
                     self.traverse_stmt0(else_then)?;
                 }
             }
-            Stmt::WhileStmt { condition, body } => {
+            StmtKind::WhileStmt { condition, body } => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"WhileStmt\"];",
@@ -66,7 +66,7 @@ impl GraphBuilder {
                 // self.traverse_expr0(condition);
                 self.traverse_stmt0(body)?;
             }
-            Stmt::DefineVariable {
+            StmtKind::DefineVariable {
                 identifier,
                 value,
                 typ,
@@ -78,7 +78,7 @@ impl GraphBuilder {
                 )?;
                 // self.traverse_expr0(value);
             }
-            Stmt::AssignVariable { identifier, value } => {
+            StmtKind::AssignVariable { identifier, value } => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"AssignVariable\\n\\nIdentifier={}\"];",
@@ -86,7 +86,7 @@ impl GraphBuilder {
                 )?;
                 // self.traverse_expr0(value);
             }
-            Stmt::DefineFunction {
+            StmtKind::DefineFunction {
                 identifier,
                 inputs,
                 output,
@@ -103,7 +103,7 @@ impl GraphBuilder {
                 )?;
                 self.traverse_stmt0(body)?;
             }
-            Stmt::Return(expr) => {
+            StmtKind::Return(expr) => {
                 writeln!(&mut self.graph, "N{} [shape=box label=\"Return\"];", self.i)?;
                 // self.traverse_expr0(expr);
             }
@@ -124,31 +124,31 @@ impl GraphBuilder {
         // }
     }
 
-    fn traverse_stmt(&mut self, stmt: &Stmt) -> Result<(), Error> {
+    fn traverse_stmt(&mut self, stmt: &StmtKind) -> Result<(), Error> {
         self.i += 1;
 
         match stmt {
-            Stmt::Block(_) => todo!(),
-            Stmt::ExprStmt(_) => todo!(),
-            Stmt::IfStmt {
+            StmtKind::Block(_) => todo!(),
+            StmtKind::ExprStmt(_) => todo!(),
+            StmtKind::IfStmt {
                 condition,
                 if_then,
                 else_then,
             } => todo!(),
-            Stmt::WhileStmt { condition, body } => todo!(),
-            Stmt::DefineVariable {
+            StmtKind::WhileStmt { condition, body } => todo!(),
+            StmtKind::DefineVariable {
                 identifier,
                 value,
                 typ,
             } => todo!(),
-            Stmt::AssignVariable { identifier, value } => todo!(),
-            Stmt::DefineFunction {
+            StmtKind::AssignVariable { identifier, value } => todo!(),
+            StmtKind::DefineFunction {
                 identifier,
                 inputs,
                 output,
                 body,
             } => todo!(),
-            Stmt::Return(_) => todo!(),
+            StmtKind::Return(_) => todo!(),
         }
 
         Ok(())
