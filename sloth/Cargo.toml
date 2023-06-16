@@ -8,4 +8,5 @@ edition.workspace = true
 [dependencies]
 inkwell = { version = "0.2.0", features = ["llvm15-0"] }
 itertools = "0.10.5"
+rand = "0.8.5"
 thiserror = "1.0.40"
