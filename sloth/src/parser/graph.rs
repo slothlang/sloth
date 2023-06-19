@@ -120,7 +120,7 @@ impl GraphBuilder {
             ExprKind::Grouping(child) => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=diamond label=\"Grouping\"];",
+                    "N{} [shape=circle label=\"Grouping\"];",
                     expr.id
                 )?;
                 self.traverse_expr0(child)?;
@@ -140,13 +140,33 @@ impl GraphBuilder {
                 )?;
             }
             ExprKind::BinaryOp { op, lhs, rhs } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=circle label=\"{}\"];",
+                    expr.id, op
+                )?;
                 self.traverse_expr0(lhs)?;
                 self.traverse_expr0(rhs)?;
             }
             ExprKind::UnaryOp { op, value } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=circle label=\"Unary {}\"];",
+                    expr.id, op
+                )?;
                 self.traverse_expr0(value)?;
             }
-            ExprKind::Call { callee, args } => (),
+            ExprKind::Call { callee, args } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=circle label=\"Function Call\"];",
+                    expr.id
+                )?;
+                self.traverse_expr0(callee)?;
+                for arg in args {
+                    self.traverse_expr0(arg)?;
+                }
+            }
         }
 
         Ok(())
@@ -222,15 +242,26 @@ impl GraphBuilder {
         match &expr.kind {
             ExprKind::Grouping(children) => {
                 writeln!(&mut self.graph, "N{} -> N{};", expr.id, children.id)?;
+                self.traverse_expr(children)?;
             }
             ExprKind::BinaryOp { lhs, rhs, .. } => {
-                writeln!(&mut self.graph, "N{} -> N{};", expr.id, lhs.id)?;
-                writeln!(&mut self.graph, "N{} -> N{};", expr.id, rhs.id)?;
+                writeln!(&mut self.graph, "N{} -> N{} [label=lhs];", expr.id, lhs.id)?;
+                writeln!(&mut self.graph, "N{} -> N{} [label=rhs];", expr.id, rhs.id)?;
+                self.traverse_expr(lhs)?;
+                self.traverse_expr(rhs)?;
             }
             ExprKind::UnaryOp { value, .. } => {
                 writeln!(&mut self.graph, "N{} -> N{};", expr.id, value.id)?;
+                self.traverse_expr(value)?;
             }
-            ExprKind::Call { callee, args } => (),
+            ExprKind::Call { callee, args } => {
+                writeln!(&mut self.graph, "N{} -> N{};", expr.id, callee.id)?;
+                self.traverse_expr(callee)?;
+                for arg in args {
+                    writeln!(&mut self.graph, "N{} -> N{};", expr.id, arg.id)?;
+                    self.traverse_expr(arg)?;
+                }
+            }
             _ => (),
         }
 

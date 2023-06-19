@@ -10,7 +10,7 @@ impl<'a> AstParser<'a> {
     }
 
     fn unary(&mut self) -> Result<Expr, ParsingError> {
-        if matches!(self.peek().tt, TokenType::Bang | TokenType::Minus) {
+        if !self.eof() && matches!(self.peek().tt, TokenType::Bang | TokenType::Minus) {
             let oeprator_tt = self.advance().unwrap().tt.clone();
             let operator = UnaryOp::try_from(oeprator_tt)?;
 
@@ -24,7 +24,32 @@ impl<'a> AstParser<'a> {
             return Ok(Expr::new(self.reserve_id(), kind));
         }
 
-        self.primary()
+        self.call()
+    }
+
+    fn call(&mut self) -> Result<Expr, ParsingError> {
+        let mut expr = self.primary()?;
+
+        if !self.eof() && self.peek().tt == TokenType::OpeningParen {
+            self.consume(TokenType::OpeningParen, "Expected '('")?;
+
+            let mut arguments = Vec::new();
+            while !self.eof() && self.peek().tt != TokenType::ClosingParen {
+                arguments.push(self.expression()?);
+                if !self.advance_if_eq(&TokenType::Comma) {
+                    break;
+                }
+            }
+
+            self.consume(TokenType::ClosingParen, "Expected ')'")?;
+
+            expr = Expr::new(self.reserve_id(), ExprKind::Call {
+                callee: Box::new(expr),
+                args: arguments,
+            });
+        }
+
+        Ok(expr)
     }
 
     fn primary(&mut self) -> Result<Expr, ParsingError> {

@@ -6,8 +6,6 @@
     unused_lifetimes
 )]
 
-pub mod codegen;
-pub mod compiler;
 pub mod lexer;
 pub mod parser;
 pub mod sloth_std;
@@ -40,11 +38,4 @@ fn main() {
 
     let graph = GraphBuilder::generate(&ast).unwrap();
     println!("{graph}");
-
-    // Compiler::compile(ast).unwrap();
-
-    // let context = Context::create();
-    // let compiler = Compiler::new(&context);
-    //
-    // compiler.compile(ast);
 }

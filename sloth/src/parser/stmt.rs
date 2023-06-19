@@ -178,145 +178,176 @@ mod tests {
 
     use super::{AstParser, StmtKind};
     use crate::lexer::Lexer;
-    use crate::parser::ast::{BinaryOp, ExprKind, FunctionInput, Literal};
+    use crate::parser::ast::{BinaryOp, Expr, ExprKind, FunctionInput, Literal, Stmt};
 
-    // #[test]
-    // fn standalone_blocks() {
-    //     let tokens = Lexer::new("{{{ 0; }}}").collect_vec();
-    //
-    //     let expected_ast =
-    // Ok(Stmt::Block(vec![Stmt::Block(vec![Stmt::Block(vec![
-    //         Stmt::ExprStmt(Literal::Integer(0).into()),
-    //     ])])]));
-    //
-    //     let mut parser = AstParser::new(tokens);
-    //     let generated_ast = parser.statement();
-    //
-    //     println!("Expected AST:\n{expected_ast:#?}\n\n");
-    //     println!("Generated AST:\n{generated_ast:#?}\n\n");
-    //
-    //     assert_eq!(expected_ast, generated_ast);
-    // }
-    //
-    // #[test]
-    // fn basic_variable_definition() {
-    //     let tokens = Lexer::new("var foo: Int = 5 + 3;").collect_vec();
-    //
-    //     let expected_ast = Ok(Stmt::DefineVariable {
-    //         identifier: "foo".to_string(),
-    //         value: ExprKind::BinaryOp {
-    //             op: BinaryOp::Add,
-    //             lhs: Box::new(ExprKind::Literal(Literal::Integer(5))),
-    //             rhs: Box::new(ExprKind::Literal(Literal::Integer(3))),
-    //         },
-    //         typ: "Int".to_string(),
-    //     });
-    //
-    //     let mut parser = AstParser::new(tokens);
-    //     let generated_ast = parser.statement();
-    //
-    //     println!("Expected AST:\n{expected_ast:#?}\n\n");
-    //     println!("Generated AST:\n{generated_ast:#?}\n\n");
-    //
-    //     assert_eq!(expected_ast, generated_ast);
-    // }
-    //
-    // #[test]
-    // fn basic_function() {
-    //     let tokens = Lexer::new(
-    //         r#"
-    //         fn foo(bar: Int) Int {
-    //             var baz: Int = bar + 1;
-    //             baz = baz + 1;
-    //             return baz;
-    //         }
-    //     "#,
-    //     )
-    //     .collect_vec();
-    //
-    //     let expected_ast = Ok(Stmt::DefineFunction {
-    //         identifier: "foo".to_owned(),
-    //         inputs: vec![FunctionInput {
-    //             identifier: "bar".to_owned(),
-    //             typ: "Int".to_owned(),
-    //         }],
-    //         output: Some("Int".to_owned()),
-    //         body: Box::new(Stmt::Block(vec![
-    //             Stmt::DefineVariable {
-    //                 identifier: "baz".to_owned(),
-    //                 value: ExprKind::BinaryOp {
-    //                     op: BinaryOp::Add,
-    //                     lhs:
-    // Box::new(ExprKind::Identifier("bar".to_owned())),
-    // rhs: Box::new(Literal::Integer(1).into()),                 },
-    //                 typ: "Int".to_owned(),
-    //             },
-    //             Stmt::AssignVariable {
-    //                 identifier: "baz".to_owned(),
-    //                 value: ExprKind::BinaryOp {
-    //                     op: BinaryOp::Add,
-    //                     lhs:
-    // Box::new(ExprKind::Identifier("baz".to_owned())),
-    // rhs: Box::new(Literal::Integer(1).into()),                 },
-    //             },
-    //             Stmt::Return(ExprKind::Identifier("baz".to_owned())),
-    //         ])),
-    //     });
-    //
-    //     let mut parser = AstParser::new(tokens);
-    //     let generated_ast = parser.statement();
-    //
-    //     println!("Expected AST:\n{expected_ast:#?}\n\n");
-    //     println!("Generated AST:\n{generated_ast:#?}\n\n");
-    //
-    //     assert_eq!(expected_ast, generated_ast);
-    // }
-    //
-    // #[test]
-    // fn basic_conditional() {
-    //     let tokens = Lexer::new(
-    //         r#"
-    //         if foo {
-    //             0;
-    //         } else if bar {
-    //             1;
-    //         } else if baz {
-    //             2;
-    //         } else {
-    //             3;
-    //         }
-    //     "#,
-    //     )
-    //     .collect_vec();
-    //
-    //     let expected_ast = Ok(Stmt::IfStmt {
-    //         condition: ExprKind::Identifier("foo".to_owned()),
-    //         if_then: Box::new(Stmt::Block(vec![Stmt::ExprStmt(
-    //             Literal::Integer(0).into(),
-    //         )])),
-    //         else_then: Some(Box::new(Stmt::IfStmt {
-    //             condition: ExprKind::Identifier("bar".to_owned()),
-    //             if_then: Box::new(Stmt::Block(vec![Stmt::ExprStmt(
-    //                 Literal::Integer(1).into(),
-    //             )])),
-    //             else_then: Some(Box::new(Stmt::IfStmt {
-    //                 condition: ExprKind::Identifier("baz".to_owned()),
-    //                 if_then: Box::new(Stmt::Block(vec![Stmt::ExprStmt(
-    //                     Literal::Integer(2).into(),
-    //                 )])),
-    //                 else_then: Some(Box::new(Stmt::Block(vec![Stmt::ExprStmt(
-    //                     Literal::Integer(3).into(),
-    //                 )]))),
-    //             })),
-    //         })),
-    //     });
-    //
-    //     let mut parser = AstParser::new(tokens);
-    //     let generated_ast = parser.statement();
-    //
-    //     println!("Expected AST:\n{expected_ast:#?}\n\n");
-    //     println!("Generated AST:\n{generated_ast:#?}\n\n");
-    //
-    //     assert_eq!(expected_ast, generated_ast);
-    // }
+    #[test]
+    fn standalone_blocks() {
+        let tokens = Lexer::new("{{{ 0; }}}").collect_vec();
+
+        let expected_ast = Ok(Stmt::new(
+            4,
+            StmtKind::Block(vec![Stmt::new(
+                3,
+                StmtKind::Block(vec![Stmt::new(
+                    2,
+                    StmtKind::Block(vec![Stmt::new(
+                        1,
+                        StmtKind::ExprStmt(Expr::new(0, Literal::Integer(0).into())),
+                    )]),
+                )]),
+            )]),
+        ));
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+
+    #[test]
+    fn basic_variable_definition() {
+        let tokens = Lexer::new("var foo: Int = 5 + 3;").collect_vec();
+
+        let expected_ast = Ok(Stmt::new(3, StmtKind::DefineVariable {
+            identifier: "foo".to_string(),
+            value: Expr::new(2, ExprKind::BinaryOp {
+                op: BinaryOp::Add,
+                lhs: Box::new(Expr::new(0, ExprKind::Literal(Literal::Integer(5)))),
+                rhs: Box::new(Expr::new(1, ExprKind::Literal(Literal::Integer(3)))),
+            }),
+            typ: "Int".to_string(),
+        }));
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+
+    #[test]
+    fn basic_function() {
+        let tokens = Lexer::new(
+            r#"
+            fn foo(bar: Int) Int {
+                var baz: Int = bar + 1;
+                baz = baz + 1;
+                return baz;
+            }
+        "#,
+        )
+        .collect_vec();
+
+        let expected_ast = Ok(Stmt::new(11, StmtKind::DefineFunction {
+            identifier: "foo".to_owned(),
+            inputs: vec![FunctionInput {
+                identifier: "bar".to_owned(),
+                typ: "Int".to_owned(),
+            }],
+            output: Some("Int".to_owned()),
+            body: Box::new(Stmt::new(
+                10,
+                StmtKind::Block(vec![
+                    Stmt::new(3, StmtKind::DefineVariable {
+                        identifier: "baz".to_owned(),
+                        value: Expr::new(2, ExprKind::BinaryOp {
+                            op: BinaryOp::Add,
+                            lhs: Box::new(Expr::new(0, ExprKind::Identifier("bar".to_owned()))),
+                            rhs: Box::new(Expr::new(1, Literal::Integer(1).into())),
+                        }),
+                        typ: "Int".to_owned(),
+                    }),
+                    Stmt::new(7, StmtKind::AssignVariable {
+                        identifier: "baz".to_owned(),
+                        value: Expr::new(6, ExprKind::BinaryOp {
+                            op: BinaryOp::Add,
+                            lhs: Box::new(Expr::new(4, ExprKind::Identifier("baz".to_owned()))),
+                            rhs: Box::new(Expr::new(5, Literal::Integer(1).into())),
+                        }),
+                    }),
+                    Stmt::new(
+                        9,
+                        StmtKind::Return(Expr::new(8, ExprKind::Identifier("baz".to_owned()))),
+                    ),
+                ]),
+            )),
+        }));
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
+
+    #[test]
+    fn basic_conditional() {
+        let tokens = Lexer::new(
+            r#"
+            if foo {
+                0;
+            } else if bar {
+                1;
+            } else if baz {
+                2;
+            } else {
+                3;
+            }
+        "#,
+        )
+        .collect_vec();
+
+        let expected_ast = Ok(Stmt::new(17, StmtKind::IfStmt {
+            condition: Expr::new(0, ExprKind::Identifier("foo".to_owned())),
+            if_then: Box::new(Stmt::new(
+                3,
+                StmtKind::Block(vec![Stmt::new(
+                    2,
+                    StmtKind::ExprStmt(Expr::new(1, Literal::Integer(0).into())),
+                )]),
+            )),
+            else_then: Some(Box::new(Stmt::new(16, StmtKind::IfStmt {
+                condition: Expr::new(4, ExprKind::Identifier("bar".to_owned())),
+                if_then: Box::new(Stmt::new(
+                    7,
+                    StmtKind::Block(vec![Stmt::new(
+                        6,
+                        StmtKind::ExprStmt(Expr::new(5, Literal::Integer(1).into())),
+                    )]),
+                )),
+                else_then: Some(Box::new(Stmt::new(15, StmtKind::IfStmt {
+                    condition: Expr::new(8, ExprKind::Identifier("baz".to_owned())),
+                    if_then: Box::new(Stmt::new(
+                        11,
+                        StmtKind::Block(vec![Stmt::new(
+                            10,
+                            StmtKind::ExprStmt(Expr::new(9, Literal::Integer(2).into())),
+                        )]),
+                    )),
+                    else_then: Some(Box::new(Stmt::new(
+                        14,
+                        StmtKind::Block(vec![Stmt::new(
+                            13,
+                            StmtKind::ExprStmt(Expr::new(12, Literal::Integer(3).into())),
+                        )]),
+                    ))),
+                }))),
+            }))),
+        }));
+
+        let mut parser = AstParser::new(tokens);
+        let generated_ast = parser.statement();
+
+        println!("Expected AST:\n{expected_ast:#?}\n\n");
+        println!("Generated AST:\n{generated_ast:#?}\n\n");
+
+        assert_eq!(expected_ast, generated_ast);
+    }
 }

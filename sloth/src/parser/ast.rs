@@ -1,4 +1,4 @@
-use std::fmt::{format, Display};
+use std::fmt::Display;
 
 use crate::lexer::{self, TokenType};
 use crate::parser::ParsingError;
@@ -127,7 +127,7 @@ impl Display for Literal {
             Literal::Boolean(b) => format!("{b}"),
             Literal::Character(c) => format!("'{c}'"),
             Literal::String(s) => format!("\"{s}\""),
-            Literal::Array(a) => format!("<Array>"),
+            Literal::Array(..) => "<Array>".to_string(),
         };
 
         write!(f, "{value}")
@@ -187,6 +187,33 @@ impl TryFrom<TokenType> for BinaryOp {
     }
 }
 
+impl Display for BinaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = match self {
+            BinaryOp::Add => "+",
+            BinaryOp::Con => "++",
+            BinaryOp::Sub => "-",
+            BinaryOp::Mul => "*",
+            BinaryOp::Div => "/",
+            BinaryOp::Mod => "%",
+
+            BinaryOp::Lt => "<",
+            BinaryOp::Gt => ">",
+            BinaryOp::LtEq => "<=",
+            BinaryOp::GtEq => ">=",
+            BinaryOp::EqEq => "==",
+            BinaryOp::NotEq => "!=",
+
+            BinaryOp::LogicalAnd => "&&",
+            BinaryOp::LogicalOr => "||",
+
+            BinaryOp::Range => "..",
+        };
+
+        write!(f, "{value}")
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnaryOp {
     Not,
@@ -205,5 +232,16 @@ impl TryFrom<TokenType> for UnaryOp {
         };
 
         Ok(operation)
+    }
+}
+
+impl Display for UnaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = match self {
+            UnaryOp::Not => "!",
+            UnaryOp::Neg => "-",
+        };
+
+        write!(f, "{value}")
     }
 }
