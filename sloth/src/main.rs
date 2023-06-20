@@ -9,7 +9,7 @@
 pub mod lexer;
 pub mod parser;
 pub mod sloth_std;
-pub mod symbol;
+pub mod symtable;
 
 use std::{env, fs};
 
