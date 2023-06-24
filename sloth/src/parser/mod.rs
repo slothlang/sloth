@@ -17,10 +17,11 @@ pub enum ParsingError {
 
 #[derive(Debug)]
 pub struct AstParser<'a> {
+    top: SymbolTable,
     tokens: Vec<Token<'a>>,
     index: usize,
     id: i32,
-    top: SymbolTable,
+    line: u32,
 }
 
 impl<'a> AstParser<'a> {
@@ -34,6 +35,7 @@ impl<'a> AstParser<'a> {
 
         let root = Stmt::new(
             parser.reserve_id(),
+            parser.line,
             StmtKind::Block(statements),
             parser.top.clone(),
         );
@@ -46,10 +48,11 @@ impl<'a> AstParser<'a> {
 impl<'a> AstParser<'a> {
     pub fn new(tokens: Vec<Token<'a>>, root: SymbolTable) -> Self {
         Self {
+            top: root,
             tokens,
             index: 0,
             id: 0,
-            top: root,
+            line: 0,
         }
     }
 
@@ -66,8 +69,10 @@ impl<'a> AstParser<'a> {
             return None;
         }
 
+        let current = &self.tokens[self.index];
         self.index += 1;
-        Some(&self.tokens[self.index - 1])
+        self.line = current.start.row;
+        Some(current)
     }
 
     pub fn advance_if(&mut self, next: impl FnOnce(&Token) -> bool) -> bool {

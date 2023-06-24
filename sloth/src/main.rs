@@ -47,9 +47,11 @@ fn main() {
     let mut ast = AstParser::parse(tokens, global_symtable).unwrap();
 
     if let Err(error) = analyze(&mut ast) {
-        eprintln!("Failed to compile code:");
-        eprintln!("{error}");
+        eprintln!("Error on line {}: {error}", error.line() + 1);
+        return;
     }
+
+    println!("{ast:#?}");
 
     // let graph = GraphBuilder::generate(&ast).unwrap();
     // println!("{graph}");

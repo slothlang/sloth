@@ -21,7 +21,12 @@ impl<'a> AstParser<'a> {
                 value: Box::new(value),
             };
 
-            return Ok(Expr::new(self.reserve_id(), kind, self.top.clone()));
+            return Ok(Expr::new(
+                self.reserve_id(),
+                self.line,
+                kind,
+                self.top.clone(),
+            ));
         }
 
         self.call()
@@ -45,6 +50,7 @@ impl<'a> AstParser<'a> {
 
             expr = Expr::new(
                 self.reserve_id(),
+                self.line,
                 ExprKind::Call {
                     callee: Box::new(expr),
                     args: arguments,
@@ -70,7 +76,12 @@ impl<'a> AstParser<'a> {
             _ => return Err(ParsingError::UnexpectedToken),
         };
 
-        Ok(Expr::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Expr::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 }
 
@@ -92,7 +103,7 @@ macro_rules! binary_expr {
                     rhs: Box::new(rhs),
                 };
 
-                expr = Expr::new(self.reserve_id(), kind, self.top.clone());
+                expr = Expr::new(self.reserve_id(), self.line, kind, self.top.clone());
             }
 
             Ok(expr)

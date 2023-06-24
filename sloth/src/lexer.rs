@@ -146,11 +146,11 @@ impl Location {
 
 #[derive(Debug)]
 pub struct Token<'a> {
-    pub tt: TokenType,
-    pub lexeme: &'a str,
+    pub(crate) tt: TokenType,
+    pub(crate) lexeme: &'a str,
 
-    start: Location,
-    end: Location,
+    pub start: Location,
+    pub end: Location,
 }
 
 pub struct Lexer<'a> {

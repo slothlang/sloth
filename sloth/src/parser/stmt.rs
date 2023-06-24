@@ -42,7 +42,12 @@ impl<'a> AstParser<'a> {
             else_then: else_then.map(|it| it.into()),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     fn while_stmt(&mut self) -> Result<Stmt, ParsingError> {
@@ -57,7 +62,12 @@ impl<'a> AstParser<'a> {
             body: body.into(),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     // TODO: Make variable types optional
@@ -82,7 +92,12 @@ impl<'a> AstParser<'a> {
             typ,
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     // TODO: Make argument types optional
@@ -126,7 +141,12 @@ impl<'a> AstParser<'a> {
             body: body.into(),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     fn return_stmt(&mut self) -> Result<Stmt, ParsingError> {
@@ -134,7 +154,12 @@ impl<'a> AstParser<'a> {
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::Return(value);
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     fn assign_variable(&mut self) -> Result<Stmt, ParsingError> {
@@ -143,14 +168,24 @@ impl<'a> AstParser<'a> {
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::AssignVariable { identifier, value };
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     fn expression_stmt(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::ExprStmt(expr);
-        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
     }
 
     fn block(&mut self) -> Result<Stmt, ParsingError> {
@@ -171,7 +206,12 @@ impl<'a> AstParser<'a> {
 
             let kind = StmtKind::Block(body);
 
-            Ok(Stmt::new(this.reserve_id(), kind, this.top.clone()))
+            Ok(Stmt::new(
+                this.reserve_id(),
+                this.line,
+                kind,
+                this.top.clone(),
+            ))
         }
 
         // Push a table, call the inner function and then pop that table

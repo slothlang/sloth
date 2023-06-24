@@ -21,11 +21,19 @@ impl<'a> AstNode<'a> {
         }
         children.into_iter()
     }
+
+    pub fn line(&self) -> u32 {
+        match self {
+            Self::Expr(expr) => expr.line,
+            Self::Stmt(stmt) => stmt.line,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct Expr {
     pub id: i32,
+    pub line: u32,
     pub kind: ExprKind,
     pub symtable: SymbolTable,
 }
@@ -37,14 +45,20 @@ impl PartialEq for Expr {
 }
 
 impl Expr {
-    pub fn new(id: i32, kind: ExprKind, symtable: SymbolTable) -> Self {
-        Self { id, kind, symtable }
+    pub fn new(id: i32, line: u32, kind: ExprKind, symtable: SymbolTable) -> Self {
+        Self {
+            id,
+            line,
+            kind,
+            symtable,
+        }
     }
 
     /// Useful for testing
     pub fn without_table(id: i32, kind: ExprKind) -> Self {
         Self {
             id,
+            line: 0,
             kind,
             symtable: SymbolTable::new(),
         }
@@ -98,6 +112,7 @@ pub enum ExprKind {
 #[derive(Clone, Debug)]
 pub struct Stmt {
     pub id: i32,
+    pub line: u32,
     pub kind: StmtKind,
     pub symtable: SymbolTable,
 }
@@ -109,14 +124,20 @@ impl PartialEq for Stmt {
 }
 
 impl Stmt {
-    pub fn new(id: i32, kind: StmtKind, symtable: SymbolTable) -> Self {
-        Self { id, kind, symtable }
+    pub fn new(id: i32, line: u32, kind: StmtKind, symtable: SymbolTable) -> Self {
+        Self {
+            id,
+            line,
+            kind,
+            symtable,
+        }
     }
 
     /// Useful for testing
     pub fn without_table(id: i32, kind: StmtKind) -> Self {
         Self {
             id,
+            line: 0,
             kind,
             symtable: SymbolTable::new(),
         }
