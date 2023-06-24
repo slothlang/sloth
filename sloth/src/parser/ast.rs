@@ -2,16 +2,76 @@ use std::fmt::Display;
 
 use crate::lexer::{self, TokenType};
 use crate::parser::ParsingError;
+use crate::symtable::SymbolTable;
 
 #[derive(PartialEq, Clone, Debug)]
+/// AstNode that is either an Expr or Stmt, typically used for iterating over an
+/// Ast for analysis reasons.
+pub enum AstNode<'a> {
+    Expr(&'a Expr),
+    Stmt(&'a Stmt),
+}
+
+impl<'a> AstNode<'a> {
+    pub fn children(&self) -> impl Iterator<Item = AstNode> {
+        let mut children = Vec::new();
+        match self {
+            Self::Expr(expr) => children.extend(expr.children()),
+            Self::Stmt(stmt) => children.extend(stmt.children()),
+        }
+        children.into_iter()
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct Expr {
     pub id: i32,
     pub kind: ExprKind,
+    pub symtable: SymbolTable,
+}
+
+impl PartialEq for Expr {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.kind == other.kind
+    }
 }
 
 impl Expr {
-    pub fn new(id: i32, kind: ExprKind) -> Self {
-        Self { id, kind }
+    pub fn new(id: i32, kind: ExprKind, symtable: SymbolTable) -> Self {
+        Self { id, kind, symtable }
+    }
+
+    /// Useful for testing
+    pub fn without_table(id: i32, kind: ExprKind) -> Self {
+        Self {
+            id,
+            kind,
+            symtable: SymbolTable::new(),
+        }
+    }
+
+    pub fn as_node(&self) -> AstNode {
+        AstNode::Expr(self)
+    }
+
+    pub fn children(&self) -> impl Iterator<Item = AstNode> {
+        let mut children = Vec::new();
+
+        match &self.kind {
+            ExprKind::Grouping(inner) => children.push(inner.as_node()),
+            ExprKind::BinaryOp { lhs, rhs, .. } => {
+                children.push(lhs.as_node());
+                children.push(rhs.as_node());
+            }
+            ExprKind::UnaryOp { value, .. } => children.push(value.as_node()),
+            ExprKind::Call { callee, args } => {
+                children.push(callee.as_node());
+                children.extend(args.iter().map(Expr::as_node));
+            }
+            _ => (),
+        }
+
+        children.into_iter()
     }
 }
 
@@ -35,15 +95,67 @@ pub enum ExprKind {
     },
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Stmt {
     pub id: i32,
     pub kind: StmtKind,
+    pub symtable: SymbolTable,
+}
+
+impl PartialEq for Stmt {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.kind == other.kind
+    }
 }
 
 impl Stmt {
-    pub fn new(id: i32, kind: StmtKind) -> Self {
-        Self { id, kind }
+    pub fn new(id: i32, kind: StmtKind, symtable: SymbolTable) -> Self {
+        Self { id, kind, symtable }
+    }
+
+    /// Useful for testing
+    pub fn without_table(id: i32, kind: StmtKind) -> Self {
+        Self {
+            id,
+            kind,
+            symtable: SymbolTable::new(),
+        }
+    }
+
+    pub fn as_node(&self) -> AstNode {
+        AstNode::Stmt(self)
+    }
+
+    pub fn children(&self) -> impl Iterator<Item = AstNode> {
+        let mut children = Vec::new();
+
+        match &self.kind {
+            StmtKind::Block(inner) => {
+                children.extend(inner.iter().map(Self::as_node));
+            }
+            StmtKind::ExprStmt(expr) => children.push(expr.as_node()),
+            StmtKind::IfStmt {
+                condition,
+                if_then,
+                else_then,
+            } => {
+                children.push(condition.as_node());
+                children.push(if_then.as_node());
+                if let Some(else_then) = else_then {
+                    children.push(else_then.as_node());
+                }
+            }
+            StmtKind::WhileStmt { condition, body } => {
+                children.push(condition.as_node());
+                children.push(body.as_node());
+            }
+            StmtKind::DefineVariable { value, .. } => children.push(value.as_node()),
+            StmtKind::AssignVariable { value, .. } => children.push(value.as_node()),
+            StmtKind::DefineFunction { body, .. } => children.push(body.as_node()),
+            StmtKind::Return(value) => children.push(value.as_node()),
+        }
+
+        children.into_iter()
     }
 }
 

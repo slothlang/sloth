@@ -27,6 +27,10 @@ impl SymbolTable {
         }))
     }
 
+    pub fn parent(&self) -> Option<Self> {
+        Some(Self(self.0.parent.clone()?))
+    }
+
     pub fn contains(&self, identifier: &str) -> bool {
         for scope in self.iter() {
             if scope.symbols.borrow().contains_key(identifier) {
@@ -59,7 +63,7 @@ impl SymbolTable {
         None
     }
 
-    pub fn insert(&self, identifier: String, symbol: Symbol) -> bool {
+    pub fn insert(&mut self, identifier: String, symbol: Symbol) -> bool {
         let mut reference = self.0.symbols.borrow_mut();
         if let Vacant(e) = reference.entry(identifier) {
             e.insert(symbol);
@@ -105,10 +109,17 @@ impl<'a> Iterator for Iter<'a> {
 
 #[derive(Debug)]
 pub struct Symbol {
-    pub typ: Option<SymbolType>,
+    pub typ: SymbolType,
+}
+
+impl Symbol {
+    pub fn new(typ: SymbolType) -> Self {
+        Self { typ }
+    }
 }
 
 #[derive(Debug)]
 pub enum SymbolType {
+    Variable,
     Function,
 }

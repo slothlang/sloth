@@ -3,8 +3,9 @@ pub mod expr;
 pub mod graph;
 pub mod stmt;
 
-use self::ast::{Literal, Stmt};
+use self::ast::{Literal, Stmt, StmtKind};
 use crate::lexer::{Token, TokenType};
+use crate::symtable::SymbolTable;
 
 #[derive(thiserror::Error, Debug, PartialEq)]
 pub enum ParsingError {
@@ -19,28 +20,36 @@ pub struct AstParser<'a> {
     tokens: Vec<Token<'a>>,
     index: usize,
     id: i32,
+    top: SymbolTable,
 }
 
 impl<'a> AstParser<'a> {
-    pub fn parse(tokens: Vec<Token<'a>>) -> Result<Vec<Stmt>, ParsingError> {
-        let mut parser = Self::new(tokens);
+    pub fn parse(tokens: Vec<Token<'a>>, root: SymbolTable) -> Result<Stmt, ParsingError> {
+        let mut parser = Self::new(tokens, root);
 
         let mut statements = Vec::new();
         while !parser.eof() {
             statements.push(parser.statement()?);
         }
 
-        Ok(statements)
+        let root = Stmt::new(
+            parser.reserve_id(),
+            StmtKind::Block(statements),
+            parser.top.clone(),
+        );
+
+        Ok(root)
     }
 }
 
 /// Implementation containing utilities used by the parsers internal components
 impl<'a> AstParser<'a> {
-    pub fn new(tokens: Vec<Token<'a>>) -> Self {
+    pub fn new(tokens: Vec<Token<'a>>, root: SymbolTable) -> Self {
         Self {
             tokens,
             index: 0,
             id: 0,
+            top: root,
         }
     }
 
@@ -107,6 +116,14 @@ impl<'a> AstParser<'a> {
         let id = self.id;
         self.id += 1;
         id
+    }
+
+    pub fn push_table(&mut self) {
+        self.top = self.top.make_child();
+    }
+
+    pub fn pop_table(&mut self) {
+        self.top = self.top.parent().unwrap();
     }
 
     pub fn eof(&self) -> bool {

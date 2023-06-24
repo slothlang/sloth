@@ -21,7 +21,7 @@ impl<'a> AstParser<'a> {
                 value: Box::new(value),
             };
 
-            return Ok(Expr::new(self.reserve_id(), kind));
+            return Ok(Expr::new(self.reserve_id(), kind, self.top.clone()));
         }
 
         self.call()
@@ -43,10 +43,14 @@ impl<'a> AstParser<'a> {
 
             self.consume(TokenType::ClosingParen, "Expected ')'")?;
 
-            expr = Expr::new(self.reserve_id(), ExprKind::Call {
-                callee: Box::new(expr),
-                args: arguments,
-            });
+            expr = Expr::new(
+                self.reserve_id(),
+                ExprKind::Call {
+                    callee: Box::new(expr),
+                    args: arguments,
+                },
+                self.top.clone(),
+            );
         }
 
         Ok(expr)
@@ -66,7 +70,7 @@ impl<'a> AstParser<'a> {
             _ => return Err(ParsingError::UnexpectedToken),
         };
 
-        Ok(Expr::new(self.reserve_id(), kind))
+        Ok(Expr::new(self.reserve_id(), kind, self.top.clone()))
     }
 }
 
@@ -88,7 +92,7 @@ macro_rules! binary_expr {
                     rhs: Box::new(rhs),
                 };
 
-                expr = Expr::new(self.reserve_id(), kind);
+                expr = Expr::new(self.reserve_id(), kind, self.top.clone());
             }
 
             Ok(expr)
@@ -115,6 +119,7 @@ mod tests {
 
     use crate::lexer::Lexer;
     use crate::parser::ast::{BinaryOp, Expr, ExprKind, Literal};
+    use crate::symtable::SymbolTable;
     use crate::AstParser;
 
     #[test]
@@ -122,25 +127,40 @@ mod tests {
         let lexer = Lexer::new("3 + 5 * 4 - 9 / 3");
         let tokens = lexer.collect_vec();
 
-        let expected_ast = Ok(Expr::new(8, ExprKind::BinaryOp {
+        let expected_ast = Ok(Expr::without_table(8, ExprKind::BinaryOp {
             op: BinaryOp::Sub,
-            lhs: Box::new(Expr::new(4, ExprKind::BinaryOp {
+            lhs: Box::new(Expr::without_table(4, ExprKind::BinaryOp {
                 op: BinaryOp::Add,
-                lhs: Box::new(Expr::new(0, ExprKind::Literal(Literal::Integer(3)))),
-                rhs: Box::new(Expr::new(3, ExprKind::BinaryOp {
+                lhs: Box::new(Expr::without_table(
+                    0,
+                    ExprKind::Literal(Literal::Integer(3)),
+                )),
+                rhs: Box::new(Expr::without_table(3, ExprKind::BinaryOp {
                     op: BinaryOp::Mul,
-                    lhs: Box::new(Expr::new(1, ExprKind::Literal(Literal::Integer(5)))),
-                    rhs: Box::new(Expr::new(2, ExprKind::Literal(Literal::Integer(4)))),
+                    lhs: Box::new(Expr::without_table(
+                        1,
+                        ExprKind::Literal(Literal::Integer(5)),
+                    )),
+                    rhs: Box::new(Expr::without_table(
+                        2,
+                        ExprKind::Literal(Literal::Integer(4)),
+                    )),
                 })),
             })),
-            rhs: Box::new(Expr::new(7, ExprKind::BinaryOp {
+            rhs: Box::new(Expr::without_table(7, ExprKind::BinaryOp {
                 op: BinaryOp::Div,
-                lhs: Box::new(Expr::new(5, ExprKind::Literal(Literal::Integer(9)))),
-                rhs: Box::new(Expr::new(6, ExprKind::Literal(Literal::Integer(3)))),
+                lhs: Box::new(Expr::without_table(
+                    5,
+                    ExprKind::Literal(Literal::Integer(9)),
+                )),
+                rhs: Box::new(Expr::without_table(
+                    6,
+                    ExprKind::Literal(Literal::Integer(3)),
+                )),
             })),
         }));
 
-        let mut parser = AstParser::new(tokens);
+        let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.expression();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");

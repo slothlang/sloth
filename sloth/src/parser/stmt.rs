@@ -42,7 +42,7 @@ impl<'a> AstParser<'a> {
             else_then: else_then.map(|it| it.into()),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     fn while_stmt(&mut self) -> Result<Stmt, ParsingError> {
@@ -57,7 +57,7 @@ impl<'a> AstParser<'a> {
             body: body.into(),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     // TODO: Make variable types optional
@@ -82,7 +82,7 @@ impl<'a> AstParser<'a> {
             typ,
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     // TODO: Make argument types optional
@@ -126,7 +126,7 @@ impl<'a> AstParser<'a> {
             body: body.into(),
         };
 
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     fn return_stmt(&mut self) -> Result<Stmt, ParsingError> {
@@ -134,7 +134,7 @@ impl<'a> AstParser<'a> {
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::Return(value);
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     fn assign_variable(&mut self) -> Result<Stmt, ParsingError> {
@@ -143,32 +143,43 @@ impl<'a> AstParser<'a> {
         let value = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::AssignVariable { identifier, value };
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     fn expression_stmt(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
         self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
         let kind = StmtKind::ExprStmt(expr);
-        Ok(Stmt::new(self.reserve_id(), kind))
+        Ok(Stmt::new(self.reserve_id(), kind, self.top.clone()))
     }
 
     fn block(&mut self) -> Result<Stmt, ParsingError> {
-        // Consume the opening brace
-        self.consume(TokenType::OpeningBrace, "Expected '{'")?;
+        // This inner function exists to make cleanup of the pushed symbol table easier
+        // in the case of a parsing error.
+        fn inner(this: &mut AstParser) -> Result<Stmt, ParsingError> {
+            // Consume the opening brace
+            this.consume(TokenType::OpeningBrace, "Expected '{'")?;
 
-        // Get the body of the block
-        let mut body = Vec::new();
-        while !self.eof() && self.peek().tt != TokenType::ClosingBrace {
-            body.push(self.statement()?);
+            // Get the body of the block
+            let mut body = Vec::new();
+            while !this.eof() && this.peek().tt != TokenType::ClosingBrace {
+                body.push(this.statement()?);
+            }
+
+            // Consume the closing brace
+            this.consume(TokenType::ClosingBrace, "Expected '}'")?;
+
+            let kind = StmtKind::Block(body);
+
+            Ok(Stmt::new(this.reserve_id(), kind, this.top.clone()))
         }
 
-        // Consume the closing brace
-        self.consume(TokenType::ClosingBrace, "Expected '}'")?;
+        // Push a table, call the inner function and then pop that table
+        self.push_table();
+        let result = inner(self);
+        self.pop_table();
 
-        let kind = StmtKind::Block(body);
-
-        Ok(Stmt::new(self.reserve_id(), kind))
+        result
     }
 }
 
@@ -179,26 +190,27 @@ mod tests {
     use super::{AstParser, StmtKind};
     use crate::lexer::Lexer;
     use crate::parser::ast::{BinaryOp, Expr, ExprKind, FunctionInput, Literal, Stmt};
+    use crate::symtable::SymbolTable;
 
     #[test]
     fn standalone_blocks() {
         let tokens = Lexer::new("{{{ 0; }}}").collect_vec();
 
-        let expected_ast = Ok(Stmt::new(
+        let expected_ast = Ok(Stmt::without_table(
             4,
-            StmtKind::Block(vec![Stmt::new(
+            StmtKind::Block(vec![Stmt::without_table(
                 3,
-                StmtKind::Block(vec![Stmt::new(
+                StmtKind::Block(vec![Stmt::without_table(
                     2,
-                    StmtKind::Block(vec![Stmt::new(
+                    StmtKind::Block(vec![Stmt::without_table(
                         1,
-                        StmtKind::ExprStmt(Expr::new(0, Literal::Integer(0).into())),
+                        StmtKind::ExprStmt(Expr::without_table(0, Literal::Integer(0).into())),
                     )]),
                 )]),
             )]),
         ));
 
-        let mut parser = AstParser::new(tokens);
+        let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.statement();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");
@@ -211,17 +223,23 @@ mod tests {
     fn basic_variable_definition() {
         let tokens = Lexer::new("var foo: Int = 5 + 3;").collect_vec();
 
-        let expected_ast = Ok(Stmt::new(3, StmtKind::DefineVariable {
+        let expected_ast = Ok(Stmt::without_table(3, StmtKind::DefineVariable {
             identifier: "foo".to_string(),
-            value: Expr::new(2, ExprKind::BinaryOp {
+            value: Expr::without_table(2, ExprKind::BinaryOp {
                 op: BinaryOp::Add,
-                lhs: Box::new(Expr::new(0, ExprKind::Literal(Literal::Integer(5)))),
-                rhs: Box::new(Expr::new(1, ExprKind::Literal(Literal::Integer(3)))),
+                lhs: Box::new(Expr::without_table(
+                    0,
+                    ExprKind::Literal(Literal::Integer(5)),
+                )),
+                rhs: Box::new(Expr::without_table(
+                    1,
+                    ExprKind::Literal(Literal::Integer(3)),
+                )),
             }),
             typ: "Int".to_string(),
         }));
 
-        let mut parser = AstParser::new(tokens);
+        let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.statement();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");
@@ -243,42 +261,51 @@ mod tests {
         )
         .collect_vec();
 
-        let expected_ast = Ok(Stmt::new(11, StmtKind::DefineFunction {
+        let expected_ast = Ok(Stmt::without_table(11, StmtKind::DefineFunction {
             identifier: "foo".to_owned(),
             inputs: vec![FunctionInput {
                 identifier: "bar".to_owned(),
                 typ: "Int".to_owned(),
             }],
             output: Some("Int".to_owned()),
-            body: Box::new(Stmt::new(
+            body: Box::new(Stmt::without_table(
                 10,
                 StmtKind::Block(vec![
-                    Stmt::new(3, StmtKind::DefineVariable {
+                    Stmt::without_table(3, StmtKind::DefineVariable {
                         identifier: "baz".to_owned(),
-                        value: Expr::new(2, ExprKind::BinaryOp {
+                        value: Expr::without_table(2, ExprKind::BinaryOp {
                             op: BinaryOp::Add,
-                            lhs: Box::new(Expr::new(0, ExprKind::Identifier("bar".to_owned()))),
-                            rhs: Box::new(Expr::new(1, Literal::Integer(1).into())),
+                            lhs: Box::new(Expr::without_table(
+                                0,
+                                ExprKind::Identifier("bar".to_owned()),
+                            )),
+                            rhs: Box::new(Expr::without_table(1, Literal::Integer(1).into())),
                         }),
                         typ: "Int".to_owned(),
                     }),
-                    Stmt::new(7, StmtKind::AssignVariable {
+                    Stmt::without_table(7, StmtKind::AssignVariable {
                         identifier: "baz".to_owned(),
-                        value: Expr::new(6, ExprKind::BinaryOp {
+                        value: Expr::without_table(6, ExprKind::BinaryOp {
                             op: BinaryOp::Add,
-                            lhs: Box::new(Expr::new(4, ExprKind::Identifier("baz".to_owned()))),
-                            rhs: Box::new(Expr::new(5, Literal::Integer(1).into())),
+                            lhs: Box::new(Expr::without_table(
+                                4,
+                                ExprKind::Identifier("baz".to_owned()),
+                            )),
+                            rhs: Box::new(Expr::without_table(5, Literal::Integer(1).into())),
                         }),
                     }),
-                    Stmt::new(
+                    Stmt::without_table(
                         9,
-                        StmtKind::Return(Expr::new(8, ExprKind::Identifier("baz".to_owned()))),
+                        StmtKind::Return(Expr::without_table(
+                            8,
+                            ExprKind::Identifier("baz".to_owned()),
+                        )),
                     ),
                 ]),
             )),
         }));
 
-        let mut parser = AstParser::new(tokens);
+        let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.statement();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");
@@ -304,45 +331,45 @@ mod tests {
         )
         .collect_vec();
 
-        let expected_ast = Ok(Stmt::new(17, StmtKind::IfStmt {
-            condition: Expr::new(0, ExprKind::Identifier("foo".to_owned())),
-            if_then: Box::new(Stmt::new(
+        let expected_ast = Ok(Stmt::without_table(17, StmtKind::IfStmt {
+            condition: Expr::without_table(0, ExprKind::Identifier("foo".to_owned())),
+            if_then: Box::new(Stmt::without_table(
                 3,
-                StmtKind::Block(vec![Stmt::new(
+                StmtKind::Block(vec![Stmt::without_table(
                     2,
-                    StmtKind::ExprStmt(Expr::new(1, Literal::Integer(0).into())),
+                    StmtKind::ExprStmt(Expr::without_table(1, Literal::Integer(0).into())),
                 )]),
             )),
-            else_then: Some(Box::new(Stmt::new(16, StmtKind::IfStmt {
-                condition: Expr::new(4, ExprKind::Identifier("bar".to_owned())),
-                if_then: Box::new(Stmt::new(
+            else_then: Some(Box::new(Stmt::without_table(16, StmtKind::IfStmt {
+                condition: Expr::without_table(4, ExprKind::Identifier("bar".to_owned())),
+                if_then: Box::new(Stmt::without_table(
                     7,
-                    StmtKind::Block(vec![Stmt::new(
+                    StmtKind::Block(vec![Stmt::without_table(
                         6,
-                        StmtKind::ExprStmt(Expr::new(5, Literal::Integer(1).into())),
+                        StmtKind::ExprStmt(Expr::without_table(5, Literal::Integer(1).into())),
                     )]),
                 )),
-                else_then: Some(Box::new(Stmt::new(15, StmtKind::IfStmt {
-                    condition: Expr::new(8, ExprKind::Identifier("baz".to_owned())),
-                    if_then: Box::new(Stmt::new(
+                else_then: Some(Box::new(Stmt::without_table(15, StmtKind::IfStmt {
+                    condition: Expr::without_table(8, ExprKind::Identifier("baz".to_owned())),
+                    if_then: Box::new(Stmt::without_table(
                         11,
-                        StmtKind::Block(vec![Stmt::new(
+                        StmtKind::Block(vec![Stmt::without_table(
                             10,
-                            StmtKind::ExprStmt(Expr::new(9, Literal::Integer(2).into())),
+                            StmtKind::ExprStmt(Expr::without_table(9, Literal::Integer(2).into())),
                         )]),
                     )),
-                    else_then: Some(Box::new(Stmt::new(
+                    else_then: Some(Box::new(Stmt::without_table(
                         14,
-                        StmtKind::Block(vec![Stmt::new(
+                        StmtKind::Block(vec![Stmt::without_table(
                             13,
-                            StmtKind::ExprStmt(Expr::new(12, Literal::Integer(3).into())),
+                            StmtKind::ExprStmt(Expr::without_table(12, Literal::Integer(3).into())),
                         )]),
                     ))),
                 }))),
             }))),
         }));
 
-        let mut parser = AstParser::new(tokens);
+        let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.statement();
 
         println!("Expected AST:\n{expected_ast:#?}\n\n");

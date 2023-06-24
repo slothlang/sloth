@@ -1,3 +1,4 @@
+#![feature(let_chains)]
 #![warn(
     clippy::wildcard_imports,
     clippy::string_add,
@@ -6,6 +7,7 @@
     unused_lifetimes
 )]
 
+pub mod analysis;
 pub mod lexer;
 pub mod parser;
 pub mod sloth_std;
@@ -13,10 +15,11 @@ pub mod symtable;
 
 use std::{env, fs};
 
+use analysis::analyze;
 use itertools::Itertools;
 use lexer::Lexer;
-use parser::graph::GraphBuilder;
 use parser::AstParser;
+use symtable::{Symbol, SymbolTable, SymbolType};
 
 fn main() {
     let args = env::args().collect_vec();
@@ -29,13 +32,25 @@ fn main() {
 
     let source_path = &args[1];
     let Ok(source) = fs::read_to_string(source_path) else {
-        println!("Error while reading '{source_path}'");
+        eprintln!("Error while reading '{source_path}'");
         return;
     };
 
-    let tokens = Lexer::new(&source).collect_vec();
-    let ast = AstParser::parse(tokens).unwrap();
+    // Symbol table
+    let mut global_symtable = SymbolTable::new();
+    global_symtable.insert("print".to_owned(), Symbol::new(SymbolType::Function));
+    global_symtable.insert("println".to_owned(), Symbol::new(SymbolType::Function));
+    global_symtable.insert("readln".to_owned(), Symbol::new(SymbolType::Function));
 
-    let graph = GraphBuilder::generate(&ast).unwrap();
-    println!("{graph}");
+    // Parsing
+    let tokens = Lexer::new(&source).collect_vec();
+    let mut ast = AstParser::parse(tokens, global_symtable).unwrap();
+
+    if let Err(error) = analyze(&mut ast) {
+        eprintln!("Failed to compile code:");
+        eprintln!("{error}");
+    }
+
+    // let graph = GraphBuilder::generate(&ast).unwrap();
+    // println!("{graph}");
 }
