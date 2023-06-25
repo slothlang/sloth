@@ -8,6 +8,7 @@
 )]
 
 pub mod analysis;
+pub mod codegen;
 pub mod lexer;
 pub mod parser;
 pub mod sloth_std;
@@ -15,6 +16,8 @@ pub mod symtable;
 
 use std::{env, fs};
 
+use codegen::Compiler;
+use inkwell::context::Context;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
@@ -55,9 +58,11 @@ fn main() {
         return;
     }
 
-    println!("Suces");
-
     // println!("{ast:#?}");
+    // println!("Suces");
+
+    let context = Context::create();
+    Compiler::codegen(&context, "hi", &ast);
 
     // let graph = GraphBuilder::generate(Some(&source), &ast).unwrap();
     // println!("{graph}");

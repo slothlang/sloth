@@ -8,8 +8,8 @@ pub enum AnalysisError {
     TypeMismatch(u32),
     #[error("Unknown identifier '{1}'")]
     UnknownIdentifier(u32, String),
-    #[error("Unknown error")]
-    Unknown(u32),
+    #[error("Unknown error '{1}'")]
+    Unknown(u32, &'static str),
 }
 
 impl AnalysisError {
@@ -17,13 +17,15 @@ impl AnalysisError {
         match self {
             AnalysisError::TypeMismatch(line) => *line,
             AnalysisError::UnknownIdentifier(line, ..) => *line,
-            AnalysisError::Unknown(line) => *line,
+            AnalysisError::Unknown(line, ..) => *line,
         }
     }
 }
 
 pub fn analyze(root: &mut Stmt) -> Result<(), AnalysisError> {
     setup::populate_symtable(&root.as_node())?;
+    setup::propagate_types_stmt(root)?;
+
     check_usage(&root.as_node())?;
 
     Ok(())

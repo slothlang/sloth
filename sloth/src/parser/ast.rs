@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::lexer::{self, TokenType};
 use crate::parser::ParsingError;
-use crate::symtable::SymbolTable;
+use crate::symtable::{SymbolTable, Type};
 
 #[derive(PartialEq, Clone, Debug)]
 /// AstNode that is either an Expr or Stmt, typically used for iterating over an
@@ -36,6 +36,11 @@ pub struct Expr {
     pub line: u32,
     pub kind: ExprKind,
     pub symtable: SymbolTable,
+
+    /// Type of the expression. If None it means the type hasn't yet been
+    /// checked.
+    pub typ: Option<Type>,
+    pub is_const: bool,
 }
 
 impl PartialEq for Expr {
@@ -46,22 +51,33 @@ impl PartialEq for Expr {
 
 impl Expr {
     pub fn new(id: i32, line: u32, kind: ExprKind, symtable: SymbolTable) -> Self {
+        /// Recursivly check if a expression is constant
+        fn is_const(kind: &ExprKind) -> bool {
+            match kind {
+                ExprKind::Literal(_) => true,
+                ExprKind::Grouping(child) => is_const(&child.kind),
+                ExprKind::BinaryOp { lhs, rhs, .. } => is_const(&lhs.kind) && is_const(&rhs.kind),
+                ExprKind::UnaryOp { value, .. } => is_const(&value.kind),
+                ExprKind::Call { .. } | ExprKind::Identifier(_) => false,
+            }
+        }
+
+        let is_const = is_const(&kind);
+
         Self {
             id,
             line,
             kind,
             symtable,
+
+            typ: None,
+            is_const,
         }
     }
 
     /// Useful for testing
     pub fn without_table(id: i32, kind: ExprKind) -> Self {
-        Self {
-            id,
-            line: 0,
-            kind,
-            symtable: SymbolTable::new(),
-        }
+        Self::new(id, 0, kind, SymbolTable::new())
     }
 
     pub fn as_node(&self) -> AstNode {

@@ -1,11 +1,13 @@
-foreign fn example(arg: Int) Void;
+# foreign fn example();
 
-fn main() {
-    var i: Int = 10;
-    var j: Int = 1.0 - 1;
-    while i > j {
-        i = i - 1;
-    }
-    example(i);
+foreign fn foo() Int;
+foreign fn bar(y: Int, z: Int) Float;
+
+fn main() Int {
+    foo();
+    foo();
+    foo();
+    bar(5, 8 * 3 + foo());
+    return 7 + 5;
 }
 
