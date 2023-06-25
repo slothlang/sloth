@@ -1,0 +1,69 @@
+foreign fn rand() Int;
+
+fn abs(x: Int) Int {
+    if x < 0 {
+        return -x;
+    }
+    return x;
+}
+
+fn fabs(x: Float) Float {
+    if x < 0 {
+        return -x;
+    }
+    return x;
+}
+
+fn max(x: Int, y: Int) Int {
+    if x > y {
+        return x;
+    }
+    return y;
+}
+
+fn min(x: Int, y: Int) Int {
+    if x < y {
+        return x;
+    }
+    return y;
+}
+
+fn fmax(x: Float, y: Float) Float {
+    if x > y {
+        return x;
+    }
+    return y;
+}
+
+fn fmin(x: Float, y: Float) Float {
+    if x < y {
+        return x;
+    }
+    return y;
+}
+
+fn pow(x: Int, y: Int) Int {
+    while y > 1 {
+        x = x*x;
+	y = y-1;
+    }
+    return x;
+}
+
+fn floor(x: Float) Float {
+    return x - abs(x % 1.0);
+}
+
+fn ceil(x: Float) Float {
+    if x < 0.0 {
+        return floor(x) - 1.0;
+    }
+    return floor(x) + 1.0;
+}
+
+fn round(x: Float) Float {
+    if fabs(x % 1.0) >= 0.5 {
+        return ceil(x);
+    }
+    return floor(x);
+}
