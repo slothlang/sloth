@@ -52,6 +52,24 @@ impl SymbolTable {
         None
     }
 
+    pub fn get_type(&self, identifier: &str) -> Option<Type> {
+        let symbol = self.get(identifier)?;
+        if let Symbol::Type(ref typ) = *symbol {
+            return Some(typ.clone());
+        }
+
+        None
+    }
+
+    pub fn get_value(&self, identifier: &str) -> Option<Type> {
+        let symbol = self.get(identifier)?;
+        if let Symbol::Value(ref typ) = *symbol {
+            return Some(typ.clone());
+        }
+
+        None
+    }
+
     pub fn get_mut(&self, identifier: &str) -> Option<RefMut<'_, Symbol>> {
         for scope in self.iter() {
             let reference = scope.symbols.borrow_mut();
@@ -108,18 +126,21 @@ impl<'a> Iterator for Iter<'a> {
 }
 
 #[derive(Debug)]
-pub struct Symbol {
-    pub typ: SymbolType,
+pub enum Symbol {
+    /// Symbol referencing a compile time type, such as the Int symbol
+    Type(Type),
+    /// Symbol referencing a runtime value, such as the println symbol
+    Value(Type),
 }
 
-impl Symbol {
-    pub fn new(typ: SymbolType) -> Self {
-        Self { typ }
-    }
-}
-
-#[derive(Debug)]
-pub enum SymbolType {
-    Variable,
-    Function,
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub enum Type {
+    Void,
+    Integer,
+    Float,
+    Boolean,
+    Function {
+        inputs: Vec<Type>,
+        output: Box<Type>,
+    },
 }

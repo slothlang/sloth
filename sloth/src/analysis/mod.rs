@@ -1,5 +1,6 @@
+pub mod setup;
+
 use crate::parser::ast::{AstNode, ExprKind, Stmt, StmtKind};
-use crate::symtable::{Symbol, SymbolType};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AnalysisError {
@@ -22,30 +23,10 @@ impl AnalysisError {
 }
 
 pub fn analyze(root: &mut Stmt) -> Result<(), AnalysisError> {
-    populate_symtable(&root.as_node());
+    setup::populate_symtable(&root.as_node())?;
     check_usage(&root.as_node())?;
 
     Ok(())
-}
-
-fn populate_symtable(node: &AstNode) {
-    if let AstNode::Stmt(stmt) = node {
-        match &stmt.kind {
-            StmtKind::DefineVariable { identifier, .. } => {
-                let mut table = stmt.symtable.clone();
-                table.insert(identifier.to_owned(), Symbol::new(SymbolType::Variable));
-            }
-            StmtKind::DefineFunction { identifier, .. } => {
-                let mut table = stmt.symtable.clone();
-                table.insert(identifier.to_owned(), Symbol::new(SymbolType::Function));
-            }
-            _ => (),
-        }
-    }
-
-    for child in node.children() {
-        populate_symtable(&child);
-    }
 }
 
 fn check_usage(node: &AstNode) -> Result<(), AnalysisError> {

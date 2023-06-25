@@ -1,24 +1,31 @@
 use std::fmt::{Error, Write};
 
-use super::ast::{Expr, ExprKind, Stmt, StmtKind};
+use super::ast::{Expr, ExprKind, Function, FunctionKind, Stmt, StmtKind};
 
 pub struct GraphBuilder {
     graph: String,
 }
 
 impl GraphBuilder {
-    pub fn generate(ast: &[Stmt]) -> Result<String, Error> {
+    pub fn generate(source: Option<&str>, ast: &Stmt) -> Result<String, Error> {
         let mut this = Self {
             graph: String::new(),
         };
 
         this.graph.push_str("digraph {\n");
-        for stmt in ast.iter() {
-            this.traverse_stmt0(stmt)?;
+
+        if let Some(source) = source {
+            let source = source
+                .replace('\"', "\\\"")
+                .replace("\\n", "\\\\n")
+                .replace('\n', "\\l");
+
+            this.graph.push_str(&format!("label = \"{source}\";"));
+            this.graph.push_str("labeljust = l; labelloc = t;");
         }
-        for stmt in ast.iter() {
-            this.traverse_stmt(stmt)?;
-        }
+
+        this.traverse_stmt0(ast)?;
+        this.traverse_stmt(ast)?;
         this.graph.push('}');
 
         Ok(this.graph)
@@ -72,7 +79,7 @@ impl GraphBuilder {
             } => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=box label=\"DefineVariable\\n\\nIdentifier={}\\nType={}\"];",
+                    "N{} [shape=box label=\"DefineVariable\\n\\nIdentifier={}\\lType={}\\l\"];",
                     stmt.id, identifier, typ
                 )?;
                 self.traverse_expr0(value)?;
@@ -85,22 +92,30 @@ impl GraphBuilder {
                 )?;
                 self.traverse_expr0(value)?;
             }
-            StmtKind::DefineFunction {
+            StmtKind::DefineFunction(Function {
                 identifier,
                 inputs,
                 output,
-                body,
-            } => {
+                kind,
+            }) => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box \
-                     label=\"DefineFunction\\n\\nIdentifier={}\\nInputs={}\\nOutput={}\"];",
+                     label=\"DefineFunction\\n\\nIdentifier={}\\lInputs={}\\lOutput={}\\lKind={}\\\
+                     l\"];",
                     stmt.id,
                     identifier,
                     inputs.len(),
-                    output.is_some()
+                    output.is_some(),
+                    match kind {
+                        FunctionKind::Normal { .. } => "Normal",
+                        FunctionKind::Foreign => "Foreign",
+                    }
                 )?;
-                self.traverse_stmt0(body)?;
+
+                if let FunctionKind::Normal { body } = kind {
+                    self.traverse_stmt0(body)?;
+                }
             }
             StmtKind::Return(expr) => {
                 writeln!(
@@ -120,7 +135,7 @@ impl GraphBuilder {
             ExprKind::Grouping(child) => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=circle label=\"Grouping\"];",
+                    "N{} [shape=box style=rounded label=\"Grouping\"];",
                     expr.id
                 )?;
                 self.traverse_expr0(child)?;
@@ -128,21 +143,21 @@ impl GraphBuilder {
             ExprKind::Literal(literal) => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=diamond label=\"Literal\\n\\nValue={}\"];",
+                    "N{} [shape=box style=\"filled,rounded\" label=\"{}\"];",
                     expr.id, literal
                 )?;
             }
             ExprKind::Identifier(identifier) => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=diamond label=\"Identifier\\n\\nIdentifier={}\"];",
+                    "N{} [shape=box style=\"filled,rounded\" label=\"{}\"];",
                     expr.id, identifier
                 )?;
             }
             ExprKind::BinaryOp { op, lhs, rhs } => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=circle label=\"{}\"];",
+                    "N{} [shape=box style=rounded label=\"{}\"];",
                     expr.id, op
                 )?;
                 self.traverse_expr0(lhs)?;
@@ -151,7 +166,7 @@ impl GraphBuilder {
             ExprKind::UnaryOp { op, value } => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=circle label=\"Unary {}\"];",
+                    "N{} [shape=box style=rounded label=\"{}\"];",
                     expr.id, op
                 )?;
                 self.traverse_expr0(value)?;
@@ -159,7 +174,7 @@ impl GraphBuilder {
             ExprKind::Call { callee, args } => {
                 writeln!(
                     &mut self.graph,
-                    "N{} [shape=circle label=\"Function Call\"];",
+                    "N{} [shape=box style=rounded label=\"Function Call\"];",
                     expr.id
                 )?;
                 self.traverse_expr0(callee)?;
@@ -185,8 +200,17 @@ impl GraphBuilder {
                 self.traverse_expr(expr)?;
             }
             StmtKind::IfStmt {
-                if_then, else_then, ..
+                condition,
+                if_then,
+                else_then,
+                ..
             } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label = \"Condition\"];",
+                    stmt.id, condition.id
+                )?;
+                self.traverse_expr(condition)?;
                 writeln!(
                     &mut self.graph,
                     "N{} -> N{} [label = \"If Then\"];",
@@ -224,15 +248,21 @@ impl GraphBuilder {
                 writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
                 self.traverse_expr(value)?;
             }
-            StmtKind::DefineFunction { body, .. } => {
-                writeln!(
-                    &mut self.graph,
-                    "N{} -> N{} [label = \"Body\"];",
-                    stmt.id, body.id
-                )?;
-                self.traverse_stmt(body)?;
+            StmtKind::DefineFunction(Function { kind, .. }) => {
+                if let FunctionKind::Normal { body } = kind {
+                    writeln!(
+                        &mut self.graph,
+                        "N{} -> N{} [label = \"Body\"];",
+                        stmt.id, body.id
+                    )?;
+
+                    self.traverse_stmt(body)?;
+                }
             }
-            StmtKind::Return(_) => (),
+            StmtKind::Return(value) => {
+                writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
+                self.traverse_expr(value)?;
+            }
         }
 
         Ok(())
@@ -255,10 +285,14 @@ impl GraphBuilder {
                 self.traverse_expr(value)?;
             }
             ExprKind::Call { callee, args } => {
-                writeln!(&mut self.graph, "N{} -> N{};", expr.id, callee.id)?;
+                writeln!(
+                    &mut self.graph,
+                    "N{} -> N{} [label=callee];",
+                    expr.id, callee.id
+                )?;
                 self.traverse_expr(callee)?;
                 for arg in args {
-                    writeln!(&mut self.graph, "N{} -> N{};", expr.id, arg.id)?;
+                    writeln!(&mut self.graph, "N{} -> N{} [label=arg];", expr.id, arg.id)?;
                     self.traverse_expr(arg)?;
                 }
             }

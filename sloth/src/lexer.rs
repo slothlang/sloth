@@ -102,6 +102,8 @@ pub enum TokenType {
 
     As,
 
+    Foreign,
+
     // Other
     Literal(Literal),
     Identifier(String),
@@ -406,6 +408,7 @@ impl<'a> Iterator for Lexer<'a> {
                     "break" => TokenType::Break,
                     "continue" => TokenType::Continue,
                     "as" => TokenType::As,
+                    "foreign" => TokenType::Foreign,
                     "true" => Literal::Boolean(true).into(),
                     "false" => Literal::Boolean(false).into(),
                     _ => TokenType::Identifier(value),

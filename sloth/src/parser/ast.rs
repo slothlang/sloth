@@ -172,7 +172,11 @@ impl Stmt {
             }
             StmtKind::DefineVariable { value, .. } => children.push(value.as_node()),
             StmtKind::AssignVariable { value, .. } => children.push(value.as_node()),
-            StmtKind::DefineFunction { body, .. } => children.push(body.as_node()),
+            StmtKind::DefineFunction(Function { kind, .. }) => {
+                if let FunctionKind::Normal { body } = kind {
+                    children.push(body.as_node())
+                }
+            }
             StmtKind::Return(value) => children.push(value.as_node()),
         }
 
@@ -207,13 +211,22 @@ pub enum StmtKind {
     /// A function definition. Output is None when the function returns nothing
     /// meaning void, otherwise it is the name of the type the function
     /// returns.
-    DefineFunction {
-        identifier: String,
-        inputs: Vec<FunctionInput>,
-        output: Option<String>,
-        body: Box<Stmt>,
-    },
+    DefineFunction(Function),
     Return(Expr),
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct Function {
+    pub identifier: String,
+    pub inputs: Vec<FunctionInput>,
+    pub output: Option<String>,
+    pub kind: FunctionKind,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum FunctionKind {
+    Normal { body: Box<Stmt> },
+    Foreign,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -259,7 +272,10 @@ impl Display for Literal {
             Literal::Float(f) => format!("{f}"),
             Literal::Boolean(b) => format!("{b}"),
             Literal::Character(c) => format!("'{c}'"),
-            Literal::String(s) => format!("\"{s}\""),
+            Literal::String(s) => format!(
+                "\\\"{}\\\"",
+                s.replace('\"', "\\\"").replace("\\n", "\\\\n")
+            ),
             Literal::Array(..) => "<Array>".to_string(),
         };
 

@@ -15,11 +15,14 @@ pub mod symtable;
 
 use std::{env, fs};
 
-use analysis::analyze;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
-use symtable::{Symbol, SymbolTable, SymbolType};
+use symtable::{Symbol, SymbolTable};
+
+use crate::analysis::analyze;
+use crate::parser::graph::GraphBuilder;
+use crate::symtable::Type;
 
 fn main() {
     let args = env::args().collect_vec();
@@ -38,9 +41,10 @@ fn main() {
 
     // Symbol table
     let mut global_symtable = SymbolTable::new();
-    global_symtable.insert("print".to_owned(), Symbol::new(SymbolType::Function));
-    global_symtable.insert("println".to_owned(), Symbol::new(SymbolType::Function));
-    global_symtable.insert("readln".to_owned(), Symbol::new(SymbolType::Function));
+    global_symtable.insert("Void".into(), Symbol::Type(Type::Void));
+    global_symtable.insert("Int".into(), Symbol::Type(Type::Integer));
+    global_symtable.insert("Float".into(), Symbol::Type(Type::Float));
+    global_symtable.insert("Bool".into(), Symbol::Type(Type::Boolean));
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();
@@ -51,8 +55,10 @@ fn main() {
         return;
     }
 
-    println!("{ast:#?}");
+    println!("Suces");
 
-    // let graph = GraphBuilder::generate(&ast).unwrap();
+    // println!("{ast:#?}");
+
+    // let graph = GraphBuilder::generate(Some(&source), &ast).unwrap();
     // println!("{graph}");
 }

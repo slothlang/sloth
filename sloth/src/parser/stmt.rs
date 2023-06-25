@@ -1,4 +1,4 @@
-use super::ast::{FunctionInput, Stmt, StmtKind};
+use super::ast::{Function, FunctionInput, FunctionKind, Stmt, StmtKind};
 use super::{AstParser, ParsingError};
 use crate::lexer::TokenType;
 
@@ -7,14 +7,27 @@ impl<'a> AstParser<'a> {
         match self.peek().tt {
             TokenType::OpeningBrace => self.block(),
 
+            TokenType::Foreign => self.foreign(),
+
             TokenType::If => self.if_stmt(),
             TokenType::While => self.while_stmt(),
             TokenType::Var => self.define_variable(),
-            TokenType::Fn => self.define_function(),
+            TokenType::Fn => self.define_function(false),
             TokenType::Return => self.return_stmt(),
 
             _ if self.peek2().tt == TokenType::Eq => self.assign_variable(),
             _ => self.expression_stmt(),
+        }
+    }
+
+    fn foreign(&mut self) -> Result<Stmt, ParsingError> {
+        // Consume the foreign token
+        self.consume(TokenType::Foreign, "Expected foreign")?;
+
+        match self.peek().tt {
+            TokenType::Fn => self.define_function(true),
+
+            _ => Err(ParsingError::UnexpectedToken),
         }
     }
 
@@ -101,7 +114,7 @@ impl<'a> AstParser<'a> {
     }
 
     // TODO: Make argument types optional
-    fn define_function(&mut self) -> Result<Stmt, ParsingError> {
+    fn define_function(&mut self, is_foreign: bool) -> Result<Stmt, ParsingError> {
         // Consume the fn token
         self.consume(TokenType::Fn, "Expected fn")?;
 
@@ -120,6 +133,12 @@ impl<'a> AstParser<'a> {
                 identifier: input_identifier,
                 typ: input_type,
             });
+
+            if self.peek().tt != TokenType::Comma {
+                break;
+            }
+
+            self.consume(TokenType::Comma, "Expected ','")?;
         }
 
         self.consume(TokenType::ClosingParen, "Expected ')'")?;
@@ -131,20 +150,27 @@ impl<'a> AstParser<'a> {
             None
         };
 
-        // Get the function body
-        let body = self.block()?;
+        // Get the function kind
+        let kind = if is_foreign {
+            self.consume(TokenType::SemiColon, "Expected semicolon")?;
+            FunctionKind::Foreign
+        } else {
+            FunctionKind::Normal {
+                body: Box::new(self.block()?),
+            }
+        };
 
-        let kind = StmtKind::DefineFunction {
+        let stmt = StmtKind::DefineFunction(Function {
             identifier,
             inputs,
             output,
-            body: body.into(),
-        };
+            kind,
+        });
 
         Ok(Stmt::new(
             self.reserve_id(),
             self.line,
-            kind,
+            stmt,
             self.top.clone(),
         ))
     }
@@ -229,7 +255,9 @@ mod tests {
 
     use super::{AstParser, StmtKind};
     use crate::lexer::Lexer;
-    use crate::parser::ast::{BinaryOp, Expr, ExprKind, FunctionInput, Literal, Stmt};
+    use crate::parser::ast::{
+        BinaryOp, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt,
+    };
     use crate::symtable::SymbolTable;
 
     #[test]
@@ -301,49 +329,60 @@ mod tests {
         )
         .collect_vec();
 
-        let expected_ast = Ok(Stmt::without_table(11, StmtKind::DefineFunction {
-            identifier: "foo".to_owned(),
-            inputs: vec![FunctionInput {
-                identifier: "bar".to_owned(),
-                typ: "Int".to_owned(),
-            }],
-            output: Some("Int".to_owned()),
-            body: Box::new(Stmt::without_table(
-                10,
-                StmtKind::Block(vec![
-                    Stmt::without_table(3, StmtKind::DefineVariable {
-                        identifier: "baz".to_owned(),
-                        value: Expr::without_table(2, ExprKind::BinaryOp {
-                            op: BinaryOp::Add,
-                            lhs: Box::new(Expr::without_table(
-                                0,
-                                ExprKind::Identifier("bar".to_owned()),
-                            )),
-                            rhs: Box::new(Expr::without_table(1, Literal::Integer(1).into())),
-                        }),
-                        typ: "Int".to_owned(),
-                    }),
-                    Stmt::without_table(7, StmtKind::AssignVariable {
-                        identifier: "baz".to_owned(),
-                        value: Expr::without_table(6, ExprKind::BinaryOp {
-                            op: BinaryOp::Add,
-                            lhs: Box::new(Expr::without_table(
-                                4,
-                                ExprKind::Identifier("baz".to_owned()),
-                            )),
-                            rhs: Box::new(Expr::without_table(5, Literal::Integer(1).into())),
-                        }),
-                    }),
-                    Stmt::without_table(
-                        9,
-                        StmtKind::Return(Expr::without_table(
-                            8,
-                            ExprKind::Identifier("baz".to_owned()),
-                        )),
-                    ),
-                ]),
-            )),
-        }));
+        let expected_ast = Ok(Stmt::without_table(
+            11,
+            StmtKind::DefineFunction(Function {
+                identifier: "foo".to_owned(),
+                inputs: vec![FunctionInput {
+                    identifier: "bar".to_owned(),
+                    typ: "Int".to_owned(),
+                }],
+                output: Some("Int".to_owned()),
+                kind: FunctionKind::Normal {
+                    body: Box::new(Stmt::without_table(
+                        10,
+                        StmtKind::Block(vec![
+                            Stmt::without_table(3, StmtKind::DefineVariable {
+                                identifier: "baz".to_owned(),
+                                value: Expr::without_table(2, ExprKind::BinaryOp {
+                                    op: BinaryOp::Add,
+                                    lhs: Box::new(Expr::without_table(
+                                        0,
+                                        ExprKind::Identifier("bar".to_owned()),
+                                    )),
+                                    rhs: Box::new(Expr::without_table(
+                                        1,
+                                        Literal::Integer(1).into(),
+                                    )),
+                                }),
+                                typ: "Int".to_owned(),
+                            }),
+                            Stmt::without_table(7, StmtKind::AssignVariable {
+                                identifier: "baz".to_owned(),
+                                value: Expr::without_table(6, ExprKind::BinaryOp {
+                                    op: BinaryOp::Add,
+                                    lhs: Box::new(Expr::without_table(
+                                        4,
+                                        ExprKind::Identifier("baz".to_owned()),
+                                    )),
+                                    rhs: Box::new(Expr::without_table(
+                                        5,
+                                        Literal::Integer(1).into(),
+                                    )),
+                                }),
+                            }),
+                            Stmt::without_table(
+                                9,
+                                StmtKind::Return(Expr::without_table(
+                                    8,
+                                    ExprKind::Identifier("baz".to_owned()),
+                                )),
+                            ),
+                        ]),
+                    )),
+                },
+            }),
+        ));
 
         let mut parser = AstParser::new(tokens, SymbolTable::new());
         let generated_ast = parser.statement();

@@ -1,3 +1,5 @@
+foreign fn example(arg: Int) Void;
+
 fn main() {
     var i: Int = 10;
     var j: Int = 1.0 - 1;

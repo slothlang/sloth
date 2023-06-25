@@ -1,26 +1,29 @@
-val computer: int = random(1, 10);
+foreign fn print();
+foreign fn println();
+foreign fn readln() String;
+foreign fn random(min: Int, max: Int) Int;
+foreign fn parse_int(str: String) Int;
 
-var tries: int = 0;
-var correct: bool = false;
+fn main() {
+	var computer: Int = random(1, 10);
+	var tries: Int = 0;
+	var correct: Bool = false;
 
-while !correct {
-    print("\nPick a number between 1 and 10: ");
-    val human: int = parse_int(readln());
+	while !correct {
+		print("Pick a number between 1 and 10: ");
+		var human: Int = parse_int(readln());
 
-    if human == computer {
-        println("You guessed the same number as me!");
-        correct = true;
-    }
-    
-    if human > computer {
-        println("Your guess was too high.");
-    }
-    
-    if human < computer {
-        println("Your guess was too low.");
-    }
-    
-    tries = tries + 1;
+		if human == computer {
+			println("You guessed the same number as me!\n");
+			correct = true;
+		} else if human > computer {
+			println("Your guess was too high.\n");
+		} else if human < computer {
+			println("Your guess was too low.\n");
+		}
+
+		tries = tries + 1;
+	}
+
+	println("It took you ", tries, " tries to guess correctly!");
 }
-
-println("\nIt took you ", tries, " tries to guess correctly!");
