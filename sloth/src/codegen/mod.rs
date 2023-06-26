@@ -7,11 +7,11 @@ use inkwell::module::Module;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
 };
-use inkwell::types::{BasicMetadataTypeEnum, BasicTypeEnum};
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum, PointerType};
 use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue, PointerValue,
 };
-use inkwell::{FloatPredicate, IntPredicate, OptimizationLevel};
+use inkwell::{AddressSpace, FloatPredicate, IntPredicate, OptimizationLevel};
 use itertools::{Either, Itertools};
 
 use crate::parser::ast::{
@@ -35,7 +35,7 @@ impl<'ctx> Codegen<'ctx> {
         let builder = context.create_builder();
         let module = context.create_module(module);
 
-        Codegen {
+        let mut this = Codegen {
             context,
             builder,
             module,
@@ -44,7 +44,13 @@ impl<'ctx> Codegen<'ctx> {
             current_func_void: false,
 
             references: Default::default(),
-        }
+        };
+
+        this.INTRINSIC_vpush("i", Type::Integer);
+        this.INTRINSIC_vpush("f", Type::Float);
+        this.INTRINSIC_vpush("b", Type::Boolean);
+
+        this
     }
 
     pub fn codegen(&mut self, code: &Stmt) {
@@ -68,7 +74,7 @@ impl<'ctx> Codegen<'ctx> {
             None => builder.position_at_end(entry),
         }
 
-        builder.build_alloca(typ, &format!("alloca {name}"))
+        builder.build_alloca(typ, name)
     }
 
     fn codegen_stmt(&mut self, code: &Stmt) {
@@ -207,6 +213,25 @@ impl<'ctx> Codegen<'ctx> {
             Type::Integer => self.context.i64_type().fn_type(&inputs_typ, false),
             Type::Float => self.context.f64_type().fn_type(&inputs_typ, false),
             Type::Boolean => self.context.bool_type().fn_type(&inputs_typ, false),
+            Type::Array { ref typ, .. } => {
+                let i32_type = self.context.i32_type().as_basic_type_enum();
+
+                let typ = self
+                    .type_as_basic_type(*typ.clone())
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum();
+
+                let vector_type = self.context.struct_type(&[i32_type, i32_type, typ], false);
+
+                let ptr_to_that = vector_type.ptr_type(AddressSpace::default());
+
+                ptr_to_that.fn_type(&inputs_typ, false)
+
+                // killll me
+                // self.type_as_basic_type(*typ.clone())
+                //     .ptr_type(AddressSpace::default())
+                //     .fn_type(&inputs_typ, false)
+            }
             _ => todo!(),
         };
 
@@ -333,15 +358,89 @@ impl<'ctx> Codegen<'ctx> {
                 .bool_type()
                 .const_int(if value { 1 } else { 0 }, false)
                 .as_basic_value_enum(),
+            Literal::Array(values) => {
+                // FIXME: Allocating a new dynamic array for constants is really inefficient
+                let element_type = self.type_as_basic_type(values[0].typ.clone().unwrap());
+                let i32_type = self.context.i32_type();
+
+                let inner_ptr = self
+                    .builder
+                    .build_array_malloc(element_type, i32_type.const_int(100, false), "vecinnerptr")
+                    .unwrap();
+
+                for (idx, value) in values.iter().enumerate() {
+                    let value = self.codegen_expr(value).unwrap();
+                    let value_ptr = unsafe {
+                        self.builder.build_gep(
+                            i32_type,
+                            inner_ptr,
+                            &[i32_type.const_int(idx as u64, false)],
+                            "",
+                        )
+                    };
+
+                    self.builder.build_store(value_ptr, value);
+                }
+
+                let vector_type = self.context.struct_type(
+                    &[
+                        i32_type.as_basic_type_enum(),
+                        i32_type.as_basic_type_enum(),
+                        inner_ptr.get_type().as_basic_type_enum(),
+                    ],
+                    false,
+                );
+
+                let vector_ptr = self.builder.build_malloc(vector_type, "vecptr").unwrap();
+
+                // Set the size and capacity values
+                let size = self
+                    .builder
+                    .build_struct_gep(vector_type, vector_ptr, 0, "gepvec")
+                    .unwrap();
+                self.builder
+                    .build_store(size, i32_type.const_int(values.len() as u64, false));
+
+                let cap = self
+                    .builder
+                    .build_struct_gep(vector_type, vector_ptr, 1, "gepvec")
+                    .unwrap();
+                self.builder
+                    .build_store(cap, i32_type.const_int(100, false));
+
+                let inner = self
+                    .builder
+                    .build_struct_gep(vector_type, vector_ptr, 2, "gepvec")
+                    .unwrap();
+                self.builder.build_store(inner, inner_ptr);
+
+                vector_ptr.as_basic_value_enum()
+            }
             _ => unimplemented!(),
         }
     }
 
     fn type_as_basic_type(&self, typ: Type) -> BasicTypeEnum<'ctx> {
+        // self.context.i64_type().ptr_type(Address)
         match typ {
             Type::Integer => self.context.i64_type().into(),
             Type::Float => self.context.f64_type().into(),
             Type::Boolean => self.context.bool_type().into(),
+            Type::Array { typ, .. } => {
+                let i32_type = self.context.i32_type().as_basic_type_enum();
+
+                let typ = self
+                    .type_as_basic_type(*typ)
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum();
+
+                let vector_type = self.context.struct_type(&[i32_type, i32_type, typ], false);
+
+                let ptr_to_that = vector_type.ptr_type(AddressSpace::default());
+
+                ptr_to_that.as_basic_type_enum()
+            }
+            // Type::Array { typ, len } => self.type_as_basic_type(*typ).array_type(len).into(),
             _ => todo!(),
         }
     }
@@ -373,5 +472,91 @@ impl<'ctx> Codegen<'ctx> {
             .unwrap();
 
         file.write_all(buffer.as_slice()).unwrap();
+    }
+}
+
+#[allow(non_snake_case)]
+impl<'ctx> Codegen<'ctx> {
+    fn INTRINSIC_vpush(&mut self, name: &str, typ: Type) {
+        // Preparing for function
+        self.references.clear();
+
+        let bruh = self.type_as_basic_type(Type::Array {
+            typ: Box::new(typ.clone()),
+            len: 0,
+        });
+
+        let inputs = &[bruh.into(), self.type_as_metadata_type(typ.clone())];
+
+        // Making the function
+        let func_type = self.context.void_type().fn_type(inputs, false);
+        let func = self
+            .module
+            .add_function(&format!("vpush{name}"), func_type, None);
+
+        self.current_func = Some(func);
+        self.current_func_void = true;
+
+        let block = self.context.append_basic_block(func, "entrypoint");
+        self.builder.position_at_end(block);
+
+        // Writing the logic
+        let element_type = self.type_as_basic_type(typ);
+        let i32_type = self.context.i32_type();
+
+        let vector_type = self.context.struct_type(
+            &[
+                i32_type.as_basic_type_enum(),
+                i32_type.as_basic_type_enum(),
+                element_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum(),
+            ],
+            false,
+        );
+
+        let vector_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
+
+        let size_ptr = self
+            .builder
+            .build_struct_gep(vector_type, vector_ptr, 0, "sizegep")
+            .unwrap();
+        let cap_ptr = self
+            .builder
+            .build_struct_gep(vector_type, vector_ptr, 1, "capgep")
+            .unwrap();
+        let inner_ptr = self
+            .builder
+            .build_struct_gep(vector_type, vector_ptr, 2, "innergep")
+            .unwrap();
+
+        let size = self
+            .builder
+            .build_load(i32_type, size_ptr, "size")
+            .into_int_value();
+        let _cap = self
+            .builder
+            .build_load(i32_type, cap_ptr, "cap")
+            .into_int_value();
+
+        // Put the new element into backing array
+        let slot_ptr = unsafe {
+            self.builder
+                .build_gep(element_type, inner_ptr, &[size], "slot")
+        };
+
+        let element = func.get_nth_param(1).unwrap();
+        self.builder.build_store(slot_ptr, element);
+
+        // TODO: Handle going over capacity
+
+        // Increase size tracker
+        let new_size = self
+            .builder
+            .build_int_add(size, i32_type.const_int(1, false), "");
+        self.builder.build_store(size_ptr, new_size);
+
+        // Function return
+        self.builder.build_return(None);
     }
 }

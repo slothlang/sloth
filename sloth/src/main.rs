@@ -22,7 +22,7 @@ use inkwell::targets::FileType;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
-use symtable::{Symbol, SymbolTable};
+use symtable::{Symbol, SymbolTable, ValueSymbol};
 
 use crate::analysis::analyze;
 use crate::symtable::Type;
@@ -48,6 +48,18 @@ fn main() {
     global_symtable.insert("Int".into(), Symbol::Type(Type::Integer));
     global_symtable.insert("Float".into(), Symbol::Type(Type::Float));
     global_symtable.insert("Bool".into(), Symbol::Type(Type::Boolean));
+
+    let dummy = Symbol::Value(ValueSymbol {
+        typ: Type::Function {
+            inputs: vec![],
+            output: Box::new(Type::Void),
+        },
+        id: 0,
+    });
+
+    global_symtable.insert("vpushi".into(), dummy.clone());
+    global_symtable.insert("vpushf".into(), dummy.clone());
+    global_symtable.insert("vpushb".into(), dummy);
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();

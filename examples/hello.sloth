@@ -1,12 +1,11 @@
-foreign fn addz(lhs: Int, rhs: Int) Int;
+fn test() [Int 3] {
+    var list: [Int 3] = [9, 5, 7];
 
-fn haiiii() Void {}
+    vpushi(list, 3);
+    vpushi(list, 3);
+    vpushi(list, 3);
+    vpushi(list, 5);
 
-fn hehehaha() Int {
-    var x: Int = 0;
-    while x < 10 {
-        x = x + 1;
-    }
-    return x;
+    return list;
 }
 

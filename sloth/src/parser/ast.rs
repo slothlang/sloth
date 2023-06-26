@@ -218,7 +218,7 @@ pub enum StmtKind {
     DefineVariable {
         identifier: String,
         value: Expr,
-        typ: String,
+        typ: TypeIdentifier,
     },
     AssignVariable {
         identifier: String,
@@ -235,7 +235,7 @@ pub enum StmtKind {
 pub struct Function {
     pub identifier: String,
     pub inputs: Vec<FunctionInput>,
-    pub output: Option<String>,
+    pub output: Option<TypeIdentifier>,
     pub kind: FunctionKind,
 }
 
@@ -248,7 +248,30 @@ pub enum FunctionKind {
 #[derive(PartialEq, Clone, Debug)]
 pub struct FunctionInput {
     pub identifier: String,
-    pub typ: String,
+    pub typ: TypeIdentifier,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct TypeIdentifier {
+    pub name: String,
+    pub is_list: bool,
+    pub list_len: u32,
+}
+
+impl Display for TypeIdentifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_list {
+            write!(f, "[")?;
+        }
+
+        write!(f, "{}", self.name)?;
+
+        if self.is_list {
+            write!(f, "]")?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -258,7 +281,7 @@ pub enum Literal {
     Boolean(bool),
     Character(char),
     String(String),
-    Array(Vec<ExprKind>),
+    Array(Vec<Expr>),
 }
 
 impl From<lexer::Literal> for Literal {

@@ -3,7 +3,7 @@ pub mod expr;
 pub mod graph;
 pub mod stmt;
 
-use self::ast::{Literal, Stmt, StmtKind};
+use self::ast::{Literal, Stmt, StmtKind, TypeIdentifier};
 use crate::lexer::{Token, TokenType};
 use crate::symtable::SymbolTable;
 
@@ -115,6 +115,31 @@ impl<'a> AstParser<'a> {
         };
 
         Ok(identifier)
+    }
+
+    pub fn consume_type(&mut self) -> Result<TypeIdentifier, ParsingError> {
+        let is_list = self.peek().tt == TokenType::OpeningBracket;
+
+        if is_list {
+            self.consume(TokenType::OpeningBracket, "Expected '['")?;
+        }
+
+        let name = self.consume_identifier()?;
+
+        let mut list_len = 0;
+        if is_list {
+            if let Literal::Integer(i) = self.consume_literal()? {
+                list_len = i as u32;
+            }
+
+            self.consume(TokenType::ClosingBracket, "Expected ']'")?;
+        }
+
+        Ok(TypeIdentifier {
+            name,
+            is_list,
+            list_len,
+        })
     }
 
     pub fn reserve_id(&mut self) -> i32 {

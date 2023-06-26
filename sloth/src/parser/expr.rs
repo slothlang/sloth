@@ -1,4 +1,4 @@
-use super::ast::{Expr, UnaryOp};
+use super::ast::{Expr, Literal, UnaryOp};
 use super::AstParser;
 use crate::lexer::TokenType;
 use crate::parser::ast::{BinaryOp, ExprKind};
@@ -66,6 +66,20 @@ impl<'a> AstParser<'a> {
         let kind = match self.advance().unwrap().tt.clone() {
             TokenType::Literal(literal) => ExprKind::Literal(literal.into()),
             TokenType::Identifier(identifier) => ExprKind::Identifier(identifier),
+
+            TokenType::OpeningBracket => {
+                let mut contents = Vec::new();
+                while !self.eof() && self.peek().tt != TokenType::ClosingBracket {
+                    contents.push(self.expression()?);
+                    if !self.advance_if_eq(&TokenType::Comma) {
+                        break;
+                    }
+                }
+
+                self.consume(TokenType::ClosingBracket, "Expected ']'")?;
+
+                ExprKind::Literal(Literal::Array(contents))
+            }
 
             TokenType::OpeningParen => {
                 let expr = self.expression()?;

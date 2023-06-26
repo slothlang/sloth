@@ -1,13 +1,26 @@
 #include <stdio.h>
 
-long long hehehaha();
+typedef struct {
+    int size;
+    int cap;
+    long* inner;
+} IntVec;
 
-long long addz(long long lhs, long long rhs) {
-    return lhs + rhs + 1;
-}
+IntVec* test();
 
 int main() {
-    long long res = hehehaha();
-    printf("%d\n", res);
-    return 0;
+    IntVec* v = test();
+
+    int size = (*v).size;
+    int cap = (*v).cap;
+    long* inner = (*v).inner;
+
+    printf("%d\n", size);
+    printf("%d\n", cap);
+
+    for (int i = 0; i < size; ++i) {
+        long value = inner[i];
+        printf("%d ", i);
+    }
+    puts("\n");
 }

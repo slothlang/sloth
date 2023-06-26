@@ -1,6 +1,7 @@
 use super::AnalysisError;
 use crate::parser::ast::{
     AstNode, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt, StmtKind,
+    TypeIdentifier,
 };
 use crate::symtable::{Symbol, SymbolTable, Type, ValueSymbol};
 
@@ -40,7 +41,7 @@ impl Populator {
                     // table of the current scope, and add the inputs to the child
                     // (body) scope.
                     let function_symbol =
-                        self.build_function_symbol(node.line(), &table, inputs, output.as_deref())?;
+                        self.build_function_symbol(node.line(), &table, inputs, output.as_ref())?;
                     table.insert(identifier.to_owned(), function_symbol);
 
                     if let FunctionKind::Normal { body } = kind {
@@ -68,11 +69,11 @@ impl Populator {
         &mut self,
         line: u32,
         table: &SymbolTable,
-        typ: &str,
+        typ: &TypeIdentifier,
     ) -> Result<Symbol, AnalysisError> {
         let typ = table
             .get_type(typ)
-            .ok_or(AnalysisError::UnknownIdentifier(line, typ.to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(line, typ.to_string()))?;
 
         Ok(Symbol::Value(ValueSymbol {
             typ,
@@ -85,7 +86,7 @@ impl Populator {
         line: u32,
         table: &SymbolTable,
         inputs: &[FunctionInput],
-        output: Option<&str>,
+        output: Option<&TypeIdentifier>,
     ) -> Result<Symbol, AnalysisError> {
         let inputs = inputs
             .iter()
@@ -166,6 +167,20 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                 Literal::Integer(_) => Type::Integer,
                 Literal::Float(_) => Type::Float,
                 Literal::Boolean(_) => Type::Boolean,
+                Literal::Array(members) => {
+                    let mut last = None;
+                    for member in members {
+                        propagate_types(member)?;
+                        if let Some(ref last) = last {
+                            if member.typ.as_ref().unwrap() != last {
+                                return Err(AnalysisError::TypeMismatch(node.line));
+                            }
+                        }
+                        last = Some(member.typ.clone().unwrap());
+                    }
+
+                    last.expect("need 1 element in literal im sozzy")
+                }
                 _ => todo!(),
             },
             ExprKind::Identifier(identifier) => {

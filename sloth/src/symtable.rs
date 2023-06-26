@@ -3,6 +3,8 @@ use std::collections::hash_map::Entry::Vacant;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use crate::parser::ast::TypeIdentifier;
+
 #[derive(Debug, Default)]
 struct Scope {
     parent: Option<Rc<Scope>>,
@@ -52,10 +54,17 @@ impl SymbolTable {
         None
     }
 
-    pub fn get_type(&self, identifier: &str) -> Option<Type> {
-        let symbol = self.get(identifier)?;
+    pub fn get_type(&self, identifier: &TypeIdentifier) -> Option<Type> {
+        let symbol = self.get(&identifier.name)?;
         if let Symbol::Type(ref typ) = *symbol {
-            return Some(typ.clone());
+            let mut typ = typ.clone();
+            if identifier.is_list {
+                typ = Type::Array {
+                    typ: Box::new(typ),
+                    len: identifier.list_len,
+                };
+            }
+            return Some(typ);
         }
 
         None
@@ -125,7 +134,7 @@ impl<'a> Iterator for Iter<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Symbol {
     /// Symbol referencing a compile time type, such as the Int symbol
     Type(Type),
@@ -148,5 +157,9 @@ pub enum Type {
     Function {
         inputs: Vec<Type>,
         output: Box<Type>,
+    },
+    Array {
+        typ: Box<Type>,
+        len: u32,
     },
 }

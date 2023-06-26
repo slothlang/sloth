@@ -91,7 +91,7 @@ impl<'a> AstParser<'a> {
         // Get the identifier and type
         let identifier = self.consume_identifier()?;
         self.consume(TokenType::Colon, "Expected ':'")?;
-        let typ = self.consume_identifier()?;
+        let typ = self.consume_type()?;
 
         // Get the default value
         self.consume(TokenType::Eq, "Expected '='")?;
@@ -127,7 +127,7 @@ impl<'a> AstParser<'a> {
         while matches!(self.peek().tt, TokenType::Identifier(_)) {
             let input_identifier = self.consume_identifier()?;
             self.consume(TokenType::Colon, "Expected ':'")?;
-            let input_type = self.consume_identifier()?;
+            let input_type = self.consume_type()?;
 
             inputs.push(FunctionInput {
                 identifier: input_identifier,
@@ -144,8 +144,11 @@ impl<'a> AstParser<'a> {
         self.consume(TokenType::ClosingParen, "Expected ')'")?;
 
         // Get the function output
-        let output = if matches!(self.peek().tt, TokenType::Identifier(_)) {
-            Some(self.consume_identifier()?)
+        let output = if matches!(
+            self.peek().tt,
+            TokenType::Identifier(_) | TokenType::OpeningBracket
+        ) {
+            Some(self.consume_type()?)
         } else {
             None
         };
@@ -257,6 +260,7 @@ mod tests {
     use crate::lexer::Lexer;
     use crate::parser::ast::{
         BinaryOp, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt,
+        TypeIdentifier,
     };
     use crate::symtable::SymbolTable;
 
@@ -304,7 +308,11 @@ mod tests {
                     ExprKind::Literal(Literal::Integer(3)),
                 )),
             }),
-            typ: "Int".to_string(),
+            typ: TypeIdentifier {
+                name: "Int".to_string(),
+                is_list: false,
+                list_len: 0,
+            },
         }));
 
         let mut parser = AstParser::new(tokens, SymbolTable::new());
@@ -335,9 +343,17 @@ mod tests {
                 identifier: "foo".to_owned(),
                 inputs: vec![FunctionInput {
                     identifier: "bar".to_owned(),
-                    typ: "Int".to_owned(),
+                    typ: TypeIdentifier {
+                        name: "Int".to_owned(),
+                        is_list: false,
+                        list_len: 0,
+                    },
                 }],
-                output: Some("Int".to_owned()),
+                output: Some(TypeIdentifier {
+                    name: "Int".to_owned(),
+                    is_list: false,
+                    list_len: 0,
+                }),
                 kind: FunctionKind::Normal {
                     body: Box::new(Stmt::without_table(
                         10,
@@ -355,7 +371,11 @@ mod tests {
                                         Literal::Integer(1).into(),
                                     )),
                                 }),
-                                typ: "Int".to_owned(),
+                                typ: TypeIdentifier {
+                                    name: "Int".to_owned(),
+                                    is_list: false,
+                                    list_len: 0,
+                                },
                             }),
                             Stmt::without_table(7, StmtKind::AssignVariable {
                                 identifier: "baz".to_owned(),
