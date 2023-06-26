@@ -1,11 +1,13 @@
 #include <stdio.h>
 
-int add(int, int);
-int subtract(int, int);
+long long hehehaha();
+
+long long addz(long long lhs, long long rhs) {
+    return lhs + rhs + 1;
+}
 
 int main() {
-    int a = add(5, 2);
-    int b = subtract(3, 8);
-    printf("%d %d\n", a, b);
+    long long res = hehehaha();
+    printf("%d\n", res);
     return 0;
 }

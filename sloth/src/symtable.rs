@@ -3,6 +3,8 @@ use std::collections::hash_map::Entry::Vacant;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use inkwell::values::PointerValue;
+
 #[derive(Debug, Default)]
 struct Scope {
     parent: Option<Rc<Scope>>,
@@ -61,10 +63,10 @@ impl SymbolTable {
         None
     }
 
-    pub fn get_value(&self, identifier: &str) -> Option<Type> {
+    pub fn get_value(&self, identifier: &str) -> Option<ValueSymbol> {
         let symbol = self.get(identifier)?;
-        if let Symbol::Value(ref typ) = *symbol {
-            return Some(typ.clone());
+        if let Symbol::Value(ref symbol) = *symbol {
+            return Some(symbol.clone());
         }
 
         None
@@ -130,7 +132,13 @@ pub enum Symbol {
     /// Symbol referencing a compile time type, such as the Int symbol
     Type(Type),
     /// Symbol referencing a runtime value, such as the println symbol
-    Value(Type),
+    Value(ValueSymbol),
+}
+
+#[derive(Clone, Debug)]
+pub struct ValueSymbol {
+    pub typ: Type,
+    pub id: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]

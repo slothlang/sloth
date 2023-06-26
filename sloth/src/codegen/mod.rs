@@ -1,11 +1,19 @@
+use std::collections::HashMap;
 use std::io::Write;
+use std::path::Path;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::types::{BasicMetadataTypeEnum, BasicType};
-use inkwell::values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue};
-use itertools::Itertools;
+use inkwell::targets::{
+    CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
+};
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
+use inkwell::values::{
+    BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue, PointerValue,
+};
+use inkwell::{FloatPredicate, IntPredicate, OptimizationLevel};
+use itertools::{Either, Itertools};
 
 use crate::parser::ast::{
     BinaryOp, Expr, ExprKind, Function, FunctionKind, Literal, Stmt, StmtKind,
@@ -18,29 +26,50 @@ pub struct Compiler<'ctx> {
     module: Module<'ctx>,
 
     current_func: Option<FunctionValue<'ctx>>,
+    current_func_void: bool,
+
+    references: HashMap<i32, PointerValue<'ctx>>,
 }
 
 impl<'ctx> Compiler<'ctx> {
-    pub fn codegen(context: &'ctx Context, module: &str, code: &Stmt) {
+    pub fn new(context: &'ctx Context, module: &str) -> Self {
         let builder = context.create_builder();
         let module = context.create_module(module);
 
-        let mut this = Compiler {
+        Compiler {
             context,
             builder,
             module,
 
             current_func: None,
-        };
+            current_func_void: false,
 
+            references: Default::default(),
+        }
+    }
+
+    pub fn codegen(&mut self, code: &Stmt) {
         let StmtKind::Block(ref stmts) = &code.kind else {
             panic!("Code root should be a block");
         };
 
         for stmt in stmts {
-            this.codegen_stmt(stmt);
-            this.current_func.unwrap().print_to_stderr();
+            self.codegen_stmt(stmt);
+            self.current_func.unwrap().print_to_stderr();
         }
+    }
+
+    fn codegen_alloca(&mut self, typ: BasicTypeEnum<'ctx>, name: &str) -> PointerValue<'ctx> {
+        let builder = self.context.create_builder();
+
+        let entry = self.current_func.unwrap().get_first_basic_block().unwrap();
+
+        match entry.get_first_instruction() {
+            Some(first) => builder.position_before(&first),
+            None => builder.position_at_end(entry),
+        }
+
+        builder.build_alloca(typ, &format!("alloca {name}"))
     }
 
     fn codegen_stmt(&mut self, code: &Stmt) {
@@ -49,9 +78,88 @@ impl<'ctx> Compiler<'ctx> {
             StmtKind::ExprStmt(expr) => {
                 self.codegen_expr(expr);
             }
+            StmtKind::IfStmt {
+                condition,
+                if_then,
+                else_then,
+            } => {
+                // Get the current function
+                let func = self.current_func.unwrap();
+
+                // Get the condition
+                let condition = self.codegen_expr(condition).unwrap().into_int_value();
+
+                // Add the branching logic
+                let then_bb = self.context.append_basic_block(func, "then");
+                let else_bb = self.context.append_basic_block(func, "else");
+                let continue_bb = self.context.append_basic_block(func, "continue");
+
+                self.builder
+                    .build_conditional_branch(condition, then_bb, else_bb);
+
+                // Building the blocks for then
+                self.builder.position_at_end(then_bb);
+                self.codegen_stmt(if_then);
+                self.builder.build_unconditional_branch(continue_bb);
+
+                // Building the blocks for else
+                self.builder.position_at_end(else_bb);
+                if let Some(else_then) = else_then {
+                    self.codegen_stmt(else_then);
+                }
+                self.builder.build_unconditional_branch(continue_bb);
+
+                // Position the builder at the end of the continue block
+                self.builder.position_at_end(continue_bb);
+            }
+            StmtKind::WhileStmt { condition, body } => {
+                // Get the current function
+                let func = self.current_func.unwrap();
+
+                let loop_bb = self.context.append_basic_block(func, "loop");
+                let body_bb = self.context.append_basic_block(func, "loop body");
+                let after_bb = self.context.append_basic_block(func, "after loop");
+
+                self.builder.build_unconditional_branch(loop_bb);
+
+                // Building the blocks for the head of the loop
+                self.builder.position_at_end(loop_bb);
+                let condition = self.codegen_expr(condition).unwrap().into_int_value();
+                self.builder
+                    .build_conditional_branch(condition, body_bb, after_bb);
+
+                // Building the blocks for the body of the loop
+                self.builder.position_at_end(body_bb);
+                self.codegen_stmt(body);
+                self.builder.build_unconditional_branch(loop_bb);
+
+                // Position the builder at the end of the loop
+                self.builder.position_at_end(after_bb);
+            }
             StmtKind::Return(expr) => {
-                let res = self.codegen_expr(expr);
+                let res = self.codegen_expr(expr).unwrap();
                 self.builder.build_return(Some(&res));
+            }
+            StmtKind::DefineVariable {
+                identifier, value, ..
+            } => {
+                let table = code.symtable.clone();
+                let symbol = table.get_value(identifier).unwrap();
+
+                let ptr = self.codegen_alloca(self.type_as_basic_type(symbol.typ), identifier);
+                let init_value = self.codegen_expr(value).unwrap();
+
+                self.builder.build_store(ptr, init_value);
+                self.references.insert(symbol.id, ptr);
+            }
+            StmtKind::AssignVariable { identifier, value } => {
+                let table = code.symtable.clone();
+                let symbol = table.get_value(identifier).unwrap();
+
+                let ptr = self.references.get(&symbol.id).unwrap();
+                let init_value = self.codegen_expr(value).unwrap();
+
+                self.builder.build_store(*ptr, init_value);
             }
             StmtKind::DefineFunction(function) => {
                 let table = code.symtable.clone();
@@ -61,7 +169,17 @@ impl<'ctx> Compiler<'ctx> {
                 // the block contents
                 if let FunctionKind::Normal { body } = &function.kind {
                     if let StmtKind::Block(body) = &body.kind {
+                        // Make the block containing the code for the function
+                        let func = self.current_func.unwrap();
+                        let block = self.context.append_basic_block(func, "entrypoint");
+
+                        // Position the builder to be at the block
+                        self.builder.position_at_end(block);
                         self.codegen_block(body);
+
+                        if self.current_func_void {
+                            self.builder.build_return(None);
+                        }
                     }
                 };
             }
@@ -70,6 +188,9 @@ impl<'ctx> Compiler<'ctx> {
     }
 
     fn codegen_function(&mut self, table: SymbolTable, function: Function) -> FunctionValue {
+        // Clear references to variables
+        self.references.clear();
+
         let inputs = function.inputs;
         let inputs_typ = inputs
             .iter()
@@ -96,59 +217,76 @@ impl<'ctx> Compiler<'ctx> {
                 .add_function(&function.identifier, llvm_function_type, None);
 
         self.current_func = Some(llvm_function);
+        self.current_func_void = matches!(output_typ, Type::Void);
 
         llvm_function
     }
 
     fn codegen_block(&mut self, code: &[Stmt]) {
-        let Some(current_func) = self.current_func else {
-            panic!("Block codegen requires function");
-        };
-
-        let block = self.context.append_basic_block(current_func, "block");
-
-        self.builder.position_at_end(block);
-
         for stmt in code {
             self.codegen_stmt(stmt);
         }
     }
 
-    fn codegen_expr(&self, code: &Expr) -> BasicValueEnum<'ctx> {
-        // AnyValue
-        match &code.kind {
+    fn codegen_expr(&self, code: &Expr) -> Option<BasicValueEnum<'ctx>> {
+        Some(match &code.kind {
             ExprKind::Literal(literal) => self.codegen_value(literal.clone()),
-            ExprKind::Grouping(inner) => self.codegen_expr(inner),
+            ExprKind::Grouping(inner) => self.codegen_expr(inner)?,
             ExprKind::Identifier(ident) => {
-                // FIXME: Do thsi
-                todo!()
+                let table = code.symtable.clone();
+                let symbol = table.get_value(ident).unwrap();
+                let ptr = self.references.get(&symbol.id).unwrap();
+
+                self.builder
+                    .build_load(self.type_as_basic_type(symbol.typ.clone()), *ptr, "deref")
             }
             ExprKind::BinaryOp { op, lhs, rhs } => match lhs.typ {
-                Some(Type::Integer) => {
-                    let lhs_gen = self.codegen_expr(lhs).into_int_value();
-                    let rhs_gen = self.codegen_expr(rhs).into_int_value();
+                Some(Type::Integer) | Some(Type::Boolean) => {
+                    use IntPredicate::*;
+
+                    let l = self.codegen_expr(lhs).unwrap().into_int_value();
+                    let r = self.codegen_expr(rhs).unwrap().into_int_value();
 
                     match op {
-                        BinaryOp::Add => self.builder.build_int_add(lhs_gen, rhs_gen, "add"),
-                        BinaryOp::Sub => self.builder.build_int_sub(lhs_gen, rhs_gen, "sub"),
-                        BinaryOp::Mul => self.builder.build_int_mul(lhs_gen, rhs_gen, "mul"),
-                        BinaryOp::Div => self.builder.build_int_signed_div(lhs_gen, rhs_gen, "div"),
+                        BinaryOp::Add => self.builder.build_int_add(l, r, "add"),
+                        BinaryOp::Sub => self.builder.build_int_sub(l, r, "sub"),
+                        BinaryOp::Mul => self.builder.build_int_mul(l, r, "mul"),
+                        BinaryOp::Div => self.builder.build_int_signed_div(l, r, "div"),
+                        BinaryOp::Mod => self.builder.build_int_signed_rem(l, r, "mod"),
+
+                        BinaryOp::Gt => self.builder.build_int_compare(SGT, l, r, "gt"),
+                        BinaryOp::GtEq => self.builder.build_int_compare(SGE, l, r, ""),
+                        BinaryOp::Lt => self.builder.build_int_compare(SLT, l, r, "lt"),
+                        BinaryOp::LtEq => self.builder.build_int_compare(SLE, l, r, ""),
+
+                        BinaryOp::EqEq => self.builder.build_int_compare(EQ, l, r, ""),
+                        BinaryOp::NotEq => self.builder.build_int_compare(NE, l, r, ""),
                         _ => panic!(),
                     }
                     .into()
                 }
                 Some(Type::Float) => {
-                    let lhs_gen = self.codegen_expr(lhs).into_float_value();
-                    let rhs_gen = self.codegen_expr(rhs).into_float_value();
+                    use FloatPredicate::*;
+
+                    let l = self.codegen_expr(lhs).unwrap().into_float_value();
+                    let r = self.codegen_expr(rhs).unwrap().into_float_value();
 
                     match op {
-                        BinaryOp::Add => self.builder.build_float_add(lhs_gen, rhs_gen, "add"),
-                        BinaryOp::Sub => self.builder.build_float_sub(lhs_gen, rhs_gen, "sub"),
-                        BinaryOp::Mul => self.builder.build_float_mul(lhs_gen, rhs_gen, "mul"),
-                        BinaryOp::Div => self.builder.build_float_div(lhs_gen, rhs_gen, "div"),
+                        BinaryOp::Add => self.builder.build_float_add(l, r, "add").into(),
+                        BinaryOp::Sub => self.builder.build_float_sub(l, r, "sub").into(),
+                        BinaryOp::Mul => self.builder.build_float_mul(l, r, "mul").into(),
+                        BinaryOp::Div => self.builder.build_float_div(l, r, "div").into(),
+                        BinaryOp::Mod => self.builder.build_float_rem(l, r, "mod").into(),
+
+                        BinaryOp::Gt => self.builder.build_float_compare(OGT, l, r, "gt").into(),
+                        BinaryOp::GtEq => self.builder.build_float_compare(OGE, l, r, "gt").into(),
+                        BinaryOp::Lt => self.builder.build_float_compare(OLT, l, r, "lt").into(),
+                        BinaryOp::LtEq => self.builder.build_float_compare(OLE, l, r, "le").into(),
+
+                        BinaryOp::EqEq => self.builder.build_float_compare(OEQ, l, r, "eq").into(),
+                        BinaryOp::NotEq => self.builder.build_float_compare(ONE, l, r, "ne").into(),
                         _ => panic!(),
                     }
-                    .into()
                 }
                 None => unreachable!("Critical Error: Type should never be null by this point"),
                 _ => todo!(),
@@ -164,15 +302,20 @@ impl<'ctx> Compiler<'ctx> {
                 let args = args
                     .iter()
                     .map(|arg| self.codegen_expr(arg))
-                    .map(|arg| arg.into())
+                    .map(|arg| arg.unwrap().into())
                     .collect::<Vec<BasicMetadataValueEnum>>();
 
-                self.builder
+                let call = self
+                    .builder
                     .build_call(function, &args, "")
-                    .try_as_basic_value()
-                    .unwrap_left()
+                    .try_as_basic_value();
+
+                match call {
+                    Either::Left(left) => left,
+                    Either::Right(_) => return None,
+                }
             }
-        }
+        })
     }
 
     fn codegen_value(&self, value: Literal) -> BasicValueEnum<'ctx> {
@@ -187,18 +330,53 @@ impl<'ctx> Compiler<'ctx> {
                 .f64_type()
                 .const_float(value)
                 .as_basic_value_enum(),
+            Literal::Boolean(value) => self
+                .context
+                .bool_type()
+                .const_int(if value { 1 } else { 0 }, false)
+                .as_basic_value_enum(),
             _ => unimplemented!(),
         }
     }
 
-    fn type_as_metadata_type(&self, typ: Type) -> BasicMetadataTypeEnum<'ctx> {
+    fn type_as_basic_type(&self, typ: Type) -> BasicTypeEnum<'ctx> {
         match typ {
             Type::Integer => self.context.i64_type().into(),
             Type::Float => self.context.f64_type().into(),
             Type::Boolean => self.context.bool_type().into(),
-            _ => todo!(), // Type::Function { inputs, output } => todo!(),
+            _ => todo!(),
         }
     }
 
-    fn write_obj(&self, file: &mut impl Write) {}
+    fn type_as_metadata_type(&self, typ: Type) -> BasicMetadataTypeEnum<'ctx> {
+        self.type_as_basic_type(typ).into()
+    }
+
+    pub fn write_obj(&self, file: &mut impl Write, filetype: FileType) {
+        Target::initialize_native(&InitializationConfig::default()).unwrap();
+
+        let triple = TargetMachine::get_default_triple();
+        let target = Target::from_triple(&triple).unwrap();
+        let machine = target
+            .create_target_machine(
+                &triple,
+                "x86-64",
+                "",
+                OptimizationLevel::None,
+                RelocMode::Default,
+                CodeModel::Default,
+            )
+            .unwrap();
+
+        self.module.set_triple(&triple);
+
+        let buffer = machine
+            .write_to_memory_buffer(&self.module, filetype)
+            .unwrap();
+        // machine
+        //     .write_to_file(&self.module, filetype, Path::new("export.o"))
+        //     .unwrap();
+
+        file.write_all(buffer.as_slice()).unwrap();
+    }
 }

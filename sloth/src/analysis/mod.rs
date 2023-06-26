@@ -23,7 +23,9 @@ impl AnalysisError {
 }
 
 pub fn analyze(root: &mut Stmt) -> Result<(), AnalysisError> {
-    setup::populate_symtable(&root.as_node())?;
+    let mut populator = setup::Populator::default();
+    populator.populate_symtable(&root.as_node())?;
+
     setup::propagate_types_stmt(root)?;
 
     check_usage(&root.as_node())?;

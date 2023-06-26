@@ -14,10 +14,12 @@ pub mod parser;
 pub mod sloth_std;
 pub mod symtable;
 
+use std::fs::File;
 use std::{env, fs};
 
 use codegen::Compiler;
 use inkwell::context::Context;
+use inkwell::targets::FileType;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
@@ -62,7 +64,13 @@ fn main() {
     // println!("Suces");
 
     let context = Context::create();
-    Compiler::codegen(&context, "hi", &ast);
+    let mut compiler = Compiler::new(&context, "s");
+    let mut output_file = File::create("output.o").unwrap();
+
+    compiler.codegen(&ast);
+    compiler.write_obj(&mut output_file, FileType::Object);
+
+    // Compiler::codegen(&context, "hi", &ast);
 
     // let graph = GraphBuilder::generate(Some(&source), &ast).unwrap();
     // println!("{graph}");

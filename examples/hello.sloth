@@ -1,13 +1,12 @@
-# foreign fn example();
+foreign fn addz(lhs: Int, rhs: Int) Int;
 
-foreign fn foo() Int;
-foreign fn bar(y: Int, z: Int) Float;
+fn haiiii() Void {}
 
-fn main() Int {
-    foo();
-    foo();
-    foo();
-    bar(5, 8 * 3 + foo());
-    return 7 + 5;
+fn hehehaha() Int {
+    var x: Int = 0;
+    while x < 10 {
+        x = x + 1;
+    }
+    return x;
 }
 

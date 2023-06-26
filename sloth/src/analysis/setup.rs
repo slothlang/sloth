@@ -2,80 +2,107 @@ use super::AnalysisError;
 use crate::parser::ast::{
     AstNode, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt, StmtKind,
 };
-use crate::symtable::{Symbol, SymbolTable, Type};
+use crate::symtable::{Symbol, SymbolTable, Type, ValueSymbol};
 
-pub(super) fn populate_symtable(node: &AstNode) -> Result<(), AnalysisError> {
-    if let AstNode::Stmt(stmt) = node {
-        let mut table = stmt.symtable.clone();
+#[derive(Default)]
+pub struct Populator {
+    next_id: i32,
+}
 
-        match &stmt.kind {
-            StmtKind::DefineVariable {
-                identifier, typ, ..
-            } => {
-                // When a variable is defined add it to the symbol table of the current scope.
-                let symbol = build_value_symbol(&table, typ)?;
-                table.insert(identifier.to_owned(), symbol);
-            }
-            StmtKind::DefineFunction(Function {
-                identifier,
-                inputs,
-                output,
-                kind,
-            }) => {
-                // When a function is defined add the function to the symbol
-                // table of the current scope, and add the inputs to the child
-                // (body) scope.
-                let function_symbol = build_function_symbol(&table, inputs, output.as_deref())?;
-                table.insert(identifier.to_owned(), function_symbol);
+impl Populator {
+    fn reserve_id(&mut self) -> i32 {
+        let id = self.next_id;
+        self.next_id += 1;
+        id
+    }
+}
 
-                if let FunctionKind::Normal { body } = kind {
-                    let mut body_table = body.symtable.clone();
+impl Populator {
+    pub(super) fn populate_symtable(&mut self, node: &AstNode) -> Result<(), AnalysisError> {
+        if let AstNode::Stmt(stmt) = node {
+            let mut table = stmt.symtable.clone();
 
-                    for input in inputs {
-                        let symbol = build_value_symbol(&body_table, &input.typ)?;
-                        body_table.insert(input.identifier.to_owned(), symbol);
+            match &stmt.kind {
+                StmtKind::DefineVariable {
+                    identifier, typ, ..
+                } => {
+                    // When a variable is defined add it to the symbol table of the current scope.
+                    let symbol = self.build_value_symbol(&table, typ)?;
+                    table.insert(identifier.to_owned(), symbol);
+                }
+                StmtKind::DefineFunction(Function {
+                    identifier,
+                    inputs,
+                    output,
+                    kind,
+                }) => {
+                    // When a function is defined add the function to the symbol
+                    // table of the current scope, and add the inputs to the child
+                    // (body) scope.
+                    let function_symbol =
+                        self.build_function_symbol(&table, inputs, output.as_deref())?;
+                    table.insert(identifier.to_owned(), function_symbol);
+
+                    if let FunctionKind::Normal { body } = kind {
+                        let mut body_table = body.symtable.clone();
+
+                        for input in inputs {
+                            let symbol = self.build_value_symbol(&body_table, &input.typ)?;
+                            body_table.insert(input.identifier.to_owned(), symbol);
+                        }
                     }
                 }
+                _ => (),
             }
-            _ => (),
         }
+
+        for child in node.children() {
+            self.populate_symtable(&child)?;
+        }
+
+        Ok(())
     }
 
-    for child in node.children() {
-        populate_symtable(&child)?;
+    fn build_value_symbol(
+        &mut self,
+        table: &SymbolTable,
+        typ: &str,
+    ) -> Result<Symbol, AnalysisError> {
+        let typ = table
+            .get_type(typ)
+            .ok_or(AnalysisError::UnknownIdentifier(0, typ.to_owned()))?;
+
+        Ok(Symbol::Value(ValueSymbol {
+            typ,
+            id: self.reserve_id(),
+        }))
     }
 
-    Ok(())
-}
+    fn build_function_symbol(
+        &mut self,
+        table: &SymbolTable,
+        inputs: &[FunctionInput],
+        output: Option<&str>,
+    ) -> Result<Symbol, AnalysisError> {
+        let inputs = inputs
+            .iter()
+            .map(|it| table.get_type(&it.typ))
+            .collect::<Option<Vec<_>>>()
+            .ok_or(AnalysisError::UnknownIdentifier(0, "0xOwO".to_owned()))?;
 
-fn build_value_symbol(table: &SymbolTable, typ: &str) -> Result<Symbol, AnalysisError> {
-    let typ = table
-        .get_type(typ)
-        .ok_or(AnalysisError::UnknownIdentifier(0, typ.to_owned()))?;
+        let output = output
+            .map(|it| table.get_type(it))
+            .unwrap_or(Some(Type::Void))
+            .ok_or(AnalysisError::UnknownIdentifier(0, "0xUwU".to_owned()))?;
 
-    Ok(Symbol::Value(typ))
-}
-
-fn build_function_symbol(
-    table: &SymbolTable,
-    inputs: &[FunctionInput],
-    output: Option<&str>,
-) -> Result<Symbol, AnalysisError> {
-    let inputs = inputs
-        .iter()
-        .map(|it| table.get_type(&it.typ))
-        .collect::<Option<Vec<_>>>()
-        .ok_or(AnalysisError::UnknownIdentifier(0, "0xOwO".to_owned()))?;
-
-    let output = output
-        .map(|it| table.get_type(it))
-        .unwrap_or(Some(Type::Void))
-        .ok_or(AnalysisError::UnknownIdentifier(0, "0xUwU".to_owned()))?;
-
-    Ok(Symbol::Value(Type::Function {
-        inputs,
-        output: output.into(),
-    }))
+        Ok(Symbol::Value(ValueSymbol {
+            typ: Type::Function {
+                inputs,
+                output: output.into(),
+            },
+            id: self.reserve_id(),
+        }))
+    }
 }
 
 pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError> {
@@ -123,63 +150,61 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
 }
 
 pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
-    let typ = match &mut node.kind {
-        ExprKind::Grouping(child) => {
-            propagate_types(child)?;
-            child
-                .typ
-                .clone()
-                .ok_or(AnalysisError::Unknown(node.line, "owo choco"))?
-        }
-        ExprKind::Literal(lit) => match lit {
-            Literal::Integer(_) => Type::Integer,
-            Literal::Float(_) => Type::Float,
-            Literal::Boolean(_) => Type::Boolean,
-            _ => todo!(),
-        },
-        ExprKind::Identifier(identifier) => {
-            let table = node.symtable.clone();
-            table
-                .get_value(identifier)
-                .ok_or(AnalysisError::UnknownIdentifier(
+    let typ =
+        match &mut node.kind {
+            ExprKind::Grouping(child) => {
+                propagate_types(child)?;
+                child
+                    .typ
+                    .clone()
+                    .ok_or(AnalysisError::Unknown(node.line, "owo choco"))?
+            }
+            ExprKind::Literal(lit) => match lit {
+                Literal::Integer(_) => Type::Integer,
+                Literal::Float(_) => Type::Float,
+                Literal::Boolean(_) => Type::Boolean,
+                _ => todo!(),
+            },
+            ExprKind::Identifier(identifier) => {
+                let table = node.symtable.clone();
+                table.get_value(identifier).map(|it| it.typ).ok_or(
+                    AnalysisError::UnknownIdentifier(node.line, identifier.to_owned()),
+                )?
+            }
+            ExprKind::BinaryOp { lhs, rhs, .. } => {
+                // Propagating the types to the children
+                propagate_types(lhs)?;
+                propagate_types(rhs)?;
+
+                if lhs.typ != rhs.typ {
+                    return Err(AnalysisError::TypeMismatch(node.line));
+                }
+
+                lhs.typ
+                    .clone()
+                    .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?
+            }
+            ExprKind::UnaryOp { value, .. } => {
+                propagate_types(value)?;
+
+                value.typ.clone().ok_or(AnalysisError::Unknown(
                     node.line,
-                    identifier.to_owned(),
+                    "YOU'RE WRONG... SULFURIC ACID!",
                 ))?
-        }
-        ExprKind::BinaryOp { lhs, rhs, .. } => {
-            // Propagating the types to the children
-            propagate_types(lhs)?;
-            propagate_types(rhs)?;
-
-            if lhs.typ != rhs.typ {
-                return Err(AnalysisError::TypeMismatch(node.line));
             }
+            ExprKind::Call { callee, args } => {
+                propagate_types(callee)?;
+                for arg in args {
+                    propagate_types(arg)?;
+                }
 
-            lhs.typ
-                .clone()
-                .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?
-        }
-        ExprKind::UnaryOp { value, .. } => {
-            propagate_types(value)?;
-
-            value.typ.clone().ok_or(AnalysisError::Unknown(
-                node.line,
-                "YOU'RE WRONG... SULFURIC ACID!",
-            ))?
-        }
-        ExprKind::Call { callee, args } => {
-            propagate_types(callee)?;
-            for arg in args {
-                propagate_types(arg)?;
-            }
-
-            let Some(Type::Function { ref output, .. }) = callee.typ else {
+                let Some(Type::Function { ref output, .. }) = callee.typ else {
                 return Err(AnalysisError::TypeMismatch(node.line));
             };
 
-            *output.clone()
-        }
-    };
+                *output.clone()
+            }
+        };
 
     node.typ = Some(typ);
 
@@ -195,8 +220,8 @@ mod tests {
     #[test]
     fn haiiiiiuwu() {
         let mut table = SymbolTable::new();
-        table.insert("poggo".to_owned(), Symbol::Value(Type::Integer));
-        table.insert("poggu".to_owned(), Symbol::Value(Type::Float));
+        // table.insert("poggo".to_owned(), Symbol::Value(Type::Integer));
+        // table.insert("poggu".to_owned(), Symbol::Value(Type::Float));
 
         let mut x = Expr::new(
             0,
