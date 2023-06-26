@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -8,7 +7,7 @@ use inkwell::module::Module;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
 };
-use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
+use inkwell::types::{BasicMetadataTypeEnum, BasicTypeEnum};
 use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue, PointerValue,
 };
@@ -20,7 +19,7 @@ use crate::parser::ast::{
 };
 use crate::symtable::{SymbolTable, Type};
 
-pub struct Compiler<'ctx> {
+pub struct Codegen<'ctx> {
     context: &'ctx Context,
     builder: Builder<'ctx>,
     module: Module<'ctx>,
@@ -31,12 +30,12 @@ pub struct Compiler<'ctx> {
     references: HashMap<i32, PointerValue<'ctx>>,
 }
 
-impl<'ctx> Compiler<'ctx> {
+impl<'ctx> Codegen<'ctx> {
     pub fn new(context: &'ctx Context, module: &str) -> Self {
         let builder = context.create_builder();
         let module = context.create_module(module);
 
-        Compiler {
+        Codegen {
             context,
             builder,
             module,
@@ -136,10 +135,6 @@ impl<'ctx> Compiler<'ctx> {
                 // Position the builder at the end of the loop
                 self.builder.position_at_end(after_bb);
             }
-            StmtKind::Return(expr) => {
-                let res = self.codegen_expr(expr).unwrap();
-                self.builder.build_return(Some(&res));
-            }
             StmtKind::DefineVariable {
                 identifier, value, ..
             } => {
@@ -183,7 +178,10 @@ impl<'ctx> Compiler<'ctx> {
                     }
                 };
             }
-            _ => (),
+            StmtKind::Return(expr) => {
+                let res = self.codegen_expr(expr).unwrap();
+                self.builder.build_return(Some(&res));
+            }
         }
     }
 
@@ -238,7 +236,7 @@ impl<'ctx> Compiler<'ctx> {
                 let ptr = self.references.get(&symbol.id).unwrap();
 
                 self.builder
-                    .build_load(self.type_as_basic_type(symbol.typ.clone()), *ptr, "deref")
+                    .build_load(self.type_as_basic_type(symbol.typ.clone()), *ptr, "")
             }
             ExprKind::BinaryOp { op, lhs, rhs } => match lhs.typ {
                 Some(Type::Integer) | Some(Type::Boolean) => {
@@ -291,7 +289,7 @@ impl<'ctx> Compiler<'ctx> {
                 None => unreachable!("Critical Error: Type should never be null by this point"),
                 _ => todo!(),
             },
-            ExprKind::UnaryOp { op, value } => todo!(),
+            ExprKind::UnaryOp { .. } => todo!(),
             ExprKind::Call { callee, args } => {
                 // FIXME: Callee is an expression but for now were just
                 // extracting an identifier to it. Change this
@@ -373,9 +371,6 @@ impl<'ctx> Compiler<'ctx> {
         let buffer = machine
             .write_to_memory_buffer(&self.module, filetype)
             .unwrap();
-        // machine
-        //     .write_to_file(&self.module, filetype, Path::new("export.o"))
-        //     .unwrap();
 
         file.write_all(buffer.as_slice()).unwrap();
     }

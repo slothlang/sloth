@@ -213,38 +213,3 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
 
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::analysis::setup::propagate_types;
-    use crate::parser::ast::{BinaryOp, Expr, ExprKind, Literal};
-    use crate::symtable::{Symbol, SymbolTable, Type};
-
-    #[test]
-    fn haiiiiiuwu() {
-        let mut table = SymbolTable::new();
-        // table.insert("poggo".to_owned(), Symbol::Value(Type::Integer));
-        // table.insert("poggu".to_owned(), Symbol::Value(Type::Float));
-
-        let mut x = Expr::new(
-            0,
-            0,
-            ExprKind::BinaryOp {
-                op: BinaryOp::Add,
-                lhs: Box::new(Expr::new(1, 0, Literal::Float(1.).into(), table.clone())),
-                rhs: Box::new(Expr::new(
-                    2,
-                    0,
-                    ExprKind::Identifier("poggu".to_owned()),
-                    table.clone(),
-                )),
-            },
-            table,
-        );
-
-        propagate_types(&mut x).expect("oh noes something went fucky wucky >~<");
-
-        println!("{x:#?}");
-        panic!()
-    }
-}

@@ -3,8 +3,6 @@ use std::collections::hash_map::Entry::Vacant;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use inkwell::values::PointerValue;
-
 #[derive(Debug, Default)]
 struct Scope {
     parent: Option<Rc<Scope>>,
