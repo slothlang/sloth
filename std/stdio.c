@@ -8,5 +8,5 @@ char* readln() {
 }
 
 void print(char *str) {
-   puts(str);
+   fputs(str, stdout);
 }
