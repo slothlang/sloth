@@ -1,6 +1,6 @@
 foreign fn wait(x: Int) Void;
 foreign fn print(str: String) Void;
-foreign fn len(str: String) Int;
+foreign fn slen(str: String) Int;
 foreign fn charAt(str: String) Char;
 
 fn termpos(x: int, y: int) Void {
