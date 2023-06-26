@@ -114,8 +114,8 @@ pub enum TokenType {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
-    Integer(i64),
-    Float(f64),
+    Integer(i32),
+    Float(f32),
     Boolean(bool),
     Character(char),
     String(String),
@@ -249,9 +249,9 @@ impl<'a> Lexer<'a> {
                 value.push(self.advance());
             }
 
-            Literal::Float(value.parse::<f64>().expect("Expected float")).into()
+            Literal::Float(value.parse::<f32>().expect("Expected float")).into()
         } else {
-            Literal::Integer(value.parse::<i64>().expect("Expected integer")).into()
+            Literal::Integer(value.parse::<i32>().expect("Expected integer")).into()
         }
     }
 

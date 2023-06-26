@@ -3,7 +3,7 @@
 typedef struct {
     int size;
     int cap;
-    long* inner;
+    int* inner;
 } IntVec;
 
 IntVec* test();
@@ -13,14 +13,14 @@ int main() {
 
     int size = (*v).size;
     int cap = (*v).cap;
-    long* inner = (*v).inner;
+    int* inner = (*v).inner;
 
     printf("%d\n", size);
     printf("%d\n", cap);
 
     for (int i = 0; i < size; ++i) {
-        long value = inner[i];
-        printf("%d ", i);
+        int value = inner[i];
+        printf("%d ", value);
     }
     puts("\n");
 }

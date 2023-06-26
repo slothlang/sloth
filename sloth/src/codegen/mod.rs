@@ -7,7 +7,7 @@ use inkwell::module::Module;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
 };
-use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum, PointerType};
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
 use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue, PointerValue,
 };
@@ -210,8 +210,8 @@ impl<'ctx> Codegen<'ctx> {
 
         let llvm_function_type = match output_typ {
             Type::Void => self.context.void_type().fn_type(&inputs_typ, false),
-            Type::Integer => self.context.i64_type().fn_type(&inputs_typ, false),
-            Type::Float => self.context.f64_type().fn_type(&inputs_typ, false),
+            Type::Integer => self.context.i32_type().fn_type(&inputs_typ, false),
+            Type::Float => self.context.f32_type().fn_type(&inputs_typ, false),
             Type::Boolean => self.context.bool_type().fn_type(&inputs_typ, false),
             Type::Array { ref typ, .. } => {
                 let i32_type = self.context.i32_type().as_basic_type_enum();
@@ -345,13 +345,13 @@ impl<'ctx> Codegen<'ctx> {
         match value {
             Literal::Integer(value) => self
                 .context
-                .i64_type()
+                .i32_type()
                 .const_int(value as u64, true)
                 .as_basic_value_enum(),
             Literal::Float(value) => self
                 .context
-                .f64_type()
-                .const_float(value)
+                .f32_type()
+                .const_float(value as f64)
                 .as_basic_value_enum(),
             Literal::Boolean(value) => self
                 .context
@@ -372,7 +372,7 @@ impl<'ctx> Codegen<'ctx> {
                     let value = self.codegen_expr(value).unwrap();
                     let value_ptr = unsafe {
                         self.builder.build_gep(
-                            i32_type,
+                            element_type,
                             inner_ptr,
                             &[i32_type.const_int(idx as u64, false)],
                             "",
@@ -394,24 +394,25 @@ impl<'ctx> Codegen<'ctx> {
                 let vector_ptr = self.builder.build_malloc(vector_type, "vecptr").unwrap();
 
                 // Set the size and capacity values
-                let size = self
+                let size_ptr = self
                     .builder
-                    .build_struct_gep(vector_type, vector_ptr, 0, "gepvec")
+                    .build_struct_gep(vector_type, vector_ptr, 0, "size")
                     .unwrap();
-                self.builder
-                    .build_store(size, i32_type.const_int(values.len() as u64, false));
-
-                let cap = self
+                let cap_ptr = self
                     .builder
-                    .build_struct_gep(vector_type, vector_ptr, 1, "gepvec")
+                    .build_struct_gep(vector_type, vector_ptr, 1, "cap")
                     .unwrap();
-                self.builder
-                    .build_store(cap, i32_type.const_int(100, false));
-
                 let inner = self
                     .builder
-                    .build_struct_gep(vector_type, vector_ptr, 2, "gepvec")
+                    .build_struct_gep(vector_type, vector_ptr, 2, "inner")
                     .unwrap();
+
+                self.builder
+                    .build_store(size_ptr, i32_type.const_int(values.len() as u64, false));
+
+                self.builder
+                    .build_store(cap_ptr, i32_type.const_int(100, false));
+
                 self.builder.build_store(inner, inner_ptr);
 
                 vector_ptr.as_basic_value_enum()
@@ -423,8 +424,8 @@ impl<'ctx> Codegen<'ctx> {
     fn type_as_basic_type(&self, typ: Type) -> BasicTypeEnum<'ctx> {
         // self.context.i64_type().ptr_type(Address)
         match typ {
-            Type::Integer => self.context.i64_type().into(),
-            Type::Float => self.context.f64_type().into(),
+            Type::Integer => self.context.i32_type().into(),
+            Type::Float => self.context.f32_type().into(),
             Type::Boolean => self.context.bool_type().into(),
             Type::Array { typ, .. } => {
                 let i32_type = self.context.i32_type().as_basic_type_enum();
@@ -502,15 +503,15 @@ impl<'ctx> Codegen<'ctx> {
 
         // Writing the logic
         let element_type = self.type_as_basic_type(typ);
+        let element_ptr_type = element_type.ptr_type(AddressSpace::default());
+
         let i32_type = self.context.i32_type();
 
         let vector_type = self.context.struct_type(
             &[
                 i32_type.as_basic_type_enum(),
                 i32_type.as_basic_type_enum(),
-                element_type
-                    .ptr_type(AddressSpace::default())
-                    .as_basic_type_enum(),
+                element_ptr_type.as_basic_type_enum(),
             ],
             false,
         );
@@ -538,14 +539,15 @@ impl<'ctx> Codegen<'ctx> {
             .builder
             .build_load(i32_type, cap_ptr, "cap")
             .into_int_value();
+        let inner = self
+            .builder
+            .build_load(element_ptr_type, inner_ptr, "inner")
+            .into_pointer_value();
 
         // Put the new element into backing array
-        let slot_ptr = unsafe {
-            self.builder
-                .build_gep(element_type, inner_ptr, &[size], "slot")
-        };
-
         let element = func.get_nth_param(1).unwrap();
+        let slot_ptr = unsafe { self.builder.build_gep(element_type, inner, &[size], "slot") };
+
         self.builder.build_store(slot_ptr, element);
 
         // TODO: Handle going over capacity

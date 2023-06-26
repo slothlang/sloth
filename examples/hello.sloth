@@ -1,5 +1,5 @@
 fn test() [Int 3] {
-    var list: [Int 3] = [9, 5, 7];
+    var list: [Int 3] = [500, 5, 7];
 
     vpushi(list, 3);
     vpushi(list, 3);

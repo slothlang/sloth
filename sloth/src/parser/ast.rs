@@ -276,8 +276,8 @@ impl Display for TypeIdentifier {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
-    Integer(i64),
-    Float(f64),
+    Integer(i32),
+    Float(f32),
     Boolean(bool),
     Character(char),
     String(String),
