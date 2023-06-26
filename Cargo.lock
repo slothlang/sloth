@@ -254,6 +254,7 @@ version = "0.1.0"
 dependencies = [
  "inkwell",
  "itertools",
+ "llvm-sys",
  "rand",
  "thiserror",
 ]
