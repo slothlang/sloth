@@ -11,7 +11,6 @@ pub mod analysis;
 pub mod codegen;
 pub mod lexer;
 pub mod parser;
-pub mod sloth_std;
 pub mod symtable;
 
 use std::{env, fs};
@@ -24,7 +23,7 @@ use parser::AstParser;
 use symtable::{Symbol, SymbolTable};
 
 use crate::analysis::analyze;
-use crate::parser::graph::GraphBuilder;
+
 use crate::symtable::Type;
 
 fn main() {
