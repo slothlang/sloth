@@ -27,7 +27,7 @@ impl Populator {
                     identifier, typ, ..
                 } => {
                     // When a variable is defined add it to the symbol table of the current scope.
-                    let symbol = self.build_value_symbol(&table, typ)?;
+                    let symbol = self.build_value_symbol(node.line(), &table, typ)?;
                     table.insert(identifier.to_owned(), symbol);
                 }
                 StmtKind::DefineFunction(Function {
@@ -40,14 +40,15 @@ impl Populator {
                     // table of the current scope, and add the inputs to the child
                     // (body) scope.
                     let function_symbol =
-                        self.build_function_symbol(&table, inputs, output.as_deref())?;
+                        self.build_function_symbol(node.line(), &table, inputs, output.as_deref())?;
                     table.insert(identifier.to_owned(), function_symbol);
 
                     if let FunctionKind::Normal { body } = kind {
                         let mut body_table = body.symtable.clone();
 
                         for input in inputs {
-                            let symbol = self.build_value_symbol(&body_table, &input.typ)?;
+                            let symbol =
+                                self.build_value_symbol(node.line(), &body_table, &input.typ)?;
                             body_table.insert(input.identifier.to_owned(), symbol);
                         }
                     }
@@ -65,12 +66,13 @@ impl Populator {
 
     fn build_value_symbol(
         &mut self,
+        line: u32,
         table: &SymbolTable,
         typ: &str,
     ) -> Result<Symbol, AnalysisError> {
         let typ = table
             .get_type(typ)
-            .ok_or(AnalysisError::UnknownIdentifier(0, typ.to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(line, typ.to_owned()))?;
 
         Ok(Symbol::Value(ValueSymbol {
             typ,
@@ -80,6 +82,7 @@ impl Populator {
 
     fn build_function_symbol(
         &mut self,
+        line: u32,
         table: &SymbolTable,
         inputs: &[FunctionInput],
         output: Option<&str>,
@@ -88,12 +91,12 @@ impl Populator {
             .iter()
             .map(|it| table.get_type(&it.typ))
             .collect::<Option<Vec<_>>>()
-            .ok_or(AnalysisError::UnknownIdentifier(0, "0xOwO".to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(line, "0xOwO".to_owned()))?;
 
         let output = output
             .map(|it| table.get_type(it))
             .unwrap_or(Some(Type::Void))
-            .ok_or(AnalysisError::UnknownIdentifier(0, "0xUwU".to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(line, "0xUwU".to_owned()))?;
 
         Ok(Symbol::Value(ValueSymbol {
             typ: Type::Function {
