@@ -8,6 +8,12 @@ typedef struct {
 
 IntVec* test();
 int testtwo(IntVec*);
+int testthree(IntVec*);
+int testfour(IntVec*);
+
+void testback(int x) {
+    printf("%d, ", x);
+}
 
 int main() {
     IntVec* v = test();
@@ -38,5 +44,10 @@ int main() {
         int value = inner[i];
         printf("%d ", value);
     }
-    puts("\n");
+    puts("\n\n");
+    int i = testthree(v);
+    printf("%d ", i);
+    puts("\n\n");
+    testfour(v);
+    puts("");
 }

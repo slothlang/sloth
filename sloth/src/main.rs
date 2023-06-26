@@ -49,21 +49,48 @@ fn main() {
     global_symtable.insert("Float".into(), Symbol::Type(Type::Float));
     global_symtable.insert("Bool".into(), Symbol::Type(Type::Boolean));
 
-    let dummy = Symbol::Value(ValueSymbol {
+    // Inputs aren't type checked but outputs are
+    let dummyi = Symbol::Value(ValueSymbol {
         typ: Type::Function {
             inputs: vec![],
-            output: Box::new(Type::Void),
+            output: Box::new(Type::Integer),
         },
         id: 0,
     });
 
-    global_symtable.insert("vpushi".into(), dummy.clone());
-    global_symtable.insert("vpushf".into(), dummy.clone());
-    global_symtable.insert("vpushb".into(), dummy.clone());
+    let dummyf = Symbol::Value(ValueSymbol {
+        typ: Type::Function {
+            inputs: vec![],
+            output: Box::new(Type::Float),
+        },
+        id: 0,
+    });
 
-    global_symtable.insert("vpopi".into(), dummy.clone());
-    global_symtable.insert("vpopf".into(), dummy.clone());
-    global_symtable.insert("vpopb".into(), dummy);
+    let dummyb = Symbol::Value(ValueSymbol {
+        typ: Type::Function {
+            inputs: vec![],
+            output: Box::new(Type::Boolean),
+        },
+        id: 0,
+    });
+
+    global_symtable.insert("vlen".into(), dummyi.clone());
+
+    global_symtable.insert("vpushi".into(), dummyi.clone());
+    global_symtable.insert("vpushf".into(), dummyf.clone());
+    global_symtable.insert("vpushb".into(), dummyb.clone());
+
+    global_symtable.insert("vpopi".into(), dummyi.clone());
+    global_symtable.insert("vpopf".into(), dummyf.clone());
+    global_symtable.insert("vpopb".into(), dummyb.clone());
+
+    global_symtable.insert("vgeti".into(), dummyi.clone());
+    global_symtable.insert("vgetf".into(), dummyf.clone());
+    global_symtable.insert("vgetb".into(), dummyb.clone());
+
+    global_symtable.insert("vseti".into(), dummyi);
+    global_symtable.insert("vsetf".into(), dummyf);
+    global_symtable.insert("vsetb".into(), dummyb);
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();

@@ -46,13 +46,18 @@ impl<'ctx> Codegen<'ctx> {
             references: Default::default(),
         };
 
+        // Compiler intrinsic functions
+        this.INTRINSIC_vlen();
+
         for (c, t) in [
             ("i", Type::Integer),
             ("f", Type::Float),
             ("b", Type::Boolean),
         ] {
             this.INTRINSIC_vpush(c, t.clone());
-            this.INTRINSIC_vpop(c, t);
+            this.INTRINSIC_vpop(c, t.clone());
+            this.INTRINSIC_vget(c, t.clone());
+            this.INTRINSIC_vset(c, t);
         }
 
         this
@@ -621,7 +626,7 @@ impl<'ctx> Codegen<'ctx> {
         let array_input = self.type_as_basic_type(Type::Array {
             typ: Box::new(typ.clone()),
         });
-        let inputs = &[array_input.into(), self.type_as_metadata_type(typ.clone())];
+        let inputs = &[array_input.into()];
         let func_type = match typ {
             Type::Integer => self.context.i32_type().fn_type(inputs, false),
             Type::Float => self.context.f32_type().fn_type(inputs, false),
@@ -640,6 +645,8 @@ impl<'ctx> Codegen<'ctx> {
         let (size_ptr, cap_ptr, inner_ptr) = self._get_ptrs(element_type, vector_ptr);
         let (size, _cap, inner) = self._get_values(element_type, size_ptr, cap_ptr, inner_ptr);
 
+        // FIXME: Array cant shrink as of now
+
         // Get the last element in the array
         let element_idx = self
             .builder
@@ -657,5 +664,117 @@ impl<'ctx> Codegen<'ctx> {
 
         // Return element
         self.builder.build_return(Some(&element));
+    }
+
+    fn INTRINSIC_vget(&mut self, name: &str, typ: Type) {
+        // Setup function
+        let array_input = self.type_as_basic_type(Type::Array {
+            typ: Box::new(typ.clone()),
+        });
+        // [Array, Index]
+        let inputs = &[array_input.into(), self.context.i32_type().into()];
+        let func_type = match typ {
+            Type::Integer => self.context.i32_type().fn_type(inputs, false),
+            Type::Float => self.context.f32_type().fn_type(inputs, false),
+            Type::Boolean => self.context.bool_type().fn_type(inputs, false),
+            _ => panic!(),
+        };
+        self._setup(&format!("vget{name}"), func_type);
+        let func = self.current_func.unwrap();
+
+        // Types
+        let element_type = self.type_as_basic_type(typ);
+
+        // Getting the pointers and values needed
+        let vector_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
+        let (size_ptr, cap_ptr, inner_ptr) = self._get_ptrs(element_type, vector_ptr);
+        let (_, _, inner) = self._get_values(element_type, size_ptr, cap_ptr, inner_ptr);
+
+        // Get the selected element in the array
+        let element_idx = func.get_nth_param(1).unwrap().into_int_value();
+        let element_ptr = unsafe {
+            self.builder
+                .build_gep(element_type, inner, &[element_idx], "elementptr")
+        };
+        let element = self
+            .builder
+            .build_load(element_type, element_ptr, "element");
+
+        // Return element
+        self.builder.build_return(Some(&element));
+    }
+
+    fn INTRINSIC_vset(&mut self, name: &str, typ: Type) {
+        // Setup function
+        let array_input = self.type_as_basic_type(Type::Array {
+            typ: Box::new(typ.clone()),
+        });
+        // [Array, Index, Value]
+        let inputs = &[
+            array_input.into(),
+            self.context.i32_type().into(),
+            self.type_as_metadata_type(typ.clone()),
+        ];
+        let func_type = self.context.void_type().fn_type(inputs, false);
+        self._setup(&format!("vset{name}"), func_type);
+        let func = self.current_func.unwrap();
+
+        // Types
+        let element_type = self.type_as_basic_type(typ);
+
+        // Getting the pointers and values needed
+        let vector_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
+        let (size_ptr, cap_ptr, inner_ptr) = self._get_ptrs(element_type, vector_ptr);
+        let (_, _, inner) = self._get_values(element_type, size_ptr, cap_ptr, inner_ptr);
+
+        // Get the selected element in the array
+        let element_idx = func.get_nth_param(1).unwrap().into_int_value();
+        let element_ptr = unsafe {
+            self.builder
+                .build_gep(element_type, inner, &[element_idx], "elementptr")
+        };
+        let element = func.get_nth_param(2).unwrap();
+        self.builder.build_store(element_ptr, element);
+
+        self.builder.build_return(None);
+    }
+
+    fn INTRINSIC_vremove(&mut self, name: &str, typ: Type) {
+        // Setup function
+        let array_input = self.type_as_basic_type(Type::Array {
+            typ: Box::new(typ.clone()),
+        });
+        // [Array, Index]
+        let inputs = &[array_input.into(), self.context.i32_type().into()];
+        let func_type = self.context.void_type().fn_type(inputs, false);
+        self._setup(&format!("vremove{name}"), func_type);
+        let func = self.current_func.unwrap();
+
+        // Types
+        let element_type = self.type_as_basic_type(typ);
+
+        // FIXME: Array cant shrink as of now
+        // TODO: vremove
+    }
+
+    fn INTRINSIC_vlen(&mut self) {
+        // Setup function
+        let array_input = self.type_as_basic_type(Type::Array {
+            typ: Box::new(Type::Integer),
+        });
+        // [Array, Index]
+        let inputs = &[array_input.into(), self.context.i32_type().into()];
+        let func_type = self.context.i32_type().fn_type(inputs, false);
+        self._setup("vlen", func_type);
+        let func = self.current_func.unwrap();
+
+        // Getting the pointers and values needed
+        let element_type = self.type_as_basic_type(Type::Integer); // Dummy - Not actually used
+        let vector_ptr = func.get_nth_param(0).unwrap().into_pointer_value();
+        let (size_ptr, cap_ptr, inner_ptr) = self._get_ptrs(element_type, vector_ptr);
+        let (size, _, _) = self._get_values(element_type, size_ptr, cap_ptr, inner_ptr);
+
+        // Return element
+        self.builder.build_return(Some(&size));
     }
 }

@@ -20,3 +20,21 @@ fn testtwo(list: [Int]) Int {
     return x;
 }
 
+fn testthree(list: [Int]) Int {
+    var x: Int = vlen(list);
+    return x;
+}
+
+foreign fn testback(x: Int) Void;
+
+fn testfour(list: [Int]) Int {
+    vseti(list, 0, 888);
+    var i: Int = 0;
+    while i < vlen(list) {
+        var value: Int = vgeti(list, i);
+        testback(value);
+        i = i + 1;
+    }
+    return 0;
+}
+
