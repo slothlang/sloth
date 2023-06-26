@@ -59,7 +59,11 @@ fn main() {
 
     global_symtable.insert("vpushi".into(), dummy.clone());
     global_symtable.insert("vpushf".into(), dummy.clone());
-    global_symtable.insert("vpushb".into(), dummy);
+    global_symtable.insert("vpushb".into(), dummy.clone());
+
+    global_symtable.insert("vpopi".into(), dummy.clone());
+    global_symtable.insert("vpopf".into(), dummy.clone());
+    global_symtable.insert("vpopb".into(), dummy);
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();

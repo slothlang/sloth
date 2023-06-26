@@ -59,10 +59,7 @@ impl SymbolTable {
         if let Symbol::Type(ref typ) = *symbol {
             let mut typ = typ.clone();
             if identifier.is_list {
-                typ = Type::Array {
-                    typ: Box::new(typ),
-                    len: identifier.list_len,
-                };
+                typ = Type::Array { typ: Box::new(typ) };
             }
             return Some(typ);
         }
@@ -160,6 +157,5 @@ pub enum Type {
     },
     Array {
         typ: Box<Type>,
-        len: u32,
     },
 }

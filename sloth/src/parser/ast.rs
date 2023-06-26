@@ -255,7 +255,6 @@ pub struct FunctionInput {
 pub struct TypeIdentifier {
     pub name: String,
     pub is_list: bool,
-    pub list_len: u32,
 }
 
 impl Display for TypeIdentifier {

@@ -311,7 +311,6 @@ mod tests {
             typ: TypeIdentifier {
                 name: "Int".to_string(),
                 is_list: false,
-                list_len: 0,
             },
         }));
 
@@ -346,13 +345,11 @@ mod tests {
                     typ: TypeIdentifier {
                         name: "Int".to_owned(),
                         is_list: false,
-                        list_len: 0,
                     },
                 }],
                 output: Some(TypeIdentifier {
                     name: "Int".to_owned(),
                     is_list: false,
-                    list_len: 0,
                 }),
                 kind: FunctionKind::Normal {
                     body: Box::new(Stmt::without_table(
@@ -374,7 +371,6 @@ mod tests {
                                 typ: TypeIdentifier {
                                     name: "Int".to_owned(),
                                     is_list: false,
-                                    list_len: 0,
                                 },
                             }),
                             Stmt::without_table(7, StmtKind::AssignVariable {

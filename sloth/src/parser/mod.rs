@@ -126,20 +126,11 @@ impl<'a> AstParser<'a> {
 
         let name = self.consume_identifier()?;
 
-        let mut list_len = 0;
         if is_list {
-            if let Literal::Integer(i) = self.consume_literal()? {
-                list_len = i as u32;
-            }
-
             self.consume(TokenType::ClosingBracket, "Expected ']'")?;
         }
 
-        Ok(TypeIdentifier {
-            name,
-            is_list,
-            list_len,
-        })
+        Ok(TypeIdentifier { name, is_list })
     }
 
     pub fn reserve_id(&mut self) -> i32 {
