@@ -8,7 +8,7 @@ fn abs(x: Int) Int {
 }
 
 fn fabs(x: Float) Float {
-    if x < 0 {
+    if x < 0.0 {
         return -x;
     }
     return x;
@@ -51,7 +51,7 @@ fn pow(x: Int, y: Int) Int {
 }
 
 fn floor(x: Float) Float {
-    return x - abs(x % 1.0);
+    return x - fabs(x % 1.0);
 }
 
 fn ceil(x: Float) Float {
