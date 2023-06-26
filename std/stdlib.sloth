@@ -1,0 +1,17 @@
+foreign fn wait(x: Int) Void;
+foreign fn print(str: String) Void;
+foreign fn slen(str: String) Int;
+foreign fn charAt(str: String) Char;
+foreign fn parse_int(str: String) Int;
+
+fn termpos(x: int, y: int) Void {
+    print("\x1b[");
+    print(x);
+    print(";");
+    print(y);
+    print("H");
+}
+
+fn termclear() Void {
+    print("\x1b[2J\x1b[H");
+}

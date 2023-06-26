@@ -1,0 +1,9 @@
+foreign fn print(str: String) Void;
+foreign fn readln() String;
+
+fn println(str: String) Void {
+	print(str);
+	print("\n");
+}
+
+

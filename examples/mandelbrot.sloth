@@ -1,23 +1,23 @@
-val size: int = 200;
-val maxVal: float = 4.0;
-val maxIter: int = 50;
-val plane: float = 4.0;
+val size: Int = 200;
+val maxVal: Float = 4.0;
+val maxIter: Int = 50;
+val plane: Float = 4.0;
 
 for x in 0 .. size {
     for y in 0 .. size {
-        var cReal: float = (x * plane / size) - 2;
-        var cImg: float = (y * plane / size) - 2;
-        var zReal: float = 0;
-        var zImg: float = 0;
-        var count: float = 0;
+        var cReal: Float = (x * plane / size) - 2;
+        var cImg: Float = (y * plane / size) - 2;
+        var zReal: Float = 0;
+        var zImg: Float = 0;
+        var count: Float = 0;
         while (zReal * zReal + zImg * zImg) <= maxVal && count < 4{
-            var temp: float = (zReal * zReal) - (zImg * zImg) + cReal;
+            var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
             zImg = 2 * zReal * zImg + cImg;
             zReal = temp;
             count += 1;
         }
         if count == maxIter {
-            term_setpos(x, y);
+            termpos(x, y);
             print("*");
         }
     }

@@ -1,0 +1,4 @@
+fn merge_sort(list: List<Int>) {
+    print(list);
+    
+}
