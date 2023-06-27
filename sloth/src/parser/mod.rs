@@ -11,8 +11,17 @@ use crate::symtable::SymbolTable;
 pub enum ParsingError {
     #[error("Invalid operation")]
     InvalidOp,
-    #[error("Unexpected token")]
-    UnexpectedToken,
+    #[error("Unexpected token '{1}'. {2}")]
+    UnexpectedToken(u32, TokenType, &'static str),
+}
+
+impl ParsingError {
+    pub fn line(&self) -> u32 {
+        match &self {
+            ParsingError::InvalidOp => 0,
+            ParsingError::UnexpectedToken(x, _, _) => *x,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -92,10 +101,13 @@ impl<'a> AstParser<'a> {
         self.advance_if(|it| it.tt == *next)
     }
 
-    pub fn consume(&mut self, next: TokenType, error: &str) -> Result<&Token, ParsingError> {
+    pub fn consume(
+        &mut self,
+        next: TokenType,
+        error: &'static str,
+    ) -> Result<&Token, ParsingError> {
         if std::mem::discriminant(&self.peek().tt) != std::mem::discriminant(&next) {
-            println!("{error} at index {:?}", self.index);
-            return Err(ParsingError::UnexpectedToken);
+            return Err(ParsingError::UnexpectedToken(self.line, next, error));
         }
 
         Ok(self.advance().unwrap())
@@ -103,7 +115,7 @@ impl<'a> AstParser<'a> {
 
     pub fn consume_literal(&mut self) -> Result<Literal, ParsingError> {
         let Some(TokenType::Literal(literal)) = self.advance().map(|it| it.tt.clone()) else {
-            return Err(ParsingError::UnexpectedToken);
+            return Err(ParsingError::UnexpectedToken(self.line, self.peek().tt.clone(), "Expected literal"));
         };
 
         Ok(literal.into())
@@ -111,7 +123,7 @@ impl<'a> AstParser<'a> {
 
     pub fn consume_identifier(&mut self) -> Result<String, ParsingError> {
         let Some(TokenType::Identifier(identifier)) = self.advance().map(|it| it.tt.clone()) else {
-            return Err(ParsingError::UnexpectedToken);
+            return Err(ParsingError::UnexpectedToken(self.line, self.peek().tt.clone(), "Expected identifier"));
         };
 
         Ok(identifier)

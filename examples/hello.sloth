@@ -1,5 +1,4 @@
 fn main() Int {
     print("Hello World\n");
-    var x: F = 2;
     return 0;
 }

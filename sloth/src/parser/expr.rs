@@ -87,7 +87,7 @@ impl<'a> AstParser<'a> {
                 ExprKind::Grouping(Box::new(expr))
             }
 
-            _ => return Err(ParsingError::UnexpectedToken),
+            tt => return Err(ParsingError::UnexpectedToken(self.line, tt, "")),
         };
 
         Ok(Expr::new(

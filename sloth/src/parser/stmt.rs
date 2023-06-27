@@ -24,10 +24,10 @@ impl<'a> AstParser<'a> {
         // Consume the foreign token
         self.consume(TokenType::Foreign, "Expected foreign")?;
 
-        match self.peek().tt {
+        match &self.peek().tt {
             TokenType::Fn => self.define_function(true),
 
-            _ => Err(ParsingError::UnexpectedToken),
+            tt => Err(ParsingError::UnexpectedToken(self.line, tt.clone(), "")),
         }
     }
 

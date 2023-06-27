@@ -2,6 +2,7 @@
 
 //! TODO: Lexing Regex Literals
 
+use std::fmt::Display;
 use std::str::Chars;
 
 use thiserror::Error;
@@ -110,6 +111,86 @@ pub enum TokenType {
 
     // Utility
     Error(LexerError),
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            TokenType::DocComment => "##",
+            TokenType::Comment => "#",
+            TokenType::OpeningParen => "(",
+            TokenType::ClosingParen => ")",
+            TokenType::OpeningBracket => "[",
+            TokenType::ClosingBracket => "]",
+            TokenType::OpeningBrace => "{",
+            TokenType::ClosingBrace => "}",
+            TokenType::Plus => "+",
+            TokenType::PlusPlus => "++",
+            TokenType::Minus => "-",
+            TokenType::Star => "*",
+            TokenType::StarStar => "**",
+            TokenType::Slash => "/",
+            TokenType::Perc => "%",
+            TokenType::Tilde => "~",
+            TokenType::PlusEq => "+=",
+            TokenType::PlusPlusEq => "++=",
+            TokenType::MinusEq => "-=",
+            TokenType::StarEq => "*=",
+            TokenType::StarStarEq => "**=",
+            TokenType::SlashEq => "/=",
+            TokenType::PercEq => "%=",
+            TokenType::TildeEq => "~=",
+            TokenType::Amp => "&",
+            TokenType::AmpAmp => "&&",
+            TokenType::Pipe => "|",
+            TokenType::PipePipe => "||",
+            TokenType::Caret => "^",
+            TokenType::Eq => "=",
+            TokenType::EqEq => "==",
+            TokenType::Bang => "!",
+            TokenType::BangBang => "!!",
+            TokenType::BangEq => "!=",
+            TokenType::Lt => "<",
+            TokenType::LtLt => "<<",
+            TokenType::LtEq => "<=",
+            TokenType::LtLtEq => "<<=",
+            TokenType::Gt => ">",
+            TokenType::GtGt => ">>",
+            TokenType::GtEq => ">=",
+            TokenType::GtGtEq => ">>=",
+            TokenType::Comma => ",",
+            TokenType::Question => "?",
+            TokenType::QuestionDot => "?.",
+            TokenType::QuestionQuestion => "??",
+            TokenType::Dot => ".",
+            TokenType::DotDot => "..",
+            TokenType::Colon => ":",
+            TokenType::ColonColon => "::",
+            TokenType::SemiColon => ";",
+            TokenType::Arrow => "->",
+            TokenType::FatArrow => "=>",
+            TokenType::Const => "const",
+            TokenType::Val => "val",
+            TokenType::Var => "var",
+            TokenType::Fn => "fn",
+            TokenType::Return => "return",
+            TokenType::If => "if",
+            TokenType::Else => "else",
+            TokenType::While => "while",
+            TokenType::For => "for",
+            TokenType::In => "in",
+            TokenType::Loop => "loop",
+            TokenType::Break => "break",
+            TokenType::Continue => "continue",
+            TokenType::As => "as",
+            TokenType::Foreign => "foreign",
+            TokenType::Literal(_) => "literal",
+            TokenType::Identifier(_) => "identifier",
+            TokenType::Error(_) => "error",
+        };
+
+        write!(f, "{s}")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

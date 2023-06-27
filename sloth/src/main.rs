@@ -54,7 +54,18 @@ fn main() {
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();
     let global_symtable = mk_symtable();
-    let mut ast = AstParser::parse(tokens, global_symtable).unwrap();
+
+    let mut ast = match AstParser::parse(tokens, global_symtable) {
+        Ok(node) => node,
+        Err(error) => {
+            eprintln!(
+                "Error in file {} on line {}: {error}",
+                args[1 + (error.line() / 1_000) as usize],
+                error.line() % 1000 + 1,
+            );
+            return;
+        }
+    };
 
     if let Err(error) = analyze(&mut ast) {
         eprintln!(
