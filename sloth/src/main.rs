@@ -32,16 +32,49 @@ fn main() {
 
     if args.len() < 2 {
         println!("Sloth programming language interpreter\n");
-        println!("Usage: sloth <file>");
+        println!("Usage: sloth <file...>");
         return;
     }
 
-    let source_path = &args[1];
-    let Ok(source) = fs::read_to_string(source_path) else {
-        eprintln!("Error while reading '{source_path}'");
-        return;
-    };
+    // Reading source files
+    let mut source = String::new();
+    for path in args.iter().skip(1) {
+        let Ok(contents) = fs::read_to_string(path) else {
+            eprintln!("Error while reading '{path}'");
+            return;
+        };
+        source.push_str(&contents);
+        let len = contents.lines().collect_vec().len();
+        let padding = 1000 - len;
+        for _ in 0..padding {
+            source.push('\n');
+        }
+    }
 
+    // Parsing
+    let tokens = Lexer::new(&source).collect_vec();
+    let global_symtable = mk_symtable();
+    let mut ast = AstParser::parse(tokens, global_symtable).unwrap();
+
+    if let Err(error) = analyze(&mut ast) {
+        eprintln!(
+            "Error in file {} on line {}: {error}",
+            args[1 + (error.line() / 1_000) as usize],
+            error.line() % 1000 + 1,
+        );
+        return;
+    }
+
+    // Generating code for module
+    let context = Context::create();
+    let mut codegen = Codegen::new(&context, "s");
+    let mut output_file = File::create("output.o").unwrap();
+
+    codegen.codegen(&ast);
+    codegen.write_obj(&mut output_file, FileType::Object);
+}
+
+fn mk_symtable() -> SymbolTable {
     // Symbol table
     let mut global_symtable = SymbolTable::new();
     global_symtable.insert("Void".into(), Symbol::Type(Type::Void));
@@ -93,20 +126,5 @@ fn main() {
     global_symtable.insert("vsetf".into(), dummyf);
     global_symtable.insert("vsetb".into(), dummyb);
 
-    // Parsing
-    let tokens = Lexer::new(&source).collect_vec();
-    let mut ast = AstParser::parse(tokens, global_symtable).unwrap();
-
-    if let Err(error) = analyze(&mut ast) {
-        eprintln!("Error on line {}: {error}", error.line() + 1);
-        return;
-    }
-
-    // Generating code for module
-    let context = Context::create();
-    let mut codegen = Codegen::new(&context, "s");
-    let mut output_file = File::create("output.o").unwrap();
-
-    codegen.codegen(&ast);
-    codegen.write_obj(&mut output_file, FileType::Object);
+    global_symtable
 }
