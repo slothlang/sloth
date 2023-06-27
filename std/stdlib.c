@@ -17,3 +17,12 @@ char charAt(char *str, int x) {
 int parse_int(char *str) {
     return (int) atoi(str);
 }
+
+int as_int(float x) {
+    return (int) x;
+}
+
+char* istr(int x) {
+    char snum[100];
+    return (char* )itoa(x, snum, 10);
+}

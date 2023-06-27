@@ -1,73 +1,99 @@
-foreign fn print(str: String);
-foreign fn randGen(min: Int, max: Int) Int;
-foreign fn wait(time: Float);
-foreign fn termpos(x: Int, y: Int);
-
-
 fn populate() [Int] {
+	# Initialize life vector
 	var life: [Int] = [0];
 	vpopi(life);
+
+	# Fill the vector with random values
 	var i: Int = 0;
 	while i < 100 {
-		n: Int = randGen(0,1);
+		var n: Int = randGen(0,1);
+		println(istr(n));
 		vpushi(life, n);
+		i = i+1;
 	}
+
 	return life;
 }
 
 fn coord(x: Int, y: Int) Int {
+	println("COORD");
+	var res: Int = -1;
+	# Calculate index based on coordinates
 	if x >= 0 && y >= 0 {
-		return y*10 + x;
+		println("COORD1");
+		res = y*10 + x;
 	}
-	return -1;
-
+	# if coordinate is invalid, return -1
+	return res;
 }
 
 fn cval(x: Int, y: Int, life: [Int]) Int {
-	c: Int = coord(x, y);
-	if c < 0 {
-		return 0;	
+	println("CVAL");
+	# Check to make sure index exists before returning
+	var res: Int = 0;
+	var c: Int = coord(x, y);
+	println("CVAL1");
+	if c >= 0 {
+		println("CVAL2");
+		res = vgeti(life, c);
 	}
-	return vgeti(life, c);
+	println("CVAL3");
+	return res;
 }
 
 fn update(life: [Int]) [Int] {
-	x: Int = 0;
-	while x < 10 Int  {
-		y: Int = 0;
+	# Iterate through life
+	var x: Int = 0;
+	while x < 10 {
+		var y: Int = 0;
 		while y < 10 {
-			total: Int = cval(x-1, y-1) + cval(x-1, y) + cval(x-1, y+1) + cval(x, y-1) + cval(x, y+1) + cval(x+1, y-1) + cval(x+1, y) + cval(x+1, y+1);
-			if cval(x, y) == 1 && total < 2 || total > 3{
+			# Calculate total score around selected cell
+			var total: Int = cval(x-1, y-1) + cval(x-1, y) + cval(x-1, y+1) + cval(x, y-1) + cval(x, y+1) + cval(x+1, y-1) + cval(x+1, y) + cval(x+1, y+1);
+
+			# Apply game of life rules
+			if cval(x, y) == 1 && total < 2 || total > 3 {
 				vseti(life, 0);
 			} else if total == 3 {
 				vseti(life, 1);
 			}
+			y = y+1;
 		}
+		x = x+1;
 	}
+
 	return life;
 }
 
 fn display(life: [Int]) {
-	x: Int = 0;
+	println("DISPLAY");
+	# Iterate through life
+	var x: Int = 0;
 	while x < 10 {
-		y: Int = 0;
+		println("DISPLAY1");
+		var y: Int = 0;
 		while y < 10 {
-			alive: Bool = cval(x, y) == 1;
-			if alive {
+			println("DISPLAY2");
+			# if the cell is alive, print
+			if cval(x, y) == 1{
+				println("DISPLAY3");
 				termpos(x, y);
 				print("#");
 			}
-
-
+			y = y+1;
 		}
+		x = x+1;
 	}
 }
 
 fn main() Int {
+	# Populate
 	var life: [Int] = populate();
+	display(life);
+	# Play forever
 	while true {
 		life = update(life);
 		display(life);
 		wait(0.5);
 	}
+	return 0;
 }

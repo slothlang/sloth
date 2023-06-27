@@ -10,3 +10,7 @@ char* readln() {
 void print(char *str) {
    fputs(str, stdout);
 }
+
+void termpos(int x, int y) {
+    printf("\x1b[%d;%dH", x, y);
+}

@@ -1,8 +1,8 @@
-foreign fn print(str: String);
-foreign fn printint(i: Int);
-foreign fn as_int(x: Float) Int;
+#foreign fn print(str: String);
+#foreign fn printint(i: Int);
+#foreign fn as_int(x: Float) Int;
 
-foreign fn termpos(x: Int, y: Int) Void;
+#foreign fn termpos(x: Int, y: Int) Void;
 
 fn main() Int{ 
     var size: Float = 1000.0;
