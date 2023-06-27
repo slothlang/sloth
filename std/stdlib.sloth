@@ -5,8 +5,6 @@ foreign fn slen(str: String) Int;
 foreign fn parse_int(str: String) Int;
 foreign fn termpos(x: Int, y: Int);
 foreign fn as_int(x: Float) Int;
-foreign fn istr(x: Int) Int;
+#foreign fn istr(x: Int) Int;
 
-fn termclear() Void {
-    print("\x1b[2J\x1b[H");
-}
+foreign fn termclear() Void;

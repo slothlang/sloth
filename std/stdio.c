@@ -14,3 +14,7 @@ void print(char *str) {
 void termpos(int x, int y) {
     printf("\x1b[%d;%dH", x, y);
 }
+
+void termclear() {
+    printf("\x1b[2J\x1b[H");
+}

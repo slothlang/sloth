@@ -6,7 +6,7 @@ void print(char* x) {
 void printfl(float x) {
     printf("%f", x);
 }
-void printint(int x) {
+void printdeez(int x) {
     printf("%d", x);
 }
 

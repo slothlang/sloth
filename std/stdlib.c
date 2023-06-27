@@ -22,7 +22,7 @@ int as_int(float x) {
     return (int) x;
 }
 
-char* istr(int x) {
-    char snum[100];
-    return (char* )itoa(x, snum, 10);
-}
+// char* istr(int x) {
+//     char snum[100];
+//     return (char* )itoa(x, snum, 10);
+// }

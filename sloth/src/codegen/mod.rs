@@ -433,7 +433,11 @@ impl<'ctx> Codegen<'ctx> {
 
                 let inner_ptr = self
                     .builder
-                    .build_array_malloc(element_type, i32_type.const_int(100, false), "vecinnerptr")
+                    .build_array_malloc(
+                        element_type,
+                        i32_type.const_int(5000, false),
+                        "vecinnerptr",
+                    )
                     .unwrap();
 
                 for (idx, value) in values.iter().enumerate() {
@@ -479,7 +483,7 @@ impl<'ctx> Codegen<'ctx> {
                     .build_store(size_ptr, i32_type.const_int(values.len() as u64, false));
 
                 self.builder
-                    .build_store(cap_ptr, i32_type.const_int(100, false));
+                    .build_store(cap_ptr, i32_type.const_int(2500, false));
 
                 self.builder.build_store(inner, inner_ptr);
 
