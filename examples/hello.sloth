@@ -1,6 +1,6 @@
 foreign fn print(x: String) Void;
 
 fn main() Int {
-    print("gaming\n");
+    print("Hello World\n");
     return 0;
 }
