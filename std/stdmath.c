@@ -3,7 +3,7 @@
 #include <time.h>
 
 
-long long randGen(long long min, long long max) {
+int randGen(int min, int max) {
    srandom((unsigned) time(NULL)); 
    return random() % (max - min + 1) + min;
 }
