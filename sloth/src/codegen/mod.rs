@@ -174,15 +174,7 @@ impl<'ctx> Codegen<'ctx> {
             }
             StmtKind::DefineFunction(function) => {
                 let table = code.symtable.clone();
-                self.codegen_function(
-                    table,
-                    // if let FunctionKind::Normal { body } = &function.kind {
-                    //     Some(body.symtable.clone())
-                    // } else {
-                    //     None
-                    // },
-                    function.clone(),
-                );
+                self.codegen_function(table, function.clone());
 
                 // If the function is written in sloth (as opposed to an extern one) we generate
                 // the block contents
@@ -262,6 +254,14 @@ impl<'ctx> Codegen<'ctx> {
 
                 ptr_to_that.fn_type(&inputs_typ, false)
             }
+            Type::String => {
+                let i8_type = self.context.i8_type().as_basic_type_enum();
+                let ptr_type = i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum();
+
+                ptr_type.fn_type(&inputs_typ, false)
+            }
             _ => todo!(),
         };
 
@@ -314,7 +314,11 @@ impl<'ctx> Codegen<'ctx> {
 
                         BinaryOp::EqEq => self.builder.build_int_compare(EQ, l, r, ""),
                         BinaryOp::NotEq => self.builder.build_int_compare(NE, l, r, ""),
-                        _ => panic!(),
+
+                        BinaryOp::LogicalAnd => self.builder.build_and(l, r, "logand"),
+                        BinaryOp::LogicalOr => self.builder.build_or(l, r, "logor"),
+
+                        _ => panic!("{op:?}"),
                     }
                     .into()
                 }
@@ -481,6 +485,44 @@ impl<'ctx> Codegen<'ctx> {
 
                 vector_ptr.as_basic_value_enum()
             }
+            Literal::String(value) => {
+                let i32_type = self.context.i32_type();
+                let i8_type = self.context.i8_type();
+                // let ptr_type = i8_type
+                //     .ptr_type(AddressSpace::default())
+                //     .as_basic_type_enum();
+                //
+                // ptr_type.fn_type(&inputs_typ, false)
+
+                let mut values = value
+                    .as_bytes()
+                    .iter()
+                    .map(|it| i8_type.const_int(*it as u64, false))
+                    .collect_vec();
+                values.push(i8_type.const_int(b'\0' as u64, false));
+
+                let const_arr = i8_type.const_array(&values);
+
+                let ptr = self
+                    .builder
+                    .build_array_malloc(
+                        i8_type,
+                        i32_type.const_int(values.len() as u64 + 5, false),
+                        "str",
+                    )
+                    .unwrap();
+
+                // self.builder.build_memcpy(
+                //     ptr,
+                //     0,
+                //     const_arr,
+                //     0,
+                //     i32_type.const_int(values.len() as u64, false),
+                // );
+                self.builder.build_store(ptr, const_arr);
+
+                ptr.as_basic_value_enum()
+            }
             _ => unimplemented!(),
         }
     }
@@ -506,6 +548,12 @@ impl<'ctx> Codegen<'ctx> {
                 ptr_to_that.as_basic_type_enum()
             }
             // Type::Array { typ, len } => self.type_as_basic_type(*typ).array_type(len).into(),
+            Type::String => {
+                let i8_type = self.context.i8_type().as_basic_type_enum();
+                i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum()
+            }
             _ => todo!(),
         }
     }

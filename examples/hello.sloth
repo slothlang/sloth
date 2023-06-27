@@ -1,40 +1,6 @@
-fn test() [Int] {
-    var list: [Int] = [500, 5, 7];
+foreign fn print(x: String) Void;
 
-    vpushi(list, 3);
-    vpushi(list, 3);
-    vpushi(list, 3);
-    vpushi(list, 5);
-
-    var x: Int = vpopi(list);
-    vpushi(list, x);
-    vpushi(list, x * 2);
-    vpushi(list, x * 3);
-
-    return list;
-}
-
-fn testtwo(list: [Int]) Int {
-    #vpopi(list);
-    var x: Int = vpopi(list);
-    return x;
-}
-
-fn testthree(list: [Int]) Int {
-    var x: Int = vlen(list);
-    return x;
-}
-
-foreign fn testback(x: Int) Void;
-
-fn testfour(list: [Int]) Int {
-    vseti(list, 0, 888);
-    var i: Int = 0;
-    while i < vlen(list) {
-        var value: Int = vgeti(list, i);
-        testback(value);
-        i = i + 1;
-    }
+fn main() Int {
+    print("gaming\n");
     return 0;
 }
-

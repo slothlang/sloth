@@ -1,7 +1,7 @@
 use super::AnalysisError;
 use crate::parser::ast::{
-    AstNode, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt, StmtKind,
-    TypeIdentifier,
+    AstNode, BinaryOp, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt,
+    StmtKind, TypeIdentifier,
 };
 use crate::symtable::{Symbol, SymbolTable, Type, ValueSymbol};
 
@@ -181,6 +181,7 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
 
                     last.expect("need 1 element in literal im sozzy")
                 }
+                Literal::String(_) => Type::String,
                 _ => todo!(),
             },
             ExprKind::Identifier(identifier) => {
@@ -189,7 +190,7 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     AnalysisError::UnknownIdentifier(node.line, identifier.to_owned()),
                 )?
             }
-            ExprKind::BinaryOp { lhs, rhs, .. } => {
+            ExprKind::BinaryOp { lhs, rhs, op } => {
                 // Propagating the types to the children
                 propagate_types(lhs)?;
                 propagate_types(rhs)?;
@@ -198,9 +199,27 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     return Err(AnalysisError::TypeMismatch(node.line));
                 }
 
-                lhs.typ
-                    .clone()
-                    .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?
+                match op {
+                    BinaryOp::Add
+                    | BinaryOp::Con
+                    | BinaryOp::Sub
+                    | BinaryOp::Mul
+                    | BinaryOp::Div
+                    | BinaryOp::Mod => lhs
+                        .typ
+                        .clone()
+                        .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?,
+                    BinaryOp::Lt
+                    | BinaryOp::Gt
+                    | BinaryOp::LtEq
+                    | BinaryOp::GtEq
+                    | BinaryOp::EqEq
+                    | BinaryOp::NotEq => Type::Boolean,
+                    BinaryOp::LogicalAnd | BinaryOp::LogicalOr | BinaryOp::Range => lhs
+                        .typ
+                        .clone()
+                        .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?,
+                }
             }
             ExprKind::UnaryOp { value, .. } => {
                 propagate_types(value)?;

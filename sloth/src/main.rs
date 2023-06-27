@@ -48,6 +48,7 @@ fn main() {
     global_symtable.insert("Int".into(), Symbol::Type(Type::Integer));
     global_symtable.insert("Float".into(), Symbol::Type(Type::Float));
     global_symtable.insert("Bool".into(), Symbol::Type(Type::Boolean));
+    global_symtable.insert("String".into(), Symbol::Type(Type::String));
 
     // Inputs aren't type checked but outputs are
     let dummyi = Symbol::Value(ValueSymbol {

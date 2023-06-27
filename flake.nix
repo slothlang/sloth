@@ -20,7 +20,7 @@
         };
 
         rustStable = pkgs.rust-bin.stable.latest.default;
-        rustNightly = pkgs.rust-bin.nightly."2023-02-10".default;
+        rustNightly = pkgs.rust-bin.nightly."2023-06-19".default;
 
         rustPlatform = pkgs.makeRustPlatform {
           cargo = rustStable;

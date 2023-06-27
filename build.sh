@@ -1,11 +1,11 @@
 # Build Sloth
-cargo build --features=llvm-sys/prefer-dynamic
+cargo build 
 
 # Compile standard library
 ./target/debug/sloth std/stdio.sloth
 mv output.o stdio.o
 ./target/debug/sloth std/stdlib.sloth
-mv output.o stdlib.io
+mv output.o stdlib.o
 ./target/debug/sloth std/stdmath.sloth
 mv output.o stdmath.o
 
@@ -14,4 +14,4 @@ mv output.o stdmath.o
 mv output.o main.o
 
 # Generate binary
-gcc stdio.o std/stdio.c stdlib.o std/stdlib.c stdmath.o std/stdmath.c main.o -o program
+clang stdio.o std/stdio.c stdlib.o std/stdlib.c stdmath.o std/stdmath.c main.o -o program

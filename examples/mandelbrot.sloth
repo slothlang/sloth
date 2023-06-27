@@ -1,34 +1,37 @@
-foreign fn termpos(x: Int, y: Int);
 foreign fn print(str: String);
+foreign fn printint(i: Int);
+foreign fn as_int(x: Float) Int;
+
+foreign fn termpos(x: Int, y: Int) Void;
 
 fn main() Int{ 
     var size: Float = 200.0;
     var maxVal: Float = 4.0;
-    var maxIter: Int = 50;
+    var maxIter: Float = 50.0;
     var plane: Float = 4.0;
     # lmao
-    var x: Int = 0;
+    var x: Float = 0.0;
     while x < size {
-        var y: Int = 0;
+        var y: Float = 0.0;
         while y < size {
             var cReal: Float = (x * plane / size) - 2.0;
             var cImg: Float = (y * plane / size) - 2.0;
             var zReal: Float = 0.0;
             var zImg: Float = 0.0;
-            var count: Int = 0;
-            while (zReal * zReal + zImg * zImg) <= maxVal && count < 4{
+            var count: Float = 0.0;
+            while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
                 var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
                 zImg = 2.0 * zReal * zImg + cImg;
                 zReal = temp;
-                count = count + 1;
+                count = count + 1.0;
             }
-            if count == maxIter {
-                termpos(x, y);
+            if as_int(count) == as_int(maxIter) {
+                termpos(as_int(x), as_int(y));
                 print("*");
             }
-            y = y + 1;
+            y = y + 1.0;
         }
-        x = x + 1;
+        x = x + 1.0;
     }
     return 0;
 }
