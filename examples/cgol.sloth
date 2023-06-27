@@ -1,0 +1,73 @@
+foreign fn print(str: String);
+foreign fn randGen(min: Int, max: Int) Int;
+foreign fn wait(time: Float);
+foreign fn termpos(x: Int, y: Int);
+
+
+fn populate() [Int] {
+	var life: [Int] = [0];
+	vpopi(life);
+	var i: Int = 0;
+	while i < 100 {
+		n: Int = randGen(0,1);
+		vpushi(life, n);
+	}
+	return life;
+}
+
+fn coord(x: Int, y: Int) Int {
+	if x >= 0 && y >= 0 {
+		return y*10 + x;
+	}
+	return -1;
+
+}
+
+fn cval(x: Int, y: Int, life: [Int]) Int {
+	c: Int = coord(x, y);
+	if c < 0 {
+		return 0;	
+	}
+	return vgeti(life, c);
+}
+
+fn update(life: [Int]) [Int] {
+	x: Int = 0;
+	while x < 10 Int  {
+		y: Int = 0;
+		while y < 10 {
+			total: Int = cval(x-1, y-1) + cval(x-1, y) + cval(x-1, y+1) + cval(x, y-1) + cval(x, y+1) + cval(x+1, y-1) + cval(x+1, y) + cval(x+1, y+1);
+			if cval(x, y) == 1 && total < 2 || total > 3{
+				vseti(life, 0);
+			} else if total == 3 {
+				vseti(life, 1);
+			}
+		}
+	}
+	return life;
+}
+
+fn display(life: [Int]) {
+	x: Int = 0;
+	while x < 10 {
+		y: Int = 0;
+		while y < 10 {
+			alive: Bool = cval(x, y) == 1;
+			if alive {
+				termpos(x, y);
+				print("#");
+			}
+
+
+		}
+	}
+}
+
+fn main() Int {
+	var life: [Int] = populate();
+	while true {
+		life = update(life);
+		display(life);
+		wait(0.5);
+	}
+}

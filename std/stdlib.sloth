@@ -1,4 +1,4 @@
-foreign fn wait(x: Int) Void;
+foreign fn wait(x: Float) Void;
 foreign fn print(str: String) Void;
 foreign fn slen(str: String) Int;
 # foreign fn charAt(str: String) Char;

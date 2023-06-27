@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void wait(int x) {
+void wait(float x) {
     sleep(x);
 }
 

@@ -5,11 +5,10 @@ foreign fn as_int(x: Float) Int;
 foreign fn termpos(x: Int, y: Int) Void;
 
 fn main() Int{ 
-    var size: Float = 200.0;
+    var size: Float = 1000.0;
     var maxVal: Float = 4.0;
     var maxIter: Float = 50.0;
     var plane: Float = 4.0;
-    # lmao
     var x: Float = 0.0;
     while x < size {
         var y: Float = 0.0;
