@@ -2,18 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-void wait(long long x) {
+void wait(int x) {
     sleep(x);
 }
 
-long long slen(char *str) {
-    return (long long) strlen(str);
+int slen(char *str) {
+    return (int) strlen(str);
 }
 
-char charAt(char *str, long long x) {
+char charAt(char *str, int x) {
     return str[x];
 }
 
-long long parse_int(char *str) {
-    return (long long) atoi(str);
+int parse_int(char *str) {
+    return (int) atoi(str);
 }

@@ -1,53 +1,25 @@
 #include <stdio.h>
-
-typedef struct {
-    int size;
-    int cap;
-    int* inner;
-} IntVec;
-
-IntVec* test();
-int testtwo(IntVec*);
-int testthree(IntVec*);
-int testfour(IntVec*);
-
-void testback(int x) {
-    printf("%d, ", x);
-}
+float pow(float, float);
+int abs(int);
+float fabs(float);
+int max(int, int);
+int min(int, int);
+float fmax(float, float);
+float fmin(float, float);
 
 int main() {
-    IntVec* v = test();
-
-    int size = (*v).size;
-    int cap = (*v).cap;
-    int* inner = (*v).inner;
-
-    printf("%d\n", size);
-    printf("%d\n", cap);
-
-    for (int i = 0; i < size; ++i) {
-        int value = inner[i];
-        printf("%d ", value);
-    }
-    puts("\n\n");
-
-    testtwo(v);
-
-    size = (*v).size;
-    cap = (*v).cap;
-    inner = (*v).inner;
-
-    printf("%d\n", size);
-    printf("%d\n", cap);
-
-    for (int i = 0; i < size; ++i) {
-        int value = inner[i];
-        printf("%d ", value);
-    }
-    puts("\n\n");
-    int i = testthree(v);
-    printf("%d ", i);
-    puts("\n\n");
-    testfour(v);
-    puts("");
+    int x = pow(5, 3);
+    printf("pow %d\n", x);
+    int y = abs(-5);
+    printf("abs %d\n", y);
+    double z = fabs(-5.0);
+    printf("fabs %f\n", z);
+    int w = max(5, 3);
+    printf("max %d\n", w);
+    int n = min(5, 3);
+    printf("min %d\n", n);
+    int p = fmax(5.0, 3.0);
+    printf("fmax %d\n", p);
+    int g = fmin(5.0, 3.0);
+    printf("fmin %d\n", g);
 }
