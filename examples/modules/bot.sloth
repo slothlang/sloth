@@ -1,7 +1,0 @@
-use slowcord::DiscordBot;
-
-pub type Bot;
-
-impl DiscordBot for Bot {
-    # TODO:
-}
