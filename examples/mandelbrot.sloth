@@ -1,24 +1,34 @@
-val size: Int = 200;
-val maxVal: Float = 4.0;
-val maxIter: Int = 50;
-val plane: Float = 4.0;
+foreign fn termpos(x: Int, y: Int);
+foreign fn print(str: String);
 
-for x in 0 .. size {
-    for y in 0 .. size {
-        var cReal: Float = (x * plane / size) - 2;
-        var cImg: Float = (y * plane / size) - 2;
-        var zReal: Float = 0;
-        var zImg: Float = 0;
-        var count: Float = 0;
-        while (zReal * zReal + zImg * zImg) <= maxVal && count < 4{
-            var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
-            zImg = 2 * zReal * zImg + cImg;
-            zReal = temp;
-            count += 1;
+fn main() Int{ 
+    var size: Float = 200.0;
+    var maxVal: Float = 4.0;
+    var maxIter: Int = 50;
+    var plane: Float = 4.0;
+    # lmao
+    var x: Int = 0;
+    while x < size {
+        var y: Int = 0;
+        while y < size {
+            var cReal: Float = (x * plane / size) - 2.0;
+            var cImg: Float = (y * plane / size) - 2.0;
+            var zReal: Float = 0.0;
+            var zImg: Float = 0.0;
+            var count: Int = 0;
+            while (zReal * zReal + zImg * zImg) <= maxVal && count < 4{
+                var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
+                zImg = 2.0 * zReal * zImg + cImg;
+                zReal = temp;
+                count = count + 1;
+            }
+            if count == maxIter {
+                termpos(x, y);
+                print("*");
+            }
+            y = y + 1;
         }
-        if count == maxIter {
-            termpos(x, y);
-            print("*");
-        }
+        x = x + 1;
     }
+    return 0;
 }
