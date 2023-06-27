@@ -15,7 +15,7 @@ use inkwell::{AddressSpace, FloatPredicate, IntPredicate, OptimizationLevel};
 use itertools::{Either, Itertools};
 
 use crate::parser::ast::{
-    BinaryOp, Expr, ExprKind, Function, FunctionKind, Literal, Stmt, StmtKind,
+    BinaryOp, Expr, ExprKind, Function, FunctionKind, Literal, Stmt, StmtKind, UnaryOp,
 };
 use crate::symtable::{SymbolTable, Type};
 
@@ -344,7 +344,41 @@ impl<'ctx> Codegen<'ctx> {
                 None => unreachable!("Critical Error: Type should never be null by this point"),
                 _ => todo!(),
             },
-            ExprKind::UnaryOp { .. } => todo!(),
+            ExprKind::UnaryOp { op, value } => {
+                //
+                match value.typ {
+                    Some(Type::Boolean) => {
+                        let value = self.codegen_expr(value).unwrap().into_int_value();
+
+                        match op {
+                            UnaryOp::Not => {
+                                todo!()
+                            }
+                            UnaryOp::Neg => todo!(),
+                        }
+                    }
+                    Some(Type::Integer) => {
+                        let value = self.codegen_expr(value).unwrap().into_int_value();
+
+                        match op {
+                            UnaryOp::Not => todo!(),
+                            UnaryOp::Neg => self.builder.build_int_neg(value, "neg").into(),
+                        }
+                    }
+                    Some(Type::Float) => {
+                        let value = self.codegen_expr(value).unwrap().into_float_value();
+
+                        match op {
+                            UnaryOp::Not => todo!(),
+                            UnaryOp::Neg => self.builder.build_float_neg(value, "neg").into(),
+                        }
+                    }
+                    None => {
+                        unreachable!("Critical Error: Type should never be null by this point!")
+                    }
+                    _ => todo!(),
+                }
+            }
             ExprKind::Call { callee, args } => {
                 // FIXME: Callee is an expression but for now were just
                 // extracting an identifier to it. Change this
