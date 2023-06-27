@@ -104,7 +104,7 @@ fn main() Int {
 		update(life, new);
 		display(new);
         life = new;
-		wait(1.0);
+		wait(100);
 	}
 	return 0;
 }
