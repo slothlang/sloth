@@ -1,11 +1,3 @@
-foreign fn print();
-foreign fn println();
-foreign fn readln() String;
-foreign fn random(min: Int, max: Int) Int;
-foreign fn parse_int(str: String) Int;
-foreign fn randGen(min: Int, max: Int) Int;
-foreign fn istr(x: Int) String;
-
 fn main() Int {
 	var computer: Int = randGen(1, 10);
 	var tries: Int = 0;

@@ -1,6 +1,6 @@
 foreign fn print(str: String) Void;
 foreign fn readln() String;
-
+foreign fn filer(path: String) String;
 foreign fn curshide();
 foreign fn cursshow();
 
@@ -8,5 +8,4 @@ fn println(str: String) Void {
 	print(str);
 	print("\n");
 }
-
 

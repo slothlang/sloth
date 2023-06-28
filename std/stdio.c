@@ -26,3 +26,23 @@ void curshide() {
 void cursshow() {
     print("\x1b[?25h");
 }
+
+char* filer(char* path) {
+    FILE *fptr = fopen(path, "rb");
+    char *contents = 0;
+    
+    if(fptr == NULL) {
+	return "File not found";
+    }
+    fseek(fptr, 0, SEEK_END);
+    long size = ftell(fptr);
+    fseek(fptr, 0, SEEK_SET);
+
+    contents = malloc(size);
+    fread(contents, 1, size, fptr);
+    fclose(fptr);
+
+    return contents;
+}
+
+

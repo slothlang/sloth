@@ -1,7 +1,3 @@
-foreign fn printdeez(nutz: Int);
-foreign fn print(str: String);
-foreign fn randGen(min: Int, max: Int) Int;
-
 fn main() Int {
     var x: [Int] = [5];
     vpopi(x);
@@ -15,7 +11,7 @@ fn main() Int {
     var y: Int = vgeti(x, 45);
     var y: Int = vgeti(x, 41);
     var y: Int = vgeti(x, 49);
-    printdeez(y);
+    println(istr(y));
 
 
     print("Hello World\n");
