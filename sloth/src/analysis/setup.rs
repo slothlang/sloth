@@ -198,7 +198,6 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     AnalysisError::UnknownIdentifier(node.line, identifier.to_owned()),
                 )?
             }
-            ExprKind::Iterator() => {}
             ExprKind::BinaryOp { lhs, rhs, op } => {
                 // Propagating the types to the children
                 propagate_types(lhs)?;
