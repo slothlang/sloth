@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 
 int wait(int msec) {
     struct timespec ts;
@@ -39,7 +40,9 @@ int as_int(float x) {
     return (int) x;
 }
 
-// char* istr(int x) {
-//     char snum[100];
-//     return (char* )itoa(x, snum, 10);
-// }
+char* istr(int x) {
+    char* snum[100];
+    sprintf(snum, "%d", x);
+    //char* result = snum;
+    return snum;
+}

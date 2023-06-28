@@ -5,6 +5,6 @@ foreign fn slen(str: String) Int;
 foreign fn parse_int(str: String) Int;
 foreign fn termpos(x: Int, y: Int);
 foreign fn as_int(x: Float) Int;
-#foreign fn istr(x: Int) Int;
+foreign fn istr(x: Int) String;
 
 foreign fn termclear() Void;

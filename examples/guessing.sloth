@@ -3,13 +3,15 @@ foreign fn println();
 foreign fn readln() String;
 foreign fn random(min: Int, max: Int) Int;
 foreign fn parse_int(str: String) Int;
+foreign fn randGen(min: Int, max: Int) Int;
+foreign fn istr(x: Int) String;
 
-fn main() {
-	var computer: Int = random(1, 10);
+fn main() Int {
+	var computer: Int = randGen(1, 10);
 	var tries: Int = 0;
 	var correct: Bool = false;
 
-	while !correct {
+	while correct == false {
 		print("Pick a number between 1 and 10: ");
 		var human: Int = parse_int(readln());
 
@@ -25,5 +27,9 @@ fn main() {
 		tries = tries + 1;
 	}
 
-	println("It took you ", tries, " tries to guess correctly!");
+	print("It took you ");
+	print(istr(tries));
+	println(" to guess correctly!");
+
+	return 0;
 }
