@@ -1,0 +1,9 @@
+fn main(argc: Int, argv: [String]) Int {
+	if argc == 2 {
+		print("The argument supplied is ");
+		println(argv);
+	} else {
+		println("Wrong # of args");
+	}
+	return 0;
+}

@@ -41,7 +41,7 @@ int as_int(float x) {
 }
 
 char* istr(int x) {
-    char* snum[100];
+    char* snum = malloc(12);
     sprintf(snum, "%d", x);
     //char* result = snum;
     return snum;
