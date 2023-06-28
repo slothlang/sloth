@@ -72,7 +72,11 @@ impl GraphBuilder {
                 self.traverse_expr0(condition)?;
                 self.traverse_stmt0(body)?;
             }
-            StmtKind::ForStmt { iterator, identifier, body } => {
+            StmtKind::ForStmt {
+                iterator,
+                identifier,
+                body,
+            } => {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"ForStmt\"];",
@@ -249,7 +253,11 @@ impl GraphBuilder {
                 self.traverse_expr(condition)?;
                 self.traverse_stmt(body)?;
             }
-            StmtKind::ForStmt { iterator, identifier, body } => {
+            StmtKind::ForStmt {
+                iterator,
+                identifier,
+                body,
+            } => {
                 writeln!(
                     &mut self.graph,
                     "N{} -> N{} [label = \"Iterator\"];",

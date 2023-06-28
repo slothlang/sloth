@@ -40,7 +40,7 @@ impl<'a> AstParser<'a> {
         let mut statements = Vec::new();
         while !parser.eof() {
             statements.push(parser.statement()?);
-       }
+        }
 
         let root = Stmt::new(
             parser.reserve_id(),

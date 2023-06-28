@@ -186,7 +186,11 @@ impl Stmt {
                 children.push(condition.as_node());
                 children.push(body.as_node());
             }
-            StmtKind::ForStmt { iterator, identifier, body} => {
+            StmtKind::ForStmt {
+                iterator,
+                identifier,
+                body,
+            } => {
                 children.push(iterator.as_node());
                 children.push(body.as_node());
             }

@@ -87,7 +87,6 @@ impl<'a> AstParser<'a> {
         // Consume the for token
         self.consume(TokenType::For, "Expected for")?;
 
-        
         let identifier = self.consume_identifier()?;
         self.consume(TokenType::In, "Expected in")?;
         let iterator = self.expression()?;

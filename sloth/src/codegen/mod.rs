@@ -151,7 +151,11 @@ impl<'ctx> Codegen<'ctx> {
                 // Position the builder at the end of the loop
                 self.builder.position_at_end(after_bb);
             }
-            StmtKind::ForStmt { iterator, identifier, body } => {
+            StmtKind::ForStmt {
+                iterator,
+                identifier,
+                body,
+            } => {
                 // Get the current function
                 let func = self.current_func.unwrap();
 
