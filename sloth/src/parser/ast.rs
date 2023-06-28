@@ -215,6 +215,11 @@ pub enum StmtKind {
         condition: Expr,
         body: Box<Stmt>,
     },
+    ForStmt {
+        iter: Expr,
+        identifier: String,
+        body: Box<Stmt>,
+    }
     DefineVariable {
         identifier: String,
         value: Expr,

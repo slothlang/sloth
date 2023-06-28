@@ -83,6 +83,31 @@ impl<'a> AstParser<'a> {
         ))
     }
 
+    fn for_stmt(&mut self) -> Result<Stmt, ParsingError> {
+        // Consume the for token
+        self.consume(TokenType::For, "Expected for")?;
+
+        
+        let identifier = self.consume_identifier()?;
+        self.consume(TokenType::In, "Expected in")?;
+        let iterator = self.expression()?;
+
+        let body = self.block()?;
+
+        let kind = StmtKind::ForStmt {
+            iterator,
+            identifier,
+            body: body.into(),
+        };
+
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
+    }
+
     // TODO: Make variable types optional
     fn define_variable(&mut self) -> Result<Stmt, ParsingError> {
         // Consume the var token
