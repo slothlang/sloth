@@ -1,5 +1,5 @@
 # Build Sloth
-cargo build --features=llvm-sys/prefer-dynamic
+cargo build
 FILENAME="$1"
 # Compile standard library
 ./target/debug/sloth std/stdio.sloth std/stdlib.sloth std/stdmath.sloth $FILENAME
