@@ -151,6 +151,30 @@ impl<'ctx> Codegen<'ctx> {
                 // Position the builder at the end of the loop
                 self.builder.position_at_end(after_bb);
             }
+            StmtKind::ForStmt { iterator, identifier, body } => {
+                // Get the current function
+                let func = self.current_func.unwrap();
+
+                let loop_bb = self.context.append_basic_block(func, "loop");
+                let body_bb = self.context.append_basic_block(func, "loop body");
+                let after_bb = self.context.append_basic_block(func, "after loop");
+
+                self.builder.build_unconditional_branch(loop_bb);
+
+                // Building the blocks for the head of the loop
+                self.builder.position_at_end(loop_bb);
+                let iterator = self.codegen_expr(iterator).unwrap().into_int_value();
+                self.builder
+                    .build_conditional_branch(iterator, body_bb, after_bb);
+
+                // Building the blocks for the body of the loop
+                self.builder.position_at_end(body_bb);
+                self.codegen_stmt(body);
+                self.builder.build_unconditional_branch(loop_bb);
+
+                // Position the builder at the end of the loop
+                self.builder.position_at_end(after_bb);
+            }
             StmtKind::DefineVariable {
                 identifier, value, ..
             } => {

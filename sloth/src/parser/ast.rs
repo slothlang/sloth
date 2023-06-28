@@ -186,6 +186,10 @@ impl Stmt {
                 children.push(condition.as_node());
                 children.push(body.as_node());
             }
+            StmtKind::ForStmt { iterator, identifier, body} => {
+                children.push(iterator.as_node());
+                children.push(body.as_node());
+            }
             StmtKind::DefineVariable { value, .. } => children.push(value.as_node()),
             StmtKind::AssignVariable { value, .. } => children.push(value.as_node()),
             StmtKind::DefineFunction(Function { kind, .. }) => {
@@ -213,6 +217,11 @@ pub enum StmtKind {
     },
     WhileStmt {
         condition: Expr,
+        body: Box<Stmt>,
+    },
+    ForStmt {
+        iterator: Expr,
+        identifier: String,
         body: Box<Stmt>,
     },
     DefineVariable {
