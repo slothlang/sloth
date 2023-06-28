@@ -98,6 +98,7 @@ fn main() Int {
 	# Populate
 	var life: [Int] = populate();
 	display(life);
+    curshide();
 	# Play forever
 	while true {
         var new: [Int] = populate();

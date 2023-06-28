@@ -18,3 +18,11 @@ void termpos(int x, int y) {
 void termclear() {
     printf("\x1b[2J\x1b[H");
 }
+
+void curshide() {
+    print("\x1b[?25l");
+}
+
+void cursshow() {
+    print("\x1b[?25h");
+}
