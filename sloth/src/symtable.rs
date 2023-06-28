@@ -152,6 +152,9 @@ pub enum Type {
     Float,
     Boolean,
     String,
+    Iterator {
+        typ: Box<Type>,
+    },
     Function {
         inputs: Vec<Type>,
         output: Box<Type>,

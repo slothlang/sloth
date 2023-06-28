@@ -134,6 +134,10 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types(condition)?;
             propagate_types_stmt(body)?;
         }
+        StmtKind::ForStmt { iterator, identifier, body } => {
+            propagate_types(iterator)?;
+            propagate_types_stmt(body)?;
+        }
         StmtKind::DefineVariable { value, .. } => {
             propagate_types(value)?;
         }
@@ -189,6 +193,9 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                 table.get_value(identifier).map(|it| it.typ).ok_or(
                     AnalysisError::UnknownIdentifier(node.line, identifier.to_owned()),
                 )?
+            }
+            ExprKind::Iterator() => {
+                
             }
             ExprKind::BinaryOp { lhs, rhs, op } => {
                 // Propagating the types to the children
