@@ -53,6 +53,7 @@ impl<'ctx> Codegen<'ctx> {
             ("i", Type::Integer),
             ("f", Type::Float),
             ("b", Type::Boolean),
+            ("s", Type::String),
         ] {
             this.INTRINSIC_vpush(c, t.clone());
             this.INTRINSIC_vpop(c, t.clone());
@@ -745,6 +746,11 @@ impl<'ctx> Codegen<'ctx> {
             Type::Integer => self.context.i32_type().fn_type(inputs, false),
             Type::Float => self.context.f32_type().fn_type(inputs, false),
             Type::Boolean => self.context.bool_type().fn_type(inputs, false),
+            Type::String => self
+                .context
+                .i8_type()
+                .ptr_type(AddressSpace::default())
+                .fn_type(inputs, false),
             _ => panic!(),
         };
         self._setup(&format!("vpop{name}"), func_type);
@@ -791,6 +797,11 @@ impl<'ctx> Codegen<'ctx> {
             Type::Integer => self.context.i32_type().fn_type(inputs, false),
             Type::Float => self.context.f32_type().fn_type(inputs, false),
             Type::Boolean => self.context.bool_type().fn_type(inputs, false),
+            Type::String => self
+                .context
+                .i8_type()
+                .ptr_type(AddressSpace::default())
+                .fn_type(inputs, false),
             _ => panic!(),
         };
         self._setup(&format!("vget{name}"), func_type);

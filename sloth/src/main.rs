@@ -119,23 +119,35 @@ fn mk_symtable() -> SymbolTable {
         id: 0,
     });
 
+    let dummys = Symbol::Value(ValueSymbol {
+        typ: Type::Function {
+            inputs: vec![],
+            output: Box::new(Type::Boolean),
+        },
+        id: 0,
+    });
+
     global_symtable.insert("vlen".into(), dummyi.clone());
 
     global_symtable.insert("vpushi".into(), dummyi.clone());
     global_symtable.insert("vpushf".into(), dummyf.clone());
     global_symtable.insert("vpushb".into(), dummyb.clone());
+    global_symtable.insert("vpushs".into(), dummys.clone());
 
     global_symtable.insert("vpopi".into(), dummyi.clone());
     global_symtable.insert("vpopf".into(), dummyf.clone());
     global_symtable.insert("vpopb".into(), dummyb.clone());
+    global_symtable.insert("vpops".into(), dummys.clone());
 
     global_symtable.insert("vgeti".into(), dummyi.clone());
     global_symtable.insert("vgetf".into(), dummyf.clone());
     global_symtable.insert("vgetb".into(), dummyb.clone());
+    global_symtable.insert("vgets".into(), dummys.clone());
 
     global_symtable.insert("vseti".into(), dummyi);
     global_symtable.insert("vsetf".into(), dummyf);
     global_symtable.insert("vsetb".into(), dummyb);
+    global_symtable.insert("vsets".into(), dummys);
 
     global_symtable
 }
