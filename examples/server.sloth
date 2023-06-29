@@ -1,0 +1,14 @@
+fn main() Int {
+	var sockint: Int = serversock();
+	sendsock("Welcome to slothnet!", sockint);
+	var con: Bool = true;
+	while con == true {
+		var msg: String = recvsock(sockint);
+		println(msg);
+		if sequals(msg, "kill") {
+		    con = false;
+		}
+	}
+	closesock(sockint);
+	return 0;
+}

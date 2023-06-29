@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 int wait(int msec) {
     struct timespec ts;
@@ -38,6 +39,18 @@ int parse_int(char *str) {
 
 int as_int(float x) {
     return (int) x;
+}
+
+bool sequals(char* a, char* b) {
+    if (strlen(a) != strlen(b)) {
+        return false;
+    }
+    for (int i=0; i<strlen(a); i++) {
+        if (a[i] != b[i]) {
+	    return false;
+	}
+    }
+    return true;
 }
 
 char* istr(int x) {

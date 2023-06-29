@@ -1,0 +1,9 @@
+fn main() Int {
+	var sockint: Int = clientsock();
+	println(recvsock(sockint));
+	while true {
+		sendsock(readln(), sockint);
+	}	
+	closesock(sockint);
+	return 0;
+}

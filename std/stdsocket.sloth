@@ -1,0 +1,5 @@
+foreign fn serversock() Int;
+foreign fn clientsock() Int;
+foreign fn closesock(soc: Int);
+foreign fn sendsock(msg: String, soc: Int);
+foreign fn recvsock(soc: Int) String;
