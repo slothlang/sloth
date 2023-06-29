@@ -1,9 +1,20 @@
 fn main() Int {
-	var sockint: Int = clientsock();
+	var sockint: Int = clientsock(8080, "127.0.0.1");
 	println(recvsock(sockint));
-	while true {
-		sendsock(readln(), sockint);
-	}	
-	closesock(sockint);
+	var con: Bool = true;
+	while con == true {
+		print("send> ");
+		var msg: String = readln();
+		sendsock(msg, sockint);
+		if sequals(msg, "KILLCLIENT") {
+			con = false;
+		}
+		println("wait...");
+		msg = recvsock(sockint);
+		print("server: ");
+		println(msg);
+
+	}
+	closesock(sockint, false);
 	return 0;
 }

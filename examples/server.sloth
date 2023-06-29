@@ -1,14 +1,20 @@
 fn main() Int {
-	var sockint: Int = serversock();
+	var sockint: Int = serversock(8080, "auto", 10);
+	println("slothnet has initialized!");
 	sendsock("Welcome to slothnet!", sockint);
 	var con: Bool = true;
 	while con == true {
+		println("wait...");
 		var msg: String = recvsock(sockint);
+		print("client: ");
 		println(msg);
-		if sequals(msg, "kill") {
+		print("send> ");
+		msg = readln();
+		sendsock(msg, sockint);
+		if sequals(msg, "KILLSERV") {
 		    con = false;
 		}
 	}
-	closesock(sockint);
+	closesock(sockint, true);
 	return 0;
 }
