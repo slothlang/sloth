@@ -1,0 +1,5 @@
+fn main() Int {
+    system("neofetch");
+    println(istr(12));
+    return 0;
+}

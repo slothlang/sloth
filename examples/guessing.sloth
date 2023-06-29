@@ -20,7 +20,8 @@ fn main() Int {
 	}
 
 	print("It took you ");
-	print(istr(tries));
+	var s: String = istr(tries);
+	print(s);
 	println(" to guess correctly!");
 
 	return 0;
