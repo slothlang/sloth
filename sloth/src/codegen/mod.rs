@@ -164,17 +164,58 @@ impl<'ctx> Codegen<'ctx> {
                 let body_bb = self.context.append_basic_block(func, "loop body");
                 let after_bb = self.context.append_basic_block(func, "after loop");
 
+                // Before the loop
+                let i32_type = self.context.i32_type();
+                let range_type = self
+                    .context
+                    .struct_type(&[i32_type.into(), i32_type.into()], false);
+
+                let range = self.codegen_expr(iterator).unwrap().into_struct_value();
+                let range_ptr = self.codegen_alloca(range_type.as_basic_type_enum(), "range");
+                self.builder.build_store(range_ptr, range);
+
+                let current_ptr = self
+                    .builder
+                    .build_struct_gep(range_type, range_ptr, 0, "current")
+                    .expect("Butter corn salt!");
+
+                let table = body.symtable.clone();
+                let symbol = table.get_value(identifier).unwrap();
+                self.references.insert(symbol.id, current_ptr);
+
+                let end_ptr = self
+                    .builder
+                    .build_struct_gep(range_type, range_ptr, 1, "end")
+                    .expect("❌🧢");
+
                 self.builder.build_unconditional_branch(loop_bb);
 
                 // Building the blocks for the head of the loop
                 self.builder.position_at_end(loop_bb);
-                let iterator = self.codegen_expr(iterator).unwrap().into_int_value();
+                let current = self.builder.build_load(i32_type, current_ptr, "");
+                let end = self.builder.build_load(i32_type, end_ptr, "");
+                let condition = self.builder.build_int_compare(
+                    IntPredicate::SLT,
+                    current.into_int_value(),
+                    end.into_int_value(),
+                    "",
+                );
+
                 self.builder
-                    .build_conditional_branch(iterator, body_bb, after_bb);
+                    .build_conditional_branch(condition, body_bb, after_bb);
 
                 // Building the blocks for the body of the loop
                 self.builder.position_at_end(body_bb);
                 self.codegen_stmt(body);
+
+                let current = self.builder.build_load(i32_type, current_ptr, "");
+                let updated_current = self.builder.build_int_add(
+                    current.into_int_value(),
+                    i32_type.const_int(1, true),
+                    "",
+                );
+                self.builder.build_store(current_ptr, updated_current);
+
                 self.builder.build_unconditional_branch(loop_bb);
 
                 // Position the builder at the end of the loop
@@ -330,26 +371,32 @@ impl<'ctx> Codegen<'ctx> {
                     let r = self.codegen_expr(rhs).unwrap().into_int_value();
 
                     match op {
-                        BinaryOp::Add => self.builder.build_int_add(l, r, "add"),
-                        BinaryOp::Sub => self.builder.build_int_sub(l, r, "sub"),
-                        BinaryOp::Mul => self.builder.build_int_mul(l, r, "mul"),
-                        BinaryOp::Div => self.builder.build_int_signed_div(l, r, "div"),
-                        BinaryOp::Mod => self.builder.build_int_signed_rem(l, r, "mod"),
+                        BinaryOp::Add => self.builder.build_int_add(l, r, "add").into(),
+                        BinaryOp::Sub => self.builder.build_int_sub(l, r, "sub").into(),
+                        BinaryOp::Mul => self.builder.build_int_mul(l, r, "mul").into(),
+                        BinaryOp::Div => self.builder.build_int_signed_div(l, r, "div").into(),
+                        BinaryOp::Mod => self.builder.build_int_signed_rem(l, r, "mod").into(),
 
-                        BinaryOp::Gt => self.builder.build_int_compare(SGT, l, r, "gt"),
-                        BinaryOp::GtEq => self.builder.build_int_compare(SGE, l, r, ""),
-                        BinaryOp::Lt => self.builder.build_int_compare(SLT, l, r, "lt"),
-                        BinaryOp::LtEq => self.builder.build_int_compare(SLE, l, r, ""),
+                        BinaryOp::Gt => self.builder.build_int_compare(SGT, l, r, "gt").into(),
+                        BinaryOp::GtEq => self.builder.build_int_compare(SGE, l, r, "").into(),
+                        BinaryOp::Lt => self.builder.build_int_compare(SLT, l, r, "lt").into(),
+                        BinaryOp::LtEq => self.builder.build_int_compare(SLE, l, r, "").into(),
 
-                        BinaryOp::EqEq => self.builder.build_int_compare(EQ, l, r, ""),
-                        BinaryOp::NotEq => self.builder.build_int_compare(NE, l, r, ""),
+                        BinaryOp::EqEq => self.builder.build_int_compare(EQ, l, r, "").into(),
+                        BinaryOp::NotEq => self.builder.build_int_compare(NE, l, r, "").into(),
 
-                        BinaryOp::LogicalAnd => self.builder.build_and(l, r, "logand"),
-                        BinaryOp::LogicalOr => self.builder.build_or(l, r, "logor"),
+                        BinaryOp::LogicalAnd => self.builder.build_and(l, r, "logand").into(),
+                        BinaryOp::LogicalOr => self.builder.build_or(l, r, "logor").into(),
+
+                        BinaryOp::Range => {
+                            // FIXME: Change Range type to Iterator type
+                            self.context
+                                .const_struct(&[l.into(), r.into()], false)
+                                .into()
+                        }
 
                         _ => panic!("{op:?}"),
                     }
-                    .into()
                 }
                 Some(Type::Float) => {
                     use FloatPredicate::*;

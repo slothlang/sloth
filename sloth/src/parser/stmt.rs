@@ -11,6 +11,7 @@ impl<'a> AstParser<'a> {
 
             TokenType::If => self.if_stmt(),
             TokenType::While => self.while_stmt(),
+            TokenType::For => self.for_stmt(),
             TokenType::Var => self.define_variable(),
             TokenType::Fn => self.define_function(false),
             TokenType::Return => self.return_stmt(),

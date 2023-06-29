@@ -277,6 +277,10 @@ impl<'a> Lexer<'a> {
         self.window[0]
     }
 
+    fn peek2(&self) -> char {
+        self.window[1]
+    }
+
     fn eof(&self) -> bool {
         self.peek() == '\0'
     }
@@ -323,7 +327,7 @@ impl<'a> Lexer<'a> {
             value.push(self.advance());
         }
 
-        if self.peek() == '.' {
+        if self.peek() == '.' && self.peek2() != '.' {
             value.push(self.advance());
 
             while self.peek().is_ascii_digit() {

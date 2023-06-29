@@ -54,6 +54,19 @@ impl Populator {
                         }
                     }
                 }
+                StmtKind::ForStmt {
+                    identifier, body, ..
+                } => {
+                    // When a for statement exists we must bind the identifier
+                    // to the value of the iterator.
+                    let mut body_table = body.symtable.clone();
+                    let symbol = Symbol::Value(ValueSymbol {
+                        typ: Type::Integer,
+                        id: self.reserve_id(),
+                    });
+
+                    body_table.insert(identifier.to_owned(), symbol);
+                }
                 _ => (),
             }
         }
@@ -134,11 +147,7 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types(condition)?;
             propagate_types_stmt(body)?;
         }
-        StmtKind::ForStmt {
-            iterator,
-            identifier,
-            body,
-        } => {
+        StmtKind::ForStmt { iterator, body, .. } => {
             propagate_types(iterator)?;
             propagate_types_stmt(body)?;
         }
@@ -223,10 +232,17 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     | BinaryOp::GtEq
                     | BinaryOp::EqEq
                     | BinaryOp::NotEq => Type::Boolean,
-                    BinaryOp::LogicalAnd | BinaryOp::LogicalOr | BinaryOp::Range => lhs
+                    BinaryOp::LogicalAnd | BinaryOp::LogicalOr => lhs
                         .typ
                         .clone()
                         .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?,
+                    BinaryOp::Range => Type::Iterator {
+                        typ: Box::new(
+                            lhs.typ
+                                .clone()
+                                .ok_or(AnalysisError::Unknown(node.line, "skill issue"))?,
+                        ),
+                    },
                 }
             }
             ExprKind::UnaryOp { value, .. } => {
