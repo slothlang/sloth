@@ -84,7 +84,7 @@ fn display(life: [Int]) {
 			# if the cell is alive, print
 			termpos(x, y);
 			if cval(x, y, life) == 1{
-				print("#");
+				print("█");
 			} else {
                 print(" ");
             }

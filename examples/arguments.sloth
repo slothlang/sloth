@@ -1,7 +1,7 @@
 fn main(argc: Int, argv: [String]) Int {
 	if argc == 2 {
 		print("The argument supplied is ");
-		println(argv);
+		println(vgets(argv, 1));
 	} else {
 		println("Wrong # of args");
 	}
