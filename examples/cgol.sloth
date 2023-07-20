@@ -76,22 +76,6 @@ fn update(life: [Int], new: [Int]) {
 
 fn display(life: [Int]) {
 	# Iterate through life
-    #termclear();
-	#var x: Int = 0;
-	#while x < 59 {
-	#	var y: Int = 0;
-	#	while y < 240 {
-	#		# if the cell is alive, print
-	#		termpos(x, y);
-	#		if cval(x, y, life) == 1{
-	#			print("█");
-	#		} else {
-        #        print(" ");
-        #    }
-	#		y = y+1;
-	#	}
-	#	x = x+1;
-	#}
 	for x in 3..62 {
 		for y in 0..240 {
 			termpos(x-3, y);

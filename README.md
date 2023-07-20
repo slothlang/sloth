@@ -6,5 +6,7 @@ In order to build sloth you will need a valid install of LLVM 15.0.1, you can do
 
 After acquiring LLVM just run `cargo build` and you will have your own version of the sloth compiler!
 
+You can also run `./build.sh {PATH TO SLOTH FILE} and it will build your sloth code!
+
 ## Disclaimer
 Sloth is in very early development is NOT meant to be used for actual projects yet. Feel free to contribute to the project via Pull Request and open issues if you can. Thank you for using sloth!

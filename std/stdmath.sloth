@@ -1,5 +1,3 @@
-foreign fn randGen(min: Int, max: Int) Int;
-
 fn abs(x: Int) Int {
     if x < 0 {
         return -x;
@@ -51,20 +49,21 @@ fn pow(x: Float, y: Float) Float {
     return x;
 }
 
-#fn floor(x: Float) Int {
-#    return x - fabs(x % 1);
-#}
+fn floor(x: Float) Int{
+	return as_int(x - fabs(x % 1.0));
+}
 
-#fn ceil(x: Float) Int {
-#    if x < 0.0 {
-#        return floor(x) - 1;
-#    }
-#    return floor(x) + 1;
-#}
+fn ceil(x: Float) Int {
+    if x < 0.0 {
+        return floor(x) - 1;
+    }
+    return floor(x) + 1;
+}
 
-#fn round(x: Float) Float {
-#    if fabs(x % 1.0) >= 0.5 {
-#        return ceil(x);
-#    }
-#    return floor(x);
-#}
+fn round(x: Float) Int {
+    var ret: Int = floor(x);
+    if fabs(x % 1.0) >= 0.5 {
+        ret = ceil(x);
+    }
+    return ret;
+}

@@ -1,0 +1,28 @@
+# stdio
+foreign fn print(str: String) Void;
+foreign fn readln() String;
+foreign fn filer(path: String) String;
+foreign fn curshide();
+foreign fn cursshow();
+
+# stdlib
+foreign fn wait(x: Int) Int;
+foreign fn slen(str: String) Int;
+# foreign fn charAt(str: String) Char;
+foreign fn parse_int(str: String) Int;
+foreign fn termpos(x: Int, y: Int);
+foreign fn as_int(x: Float) Int;
+foreign fn istr(x: Int) String;
+foreign fn system(cmd: String) Int;
+foreign fn sequals(a: String, b: String) Bool;
+foreign fn termclear() Void;
+
+#stdmath
+foreign fn randGen(min: Int, max: Int) Int;
+
+#stdsocket
+foreign fn serversock(port: Int, addr: String, backlog: Int) Int;
+foreign fn clientsock(port: Int, addr: String) Int;
+foreign fn closesock(soc: Int, server:Bool);
+foreign fn sendsock(msg: String, soc: Int);
+foreign fn recvsock(soc: Int) String;

@@ -1,40 +1,40 @@
-fn main() Int { 
-    # Configuration related variables
-    var size: Float = 800.0;
-    var maxVal = 4.0;
-    var maxIter = 50.0;
-    var plane = 4.0;
+fn main() Int{
+  # Configure
+  var size: Float = 1000.0;
+  var maxVal: Float = 4.0;
+  var maxIter: Float = 50.0;
+  var plane: Float = 4.0;
 
-    # Loop over X the configured size
-    var x = 0.0;
-    while x < size {
-        # Loop over Y for the configured size
-        var y = 0.0;
-        while y < size {
-            # Get variables ready
-            var cReal = (x * plane / size) - 2.0;
-            var cImg = (y * plane / size) - 2.0;
-            var zReal = 0.0;
-            var zImg = 0.0;
-            var count = 0.0;
+  # loop over coordinates
+  var x: Float = 0.0;
+  while x < size {	
+  	var y: Float = 0.0;
+	  while y < size {
+      # Initialize
+      var cReal: Float = (x * plane / size) - 2.0;
+      var cImg: Float = (y * plane / size) - 2.0;
+      var zReal: Float = 0.0;
+      var zImg: Float = 0.0;
+      var count: Float = 0.0;
 
-            # Loop over and finish mandelbrot calculations
-            while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
-                var temp = (zReal * zReal) - (zImg * zImg) + cReal;
-                zImg = 2.0 * zReal * zImg + cImg;
-                zReal = temp;
-                count = count + 1.0;
+	    # Calculate
+      while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
+        var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
+        zImg = 2.0 * zReal * zImg + cImg;
+        zReal = temp;
+        count = count + 1.0;
+      }
 
-                # Display the mandelbrot to the actual screen
-                if as_int(count) == as_int(maxIter) {
-                    termpos(as_int(x), as_int(y));
-                    print("█");
-                }
-            }
-            y = y + 1.0;
-        }
-        x = x + 1.0;
+	    # Check
+      if as_int(count) == as_int(maxIter) {
+        termpos(as_int(x), as_int(y));
+        print("█");
+      }
+	    
+      y = y  + 1.0;
     }
-    return 0;
+    x = x + 1.0;
+  }
+  return 0;
 }
 
