@@ -93,7 +93,9 @@ impl GraphBuilder {
                 writeln!(
                     &mut self.graph,
                     "N{} [shape=box label=\"DefineVariable\\n\\nIdentifier={}\\lType={}\\l\"];",
-                    stmt.id, identifier, typ
+                    stmt.id,
+                    identifier,
+                    typ.clone().unwrap()
                 )?;
                 self.traverse_expr0(value)?;
             }

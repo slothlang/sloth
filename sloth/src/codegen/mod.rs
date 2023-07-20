@@ -511,7 +511,7 @@ impl<'ctx> Codegen<'ctx> {
                     .builder
                     .build_array_malloc(
                         element_type,
-                        i32_type.const_int(5000, false),
+                        i32_type.const_int(57600, false),
                         "vecinnerptr",
                     )
                     .unwrap();
@@ -559,7 +559,7 @@ impl<'ctx> Codegen<'ctx> {
                     .build_store(size_ptr, i32_type.const_int(values.len() as u64, false));
 
                 self.builder
-                    .build_store(cap_ptr, i32_type.const_int(2500, false));
+                    .build_store(cap_ptr, i32_type.const_int(57600, false));
 
                 self.builder.build_store(inner, inner_ptr);
 
@@ -652,7 +652,7 @@ impl<'ctx> Codegen<'ctx> {
                 &triple,
                 "x86-64",
                 "",
-                OptimizationLevel::None,
+                OptimizationLevel::Aggressive,
                 RelocMode::Default,
                 CodeModel::Default,
             )

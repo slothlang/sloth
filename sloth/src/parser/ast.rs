@@ -231,7 +231,7 @@ pub enum StmtKind {
     DefineVariable {
         identifier: String,
         value: Expr,
-        typ: TypeIdentifier,
+        typ: Option<TypeIdentifier>,
     },
     AssignVariable {
         identifier: String,

@@ -4,6 +4,9 @@ use crate::lexer::TokenType;
 
 impl<'a> AstParser<'a> {
     pub(super) fn statement(&mut self) -> Result<Stmt, ParsingError> {
+        // Checking what the next token is in order to figure out how we proceed. If
+        // it's not one of these tokens we assume it's an expression statement
+        // and parse the expression statement.
         match self.peek().tt {
             TokenType::OpeningBrace => self.block(),
 
@@ -25,6 +28,10 @@ impl<'a> AstParser<'a> {
         // Consume the foreign token
         self.consume(TokenType::Foreign, "Expected foreign")?;
 
+        // Foreign allows for you to interact with languages other than Sloth. When
+        // Sloth sees a foreign keyword it expects something to follow
+        // determining what from the other language you want to get, this is
+        // similar to the "statement" function but more trimmed down.
         match &self.peek().tt {
             TokenType::Fn => self.define_function(true),
 
@@ -50,6 +57,7 @@ impl<'a> AstParser<'a> {
             }
         }
 
+        // Build the actual if statement kind
         let kind = StmtKind::IfStmt {
             condition,
             if_then: if_then.into(),
@@ -115,8 +123,11 @@ impl<'a> AstParser<'a> {
 
         // Get the identifier and type
         let identifier = self.consume_identifier()?;
-        self.consume(TokenType::Colon, "Expected ':'")?;
-        let typ = self.consume_type()?;
+        let typ = if self.consume(TokenType::Colon, "Expected ':'").is_ok() {
+            self.consume_type().ok()
+        } else {
+            None
+        };
 
         // Get the default value
         self.consume(TokenType::Eq, "Expected '='")?;
@@ -333,10 +344,10 @@ mod tests {
                     ExprKind::Literal(Literal::Integer(3)),
                 )),
             }),
-            typ: TypeIdentifier {
+            typ: Some(TypeIdentifier {
                 name: "Int".to_string(),
                 is_list: false,
-            },
+            }),
         }));
 
         let mut parser = AstParser::new(tokens, SymbolTable::new());
@@ -393,10 +404,10 @@ mod tests {
                                         Literal::Integer(1).into(),
                                     )),
                                 }),
-                                typ: TypeIdentifier {
+                                typ: Some(TypeIdentifier {
                                     name: "Int".to_owned(),
                                     is_list: false,
-                                },
+                                }),
                             }),
                             Stmt::without_table(7, StmtKind::AssignVariable {
                                 identifier: "baz".to_owned(),

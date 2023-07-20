@@ -5,7 +5,7 @@ fn populate() [Int] {
 
 	# Fill the vector with random values
 	var i: Int = 0;
-	while i < 2500 {
+	while i < 57600 {
 		var n: Int = randGen(0,1);
 		vpushi(life, n);
 		i = i+1;
@@ -18,7 +18,7 @@ fn coord(x: Int, y: Int) Int {
 	var res: Int = -1;
 	# Calculate index based on coordinates
 	if x >= 0 && y >= 0 {
-		res = y*50 + x;
+		res = y*240+ x;
 	}
 	# if coordinate is invalid, return -1
 	return res;
@@ -37,9 +37,9 @@ fn cval(x: Int, y: Int, life: [Int]) Int {
 fn update(life: [Int], new: [Int]) {
 	# Iterate through life
 	var x: Int = 0;
-	while x < 50 {
+	while x < 64 {
 		var y: Int = 0;
-		while y < 50 {
+		while y < 240 {
 			# Calculate total score around selected cell
 			var total: Int = 
                 cval(x-1, y-1, life) + # Top Left
@@ -77,20 +77,30 @@ fn update(life: [Int], new: [Int]) {
 fn display(life: [Int]) {
 	# Iterate through life
     #termclear();
-	var x: Int = 0;
-	while x < 50 {
-		var y: Int = 0;
-		while y < 50 {
-			# if the cell is alive, print
-			termpos(x, y);
-			if cval(x, y, life) == 1{
-				print("#");
+	#var x: Int = 0;
+	#while x < 59 {
+	#	var y: Int = 0;
+	#	while y < 240 {
+	#		# if the cell is alive, print
+	#		termpos(x, y);
+	#		if cval(x, y, life) == 1{
+	#			print("█");
+	#		} else {
+        #        print(" ");
+        #    }
+	#		y = y+1;
+	#	}
+	#	x = x+1;
+	#}
+	for x in 3..62 {
+		for y in 0..240 {
+			termpos(x-3, y);
+			if cval(x-3, y, life) == 1 {
+				print("█");
 			} else {
-                print(" ");
-            }
-			y = y+1;
+				print(" ");
+			}
 		}
-		x = x+1;
 	}
 }
 

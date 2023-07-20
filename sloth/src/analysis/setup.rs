@@ -28,7 +28,14 @@ impl Populator {
                     identifier, typ, ..
                 } => {
                     // When a variable is defined add it to the symbol table of the current scope.
-                    let symbol = self.build_value_symbol(node.line(), &table, typ)?;
+                    let symbol = self.build_value_symbol(
+                        node.line(),
+                        &table,
+                        &typ.clone().unwrap_or(TypeIdentifier {
+                            name: "Float".to_owned(),
+                            is_list: false,
+                        }),
+                    )?;
                     table.insert(identifier.to_owned(), symbol);
                 }
                 StmtKind::DefineFunction(Function {
@@ -151,7 +158,7 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types(iterator)?;
             propagate_types_stmt(body)?;
         }
-        StmtKind::DefineVariable { value, .. } => {
+        StmtKind::DefineVariable { value, typ, .. } => {
             propagate_types(value)?;
         }
         StmtKind::AssignVariable { value, .. } => {
