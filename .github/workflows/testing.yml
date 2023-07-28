@@ -16,6 +16,9 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v3
+      - run: rm rust-toolchain.toml
+
+      # Cache files like by target directory
       - uses: actions/cache@v3
         with:
           path: |
@@ -23,11 +26,19 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-rustc-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: rm rust-toolchain.toml
+
+      - uses: actions/cache@v3
+        with:
+          path: llvm
+          key: ${{ runner.os }}-llvm-15
+
+      # Prepare toolchain related stuff
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
       - uses: KyleMayes/install-llvm-action@v1
         with:
           version: "15.0"
+
+      - run: cargo build --all-features
       - run: cargo test --all-features --no-fail-fast
