@@ -177,7 +177,7 @@ impl<'ctx> Codegen<'ctx> {
                 let current_ptr = self
                     .builder
                     .build_struct_gep(range_type, range_ptr, 0, "current")
-                    .expect("Butter corn salt!");
+                    .expect("Error creating current_ptr at for loop.");
 
                 let table = body.symtable.clone();
                 let symbol = table.get_value(identifier).unwrap();
@@ -186,7 +186,7 @@ impl<'ctx> Codegen<'ctx> {
                 let end_ptr = self
                     .builder
                     .build_struct_gep(range_type, range_ptr, 1, "end")
-                    .expect("❌🧢");
+                    .expect("Error creating end_ptr at for loop.");
 
                 self.builder.build_unconditional_branch(loop_bb);
 
@@ -464,7 +464,10 @@ impl<'ctx> Codegen<'ctx> {
                 // extracting an identifier to it. Change this
                 // so you can do for example `fn(){}()`.
                 let ExprKind::Identifier(ident) = &callee.kind else { panic!() };
-                let function = self.module.get_function(ident).expect("oh nooos");
+                let function = self
+                    .module
+                    .get_function(ident)
+                    .unwrap_or_else(|| panic!("Function not found: {}", ident));
 
                 let args = args
                     .iter()

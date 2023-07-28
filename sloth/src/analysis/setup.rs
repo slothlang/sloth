@@ -112,12 +112,18 @@ impl Populator {
             .iter()
             .map(|it| table.get_type(&it.typ))
             .collect::<Option<Vec<_>>>()
-            .ok_or(AnalysisError::UnknownIdentifier(line, "0xOwO".to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(
+                line,
+                "Error creating function inputs".to_owned(),
+            ))?;
 
         let output = output
             .map(|it| table.get_type(it))
             .unwrap_or(Some(Type::Void))
-            .ok_or(AnalysisError::UnknownIdentifier(line, "0xUwU".to_owned()))?;
+            .ok_or(AnalysisError::UnknownIdentifier(
+                line,
+                "Error creating function output".to_owned(),
+            ))?;
 
         Ok(Symbol::Value(ValueSymbol {
             typ: Type::Function {
@@ -185,7 +191,7 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                 child
                     .typ
                     .clone()
-                    .ok_or(AnalysisError::Unknown(node.line, "owo choco"))?
+                    .ok_or(AnalysisError::Unknown(node.line, "Error at grouping"))?
             }
             ExprKind::Literal(lit) => match lit {
                 Literal::Integer(_) => Type::Integer,
@@ -203,7 +209,7 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                         last = Some(member.typ.clone().unwrap());
                     }
 
-                    last.expect("need 1 element in literal im sozzy")
+                    last.expect("Literal requires 1 element")
                 }
                 Literal::String(_) => Type::String,
                 _ => todo!(),
@@ -232,7 +238,7 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     | BinaryOp::Mod => lhs
                         .typ
                         .clone()
-                        .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?,
+                        .ok_or(AnalysisError::Unknown(node.line, "Error propagating type"))?,
                     BinaryOp::Lt
                     | BinaryOp::Gt
                     | BinaryOp::LtEq
@@ -242,23 +248,24 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                     BinaryOp::LogicalAnd | BinaryOp::LogicalOr => lhs
                         .typ
                         .clone()
-                        .ok_or(AnalysisError::Unknown(node.line, "owo?? choco???"))?,
-                    BinaryOp::Range => Type::Iterator {
-                        typ: Box::new(
-                            lhs.typ
-                                .clone()
-                                .ok_or(AnalysisError::Unknown(node.line, "skill issue"))?,
-                        ),
-                    },
+                        .ok_or(AnalysisError::Unknown(node.line, "Error popagating type"))?,
+                    BinaryOp::Range => {
+                        Type::Iterator {
+                            typ: Box::new(lhs.typ.clone().ok_or(AnalysisError::Unknown(
+                                node.line,
+                                "Error popagating type",
+                            ))?),
+                        }
+                    }
                 }
             }
             ExprKind::UnaryOp { value, .. } => {
                 propagate_types(value)?;
 
-                value.typ.clone().ok_or(AnalysisError::Unknown(
-                    node.line,
-                    "YOU'RE WRONG... SULFURIC ACID!",
-                ))?
+                value
+                    .typ
+                    .clone()
+                    .ok_or(AnalysisError::Unknown(node.line, "Error propagating type"))?
             }
             ExprKind::Call { callee, args } => {
                 propagate_types(callee)?;
