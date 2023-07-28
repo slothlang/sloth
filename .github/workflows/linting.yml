@@ -36,7 +36,8 @@ jobs:
       # Prepare toolchain related stuff
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: nightly-2023-06-19
+          components: clippy, rust-src
       - uses: KyleMayes/install-llvm-action@v1
         with:
           version: "15.0"
