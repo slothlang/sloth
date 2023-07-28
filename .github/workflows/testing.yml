@@ -27,11 +27,6 @@ jobs:
             target
           key: ${{ runner.os }}-rustc-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: actions/cache@v3
-        with:
-          path: llvm
-          key: ${{ runner.os }}-llvm-15
-
       # Prepare toolchain related stuff
       - uses: dtolnay/rust-toolchain@stable
         with:
