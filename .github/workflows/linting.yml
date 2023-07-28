@@ -36,6 +36,9 @@ jobs:
         with:
           toolchain: nightly-2023-06-19
           components: clippy, rust-src
+      - uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "15.0"
       - run: cargo clippy --all-features -- --deny warnings
   code-format:
     name: Check formatting
