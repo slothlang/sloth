@@ -914,23 +914,23 @@ impl<'ctx> Codegen<'ctx> {
         self.builder.build_return(None);
     }
 
-    fn INTRINSIC_vremove(&mut self, name: &str, typ: Type) {
-        // Setup function
-        let array_input = self.type_as_basic_type(Type::Array {
-            typ: Box::new(typ.clone()),
-        });
-        // [Array, Index]
-        let inputs = &[array_input.into(), self.context.i32_type().into()];
-        let func_type = self.context.void_type().fn_type(inputs, false);
-        self._setup(&format!("vremove{name}"), func_type);
-        let _func = self.current_func.unwrap();
-
-        // Types
-        let _element_type = self.type_as_basic_type(typ);
-
-        // FIXME: Array cant shrink as of now
-        // TODO: vremove
-    }
+    //    fn INTRINSIC_vremove(&mut self, name: &str, typ: Type) {
+    //        // Setup function
+    //        let array_input = self.type_as_basic_type(Type::Array {
+    //            typ: Box::new(typ.clone()),
+    //        });
+    //        // [Array, Index]
+    //        let inputs = &[array_input.into(), self.context.i32_type().into()];
+    //        let func_type = self.context.void_type().fn_type(inputs, false);
+    //        self._setup(&format!("vremove{name}"), func_type);
+    //        let _func = self.current_func.unwrap();
+    //
+    //        // Types
+    //        let _element_type = self.type_as_basic_type(typ);
+    //
+    //        // FIXME: Array cant shrink as of now
+    //        // TODO: vremove
+    //    }
 
     fn INTRINSIC_vlen(&mut self) {
         // Setup function
