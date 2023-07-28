@@ -42,8 +42,6 @@
           version = "0.1.0";
           src = ./.;
 
-          # FIXME: Tests do not run in release mode
-          checkType = "debug";
           cargoLock = {
             lockFile = ./Cargo.lock;
           };
