@@ -1,4 +1,4 @@
-us estd::fmt::{Error, Write};
+use std::fmt::{Error, Write};
 
 use super::ast::{Expr, ExprKind, Function, FunctionKind, Stmt, StmtKind};
 
@@ -74,7 +74,7 @@ impl GraphBuilder {
             }
             StmtKind::ForStmt {
                 iterator,
-                identifier,
+                identifier: _,
                 body,
             } => {
                 writeln!(
@@ -257,7 +257,7 @@ impl GraphBuilder {
             }
             StmtKind::ForStmt {
                 iterator,
-                identifier,
+                identifier: _,
                 body,
             } => {
                 writeln!(

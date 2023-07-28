@@ -188,7 +188,7 @@ impl Stmt {
             }
             StmtKind::ForStmt {
                 iterator,
-                identifier,
+                identifier: _,
                 body,
             } => {
                 children.push(iterator.as_node());

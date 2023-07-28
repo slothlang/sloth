@@ -164,7 +164,7 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types(iterator)?;
             propagate_types_stmt(body)?;
         }
-        StmtKind::DefineVariable { value, typ, .. } => {
+        StmtKind::DefineVariable { value, .. } => {
             propagate_types(value)?;
         }
         StmtKind::AssignVariable { value, .. } => {

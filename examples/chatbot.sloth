@@ -1,0 +1,12 @@
+fn main() Int {
+	var run: Bool = true;
+	while run == true {
+		println("Hello! How are you?");
+		print("User> ");
+		var input: String = readln();
+		if sequals(input, "bad") {
+			println("lmao sucks");
+		}
+	}
+	return 0;
+}

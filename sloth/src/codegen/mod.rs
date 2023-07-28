@@ -428,7 +428,7 @@ impl<'ctx> Codegen<'ctx> {
                 //
                 match value.typ {
                     Some(Type::Boolean) => {
-                        let value = self.codegen_expr(value).unwrap().into_int_value();
+                        let _value = self.codegen_expr(value).unwrap().into_int_value();
 
                         match op {
                             UnaryOp::Not => {
@@ -923,10 +923,10 @@ impl<'ctx> Codegen<'ctx> {
         let inputs = &[array_input.into(), self.context.i32_type().into()];
         let func_type = self.context.void_type().fn_type(inputs, false);
         self._setup(&format!("vremove{name}"), func_type);
-        let func = self.current_func.unwrap();
+        let _func = self.current_func.unwrap();
 
         // Types
-        let element_type = self.type_as_basic_type(typ);
+        let _element_type = self.type_as_basic_type(typ);
 
         // FIXME: Array cant shrink as of now
         // TODO: vremove
