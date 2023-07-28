@@ -27,9 +27,17 @@
           rustc = rustStable;
         };
       in
+      let
+        baseNativeBuildInputs = with pkgs; [ pkg-config ];
+        baseBuildInputs = with pkgs; [ 
+          llvmPackages_15.libllvm
+          libffi
+          libxml2
+        ];
+      in
       with pkgs;
       {
-        packages.default = rustPlatform.buildRustPackage rec {
+        packages.default = rustPlatform.buildRustPackage {
           pname = "sloth";
           version = "0.1.0";
           src = ./.;
@@ -40,14 +48,20 @@
             lockFile = ./Cargo.lock;
           };
 
+          nativeBuildInputs = baseNativeBuildInputs;
+          buildInputs = baseBuildInputs;
+
           meta = with lib; {
             description = "The Sloth programming language";
             homepage = "https://slothlang.tech";
             license = with licenses; [ mit asl20 ];
           };
+
+          LLVM_SYS_150_PREFIX = "${llvmPackages_15.libllvm.dev}";
         };
         devShells.default = mkShell {
-          buildInputs = [
+          nativeBuildInputs = baseNativeBuildInputs;
+          buildInputs = baseBuildInputs ++ [
             (rustNightly.override {
               extensions = [ "rust-src" "rust-analyzer" ];
               targets = [ "wasm32-unknown-unknown" ];
@@ -57,16 +71,11 @@
             cargo-deny
             cargo-release
 
-            pkg-config
-
-            # Packages required for LLVM
-            llvmPackages_15.libllvm
-            libffi
-            libxml2
-
             # C compiler for debugging
             clang
           ];
+
+          RUST_BACKTRACE = 1;
         };
       }
     );

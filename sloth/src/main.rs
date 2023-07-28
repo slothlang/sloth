@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 #![warn(
     clippy::wildcard_imports,
     clippy::string_add,
