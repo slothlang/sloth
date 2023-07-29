@@ -1,25 +1,25 @@
 fn main() Int{
   # Configure
-  var size: Float = 1000.0;
-  var maxVal: Float = 4.0;
-  var maxIter: Float = 50.0;
-  var plane: Float = 4.0;
+  var size = 1000.0;
+  var maxVal = 4.0;
+  var maxIter = 50.0;
+  var plane = 4.0;
 
   # loop over coordinates
-  var x: Float = 0.0;
+  var x = 0.0;
   while x < size {	
-  	var y: Float = 0.0;
+  	var y = 0.0;
 	  while y < size {
       # Initialize
-      var cReal: Float = (x * plane / size) - 2.0;
-      var cImg: Float = (y * plane / size) - 2.0;
-      var zReal: Float = 0.0;
-      var zImg: Float = 0.0;
-      var count: Float = 0.0;
+      var cReal = (x * plane / size) - 2.0;
+      var cImg = (y * plane / size) - 2.0;
+      var zReal = 0.0;
+      var zImg = 0.0;
+      var count = 0.0;
 
 	    # Calculate
       while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
-        var temp: Float = (zReal * zReal) - (zImg * zImg) + cReal;
+        var temp = (zReal * zReal) - (zImg * zImg) + cReal;
         zImg = 2.0 * zReal * zImg + cImg;
         zReal = temp;
         count = count + 1.0;

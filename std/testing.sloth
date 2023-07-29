@@ -1,0 +1,54 @@
+fn main() Int {
+	print("print()");
+	println("println()");
+	var read: String = readln();
+	println(read);
+	var file: String = filer("std/testing.sloth");
+	println(file);
+	curshide();
+	readln();
+	cursshow();
+	readln();
+	wait(3);
+	var sle: Int = slen("Sloth");
+	println(istr(sle));
+	var parse: Int = parse_int("45");
+	if sequals("Sloth", "Sloth") {
+		println("sequals");
+	}
+	if sequals("sloth", "Sloth") {
+		println("sequals error");
+	}
+	var asint: Int = as_int(3.0);
+	system("echo hello_echo");
+	wait(5);
+	termclear();
+	print("randGen: ");
+	println(istr(randGen(0,10)));
+	print("abs: ");
+	println(istr(abs(-5)));
+	print("fabs: ");
+	println(istr(as_int(fabs(-3.0))));
+	print("max: ");
+	println(istr(max(3, 10)));
+	print("min: ");
+	println(istr(min(3, 10)));
+	print("fmax: ");
+	println(istr(as_int(fmax(3.0, 10.0))));
+	print("fmin: ");
+	println(istr(as_int(fmin(3.0, 10.0))));
+	print("pow: ");
+	println(istr(as_int(pow(5.0, 2.0))));
+	print("floor: ");
+	println(istr(floor(3.7)));
+	print("ceil: ");
+	println(istr(ceil(3.3)));
+	print("round: ");
+	println(istr(round(3.5)));
+	print("round: ");
+	println(istr(round(3.4)));
+	print("round: ");
+	println(istr(round(3.6)));
+
+	return 0;
+}
