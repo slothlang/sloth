@@ -5,7 +5,7 @@ FILENAME="$1"
 ./target/debug/sloth std/extern.sloth std/stdmath.sloth std/stdio.sloth $FILENAME
 
 # Generate binary
-clang -lm output.o std/stdio.c std/stdlib.c std/stdmath.c -o "${FILENAME%.sloth}"
+clang --verbose -lm output.o std/stdio.c std/stdlib.c std/stdmath.c -o "${FILENAME%.sloth}"
 
 # Move file
 mv "${FILENAME%.sloth}" .

@@ -1,4 +1,4 @@
-fn main() Int{
+fn main() Int {
   # Configure
   var size: Float = 1000.0;
   var maxVal: Float = 4.0;
