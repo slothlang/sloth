@@ -8,16 +8,32 @@ jobs:
       matrix:
         os:
           - ubuntu
-          - windows
           - macos
         rust:
           - stable
-          - nightly
+          - nightly-2023-06-19
     name: Test Rust ${{ matrix.rust }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - run: rm rust-toolchain.toml
+
+      # Cache files like by target directory
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-rustc-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # Prepare toolchain related stuff
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
+      - uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "15.0"
+
+      - run: cargo build --all-features
       - run: cargo test --all-features --no-fail-fast

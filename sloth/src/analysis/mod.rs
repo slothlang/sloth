@@ -34,12 +34,26 @@ pub fn analyze(root: &mut Stmt) -> Result<(), AnalysisError> {
 }
 
 fn check_usage(node: &AstNode) -> Result<(), AnalysisError> {
-    if let AstNode::Expr(expr) = node && let ExprKind::Identifier(identifier) = &expr.kind && !expr.symtable.clone().contains(identifier) {
-        return Err(AnalysisError::UnknownIdentifier(expr.line, identifier.clone()));
+    if let AstNode::Expr(expr) = node {
+        if let ExprKind::Identifier(identifier) = &expr.kind {
+            if !expr.symtable.clone().contains(identifier) {
+                return Err(AnalysisError::UnknownIdentifier(
+                    expr.line,
+                    identifier.clone(),
+                ));
+            }
+        }
     }
 
-    if let AstNode::Stmt(stmt) = node && let StmtKind::AssignVariable { identifier, .. } = &stmt.kind && !stmt.symtable.clone().contains(identifier) {
-        return Err(AnalysisError::UnknownIdentifier(stmt.line, identifier.clone()));
+    if let AstNode::Stmt(stmt) = node {
+        if let StmtKind::AssignVariable { identifier, .. } = &stmt.kind {
+            if !stmt.symtable.clone().contains(identifier) {
+                return Err(AnalysisError::UnknownIdentifier(
+                    stmt.line,
+                    identifier.clone(),
+                ));
+            }
+        }
     }
 
     for child in node.children() {

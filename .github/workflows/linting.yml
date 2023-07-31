@@ -6,7 +6,8 @@ jobs:
     name: Dependency linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - run: rm rust-toolchain.toml
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:
           arguments: --all-features
@@ -15,19 +16,36 @@ jobs:
     name: Code linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - run: rm rust-toolchain.toml
+
+      # Cache files like by target directory
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-rustc-nightly-2023-06-19-cargo-${{ hashFiles('**/Cargo.lock') }}-linting
+
+      # Prepare toolchain related stuff
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
+          toolchain: nightly-2023-06-19
           components: clippy, rust-src
+      - uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "15.0"
+
       - run: cargo clippy --all-features -- --deny warnings
   code-format:
     name: Check formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - run: rm rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
+          toolchain: nightly-2023-06-19
           components: rustfmt, rust-src
       - run: cargo fmt -- --check
