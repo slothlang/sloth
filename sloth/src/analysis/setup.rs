@@ -71,8 +71,12 @@ impl Populator {
                         let mut body_table = body.symtable.clone();
 
                         for input in inputs {
-                            let symbol =
-                                self.build_value_symbol(node.line(), &body_table, &input.typ, true)?;
+                            let symbol = self.build_value_symbol(
+                                node.line(),
+                                &body_table,
+                                &input.typ,
+                                true,
+                            )?;
                             body_table.insert(input.identifier.to_owned(), symbol);
                         }
                     }
@@ -148,7 +152,6 @@ impl Populator {
             typ: Type::Function {
                 inputs,
                 output: output.into(),
-
             },
             id: self.reserve_id(),
             mutable: true,
