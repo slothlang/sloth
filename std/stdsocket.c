@@ -1,4 +1,3 @@
-#include "stdlib.c"
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -64,6 +63,14 @@ char *recvsock(int soc) {
   char *buf = malloc(1024);
   int valread = read(soc, buf, 1024);
   return buf;
+}
+
+size_t
+strlen(const char *str)
+{
+    const char *s;
+    for (s = str; *s; ++s);
+    return(s - str);
 }
 
 void sendsock(char *msg, int soc) { send(soc, msg, strlen(msg), 0); }

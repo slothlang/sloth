@@ -1,5 +1,5 @@
 fn main() Int {
-	var computer: Int = randGen(1, 10);
+	val computer: Int = randGen(1, 10);
 	var tries: Int = 0;
 	var correct: Bool = false;
 
