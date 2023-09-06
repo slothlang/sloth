@@ -1,0 +1,7 @@
+fn main() {
+  val test = 0;
+  println(istr(test));
+  #test = 1;
+  println(istr(test));
+  return 0;
+}

@@ -195,6 +195,7 @@ impl Stmt {
                 children.push(body.as_node());
             }
             StmtKind::DefineVariable { value, .. } => children.push(value.as_node()),
+            StmtKind::DefineValue { value, .. } => children.push(value.as_node()),
             StmtKind::AssignVariable { value, .. } => children.push(value.as_node()),
             StmtKind::DefineFunction(Function { kind, .. }) => {
                 if let FunctionKind::Normal { body } = kind {
@@ -229,6 +230,11 @@ pub enum StmtKind {
         body: Box<Stmt>,
     },
     DefineVariable {
+        identifier: String,
+        value: Expr,
+        typ: Option<TypeIdentifier>,
+    },
+    DefineValue {
         identifier: String,
         value: Expr,
         typ: Option<TypeIdentifier>,

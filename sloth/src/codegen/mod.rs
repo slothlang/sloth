@@ -233,14 +233,29 @@ impl<'ctx> Codegen<'ctx> {
                 self.builder.build_store(ptr, init_value);
                 self.references.insert(symbol.id, ptr);
             }
-            StmtKind::AssignVariable { identifier, value } => {
+            StmtKind::DefineValue {
+                identifier, value, ..
+            } => {
                 let table = code.symtable.clone();
                 let symbol = table.get_value(identifier).unwrap();
 
-                let ptr = self.references.get(&symbol.id).unwrap();
+                let ptr = self.codegen_alloca(self.type_as_basic_type(symbol.typ), identifier);
                 let init_value = self.codegen_expr(value).unwrap();
 
-                self.builder.build_store(*ptr, init_value);
+                self.builder.build_store(ptr, init_value);
+                self.references.insert(symbol.id, ptr);
+            }
+            StmtKind::AssignVariable { identifier, value } => {
+                let table = code.symtable.clone();
+                let symbol = table.get_value(identifier).unwrap();
+                if symbol.mutable {
+                    let ptr = self.references.get(&symbol.id).unwrap();
+                    let init_value = self.codegen_expr(value).unwrap();
+
+                    self.builder.build_store(*ptr, init_value);
+                } else {
+                    panic!("Val not mutable!");
+                }
             }
             StmtKind::DefineFunction(function) => {
                 let table = code.symtable.clone();

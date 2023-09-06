@@ -85,6 +85,20 @@ impl GraphBuilder {
                 self.traverse_expr0(iterator)?;
                 self.traverse_stmt0(body)?;
             }
+            StmtKind::DefineValue {
+                identifier,
+                value,
+                typ,
+            } => {
+                writeln!(
+                    &mut self.graph,
+                    "N{} [shape=box label=\"DefineValue\\n\\nIdentifier={}\\lType={}\\l\"];",
+                    stmt.id,
+                    identifier,
+                    typ.clone().unwrap()
+                )?;
+                self.traverse_expr0(value)?;
+            }
             StmtKind::DefineVariable {
                 identifier,
                 value,
@@ -274,6 +288,10 @@ impl GraphBuilder {
                 self.traverse_stmt(body)?;
             }
             StmtKind::DefineVariable { value, .. } => {
+                writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
+                self.traverse_expr(value)?;
+            }
+            StmtKind::DefineValue { value, .. } => {
                 writeln!(&mut self.graph, "N{} -> N{};", stmt.id, value.id)?;
                 self.traverse_expr(value)?;
             }

@@ -1,5 +1,6 @@
 # Build Sloth
 cargo build
+rm output.o
 FILENAME="$1"
 # Compile standard library
 ./target/debug/sloth std/extern.sloth std/stdmath.sloth std/stdio.sloth $FILENAME

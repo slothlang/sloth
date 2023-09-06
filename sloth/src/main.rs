@@ -100,6 +100,7 @@ fn mk_symtable() -> SymbolTable {
             output: Box::new(Type::Integer),
         },
         id: 0,
+        mutable: true,
     });
 
     let dummyf = Symbol::Value(ValueSymbol {
@@ -108,6 +109,7 @@ fn mk_symtable() -> SymbolTable {
             output: Box::new(Type::Float),
         },
         id: 0,
+        mutable: true,
     });
 
     let dummyb = Symbol::Value(ValueSymbol {
@@ -116,6 +118,7 @@ fn mk_symtable() -> SymbolTable {
             output: Box::new(Type::Boolean),
         },
         id: 0,
+        mutable: true,
     });
 
     let dummys = Symbol::Value(ValueSymbol {
@@ -124,6 +127,7 @@ fn mk_symtable() -> SymbolTable {
             output: Box::new(Type::Boolean),
         },
         id: 0,
+        mutable: true,
     });
 
     global_symtable.insert("vlen".into(), dummyi.clone());

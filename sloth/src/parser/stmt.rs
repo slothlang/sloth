@@ -16,6 +16,7 @@ impl<'a> AstParser<'a> {
             TokenType::While => self.while_stmt(),
             TokenType::For => self.for_stmt(),
             TokenType::Var => self.define_variable(),
+            TokenType::Val => self.define_value(),
             TokenType::Fn => self.define_function(false),
             TokenType::Return => self.return_stmt(),
 
@@ -149,6 +150,37 @@ impl<'a> AstParser<'a> {
         ))
     }
 
+    fn define_value(&mut self) -> Result<Stmt, ParsingError> {
+        // Consume the val token
+        self.consume(TokenType::Val, "Expected val")?;
+
+        // Get the identifier and type
+        let identifier = self.consume_identifier()?;
+        let typ = if self.consume(TokenType::Colon, "Expected ':'").is_ok() {
+            self.consume_type().ok()
+        } else {
+            None
+        };
+
+        // Get the default value
+        self.consume(TokenType::Eq, "Expected '='")?;
+        let value = self.expression()?;
+
+        self.consume(TokenType::SemiColon, "Expected ';' at end of statement")?;
+
+        let kind = StmtKind::DefineValue {
+            identifier,
+            value,
+            typ,
+        };
+
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
+    }
     // TODO: Make argument types optional
     fn define_function(&mut self, is_foreign: bool) -> Result<Stmt, ParsingError> {
         // Consume the fn token

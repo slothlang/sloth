@@ -143,6 +143,7 @@ pub enum Symbol {
 pub struct ValueSymbol {
     pub typ: Type,
     pub id: i32,
+    pub mutable: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]

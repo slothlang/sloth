@@ -35,6 +35,22 @@ impl Populator {
                             name: "Float".to_owned(),
                             is_list: false,
                         }),
+                        true,
+                    )?;
+                    table.insert(identifier.to_owned(), symbol);
+                }
+                StmtKind::DefineValue {
+                    identifier, typ, ..
+                } => {
+                    // When a variable is defined add it to the symbol table of the current scope.
+                    let symbol = self.build_value_symbol(
+                        node.line(),
+                        &table,
+                        &typ.clone().unwrap_or(TypeIdentifier {
+                            name: "Float".to_owned(),
+                            is_list: false,
+                        }),
+                        false,
                     )?;
                     table.insert(identifier.to_owned(), symbol);
                 }
@@ -56,7 +72,7 @@ impl Populator {
 
                         for input in inputs {
                             let symbol =
-                                self.build_value_symbol(node.line(), &body_table, &input.typ)?;
+                                self.build_value_symbol(node.line(), &body_table, &input.typ, true)?;
                             body_table.insert(input.identifier.to_owned(), symbol);
                         }
                     }
@@ -70,6 +86,7 @@ impl Populator {
                     let symbol = Symbol::Value(ValueSymbol {
                         typ: Type::Integer,
                         id: self.reserve_id(),
+                        mutable: true,
                     });
 
                     body_table.insert(identifier.to_owned(), symbol);
@@ -90,6 +107,7 @@ impl Populator {
         line: u32,
         table: &SymbolTable,
         typ: &TypeIdentifier,
+        mutab: bool,
     ) -> Result<Symbol, AnalysisError> {
         let typ = table
             .get_type(typ)
@@ -98,6 +116,7 @@ impl Populator {
         Ok(Symbol::Value(ValueSymbol {
             typ,
             id: self.reserve_id(),
+            mutable: mutab,
         }))
     }
 
@@ -129,8 +148,10 @@ impl Populator {
             typ: Type::Function {
                 inputs,
                 output: output.into(),
+
             },
             id: self.reserve_id(),
+            mutable: true,
         }))
     }
 }
@@ -165,6 +186,9 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types_stmt(body)?;
         }
         StmtKind::DefineVariable { value, .. } => {
+            propagate_types(value)?;
+        }
+        StmtKind::DefineValue { value, .. } => {
             propagate_types(value)?;
         }
         StmtKind::AssignVariable { value, .. } => {
