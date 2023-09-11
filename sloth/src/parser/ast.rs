@@ -424,6 +424,9 @@ impl Display for BinaryOp {
 pub enum UnaryOp {
     Not,
     Neg,
+
+    Reference,
+    Dereference,
 }
 
 impl TryFrom<TokenType> for UnaryOp {
@@ -433,6 +436,9 @@ impl TryFrom<TokenType> for UnaryOp {
         let operation = match value {
             TokenType::Bang => Self::Not,
             TokenType::Minus => Self::Neg,
+
+            TokenType::Star => Self::Reference,
+            TokenType::At => Self::Dereference,
 
             _ => return Err(ParsingError::InvalidOp),
         };
@@ -446,6 +452,9 @@ impl Display for UnaryOp {
         let value = match self {
             UnaryOp::Not => "!",
             UnaryOp::Neg => "-",
+
+            UnaryOp::Reference => "*",
+            UnaryOp::Dereference => "@",
         };
 
         write!(f, "{value}")

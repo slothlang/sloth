@@ -10,9 +10,14 @@ impl<'a> AstParser<'a> {
     }
 
     fn unary(&mut self) -> Result<Expr, ParsingError> {
-        if !self.eof() && matches!(self.peek().tt, TokenType::Bang | TokenType::Minus) {
-            let oeprator_tt = self.advance().unwrap().tt.clone();
-            let operator = UnaryOp::try_from(oeprator_tt)?;
+        if !self.eof()
+            && matches!(
+                self.peek().tt,
+                TokenType::Bang | TokenType::Minus | TokenType::Star | TokenType::At
+            )
+        {
+            let operator_tt = self.advance().unwrap().tt.clone();
+            let operator = UnaryOp::try_from(operator_tt)?;
 
             let value = self.unary()?;
 

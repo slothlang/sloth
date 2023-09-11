@@ -67,6 +67,8 @@ pub enum TokenType {
     GtEq,   // >=
     GtGtEq, // >>=
 
+    At, // @
+
     Comma,
 
     Question,         // ?
@@ -158,6 +160,7 @@ impl Display for TokenType {
             TokenType::GtGt => ">>",
             TokenType::GtEq => ">=",
             TokenType::GtGtEq => ">>=",
+            TokenType::At => "@",
             TokenType::Comma => ",",
             TokenType::Question => "?",
             TokenType::QuestionDot => "?.",
@@ -455,6 +458,8 @@ impl<'a> Iterator for Lexer<'a> {
             ['>', '=', ..] => self.advance_by_with(2, TokenType::GtEq),
             ['>', ..] => self.advance_with(TokenType::Gt),
 
+            ['@', ..] => self.advance_with(TokenType::At),
+
             [',', ..] => self.advance_with(TokenType::Comma),
 
             ['.', '.', ..] => self.advance_by_with(2, TokenType::DotDot),
@@ -533,7 +538,7 @@ mod tests {
     #[test]
     fn lex_operators() {
         let source = "+ ++ - * ** / % ~ += ++= -= *= **= /= %= ~= & && | || ^ = == ! !! != < << \
-                      <<= <= > >> >>= >= , ? ?. ?? . .. : :: ; -> =>";
+                      <<= <= > >> >>= >= @ , ? ?. ?? . .. : :: ; -> =>";
         let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
 
         assert_eq!(&tokens, &[
@@ -571,6 +576,7 @@ mod tests {
             TokenType::GtGt,
             TokenType::GtGtEq,
             TokenType::GtEq,
+            TokenType::At,
             TokenType::Comma,
             TokenType::Question,
             TokenType::QuestionDot,

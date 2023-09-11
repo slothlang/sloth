@@ -7,17 +7,15 @@
 )]
 
 pub mod analysis;
-pub mod codegen;
 pub mod lexer;
 pub mod parser;
 pub mod symtable;
 
-use std::fs::File;
+#[cfg(feature = "llvm")]
+pub mod codegen;
+
 use std::{env, fs};
 
-use codegen::Codegen;
-use inkwell::context::Context;
-use inkwell::targets::FileType;
 use itertools::Itertools;
 use lexer::Lexer;
 use parser::AstParser;
@@ -32,7 +30,7 @@ fn main() {
     if args.len() < 2 {
         println!("Sloth programming language interpreter\n");
         println!("Usage: sloth <file...>");
-        return;
+        std::process::exit(1);
     }
 
     // Reading source files
@@ -40,7 +38,7 @@ fn main() {
     for path in args.iter().skip(1) {
         let Ok(contents) = fs::read_to_string(path) else {
             eprintln!("Error while reading '{path}'");
-            return;
+            std::process::exit(1);
         };
         source.push_str(&contents);
         let len = contents.lines().collect_vec().len();
@@ -52,6 +50,7 @@ fn main() {
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();
+    println!("{tokens:#?}");
     let global_symtable = mk_symtable();
 
     let mut ast = match AstParser::parse(tokens, global_symtable) {
@@ -62,7 +61,7 @@ fn main() {
                 args[1 + (error.line() / 1_000) as usize],
                 error.line() % 1000 + 1,
             );
-            return;
+            std::process::exit(1);
         }
     };
 
@@ -72,16 +71,25 @@ fn main() {
             args[1 + (error.line() / 1_000) as usize],
             error.line() % 1000 + 1,
         );
-        return;
+        std::process::exit(1);
     }
 
-    // Generating code for module
-    let context = Context::create();
-    let mut codegen = Codegen::new(&context, "s");
-    let mut output_file = File::create("output.o").unwrap();
+    // Generating code for module if LLVM enabled
+    #[cfg(feature = "llvm")]
+    {
+        use std::fs::File;
 
-    codegen.codegen(&ast);
-    codegen.write_obj(&mut output_file, FileType::Object);
+        use codegen::Codegen;
+        use inkwell::context::Context;
+        use inkwell::targets::FileType;
+
+        let context = Context::create();
+        let mut codegen = Codegen::new(&context, "s");
+        let mut output_file = File::create("output.o").unwrap();
+
+        codegen.codegen(&ast);
+        codegen.write_obj(&mut output_file, FileType::Object);
+    }
 }
 
 fn mk_symtable() -> SymbolTable {

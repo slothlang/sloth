@@ -1,0 +1,5 @@
+fn main() Int {
+	val x: Int = 0;
+	val xPtr: Int = *x;
+	val x: Int = @xPtr;
+}
