@@ -1,0 +1,8 @@
+fn main() Int {
+  struct Time {
+    var hr: Int;
+    var mn: Int;
+  }
+  println("Hello Struct");
+  return 0;
+}

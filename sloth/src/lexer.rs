@@ -499,6 +499,7 @@ impl<'a> Iterator for Lexer<'a> {
                     "loop" => TokenType::Loop,
                     "break" => TokenType::Break,
                     "continue" => TokenType::Continue,
+                    "struct" => TokenType::Struct,
                     "as" => TokenType::As,
                     "foreign" => TokenType::Foreign,
                     "true" => Literal::Boolean(true).into(),
