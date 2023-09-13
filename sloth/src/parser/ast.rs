@@ -271,24 +271,19 @@ pub struct FunctionInput {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct TypeIdentifier {
-    pub name: String,
-    pub is_list: bool,
+pub enum TypeIdentifier {
+    Pointer(Box<TypeIdentifier>),
+    Array(Box<TypeIdentifier>),
+    Standard { name: String },
 }
 
 impl Display for TypeIdentifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.is_list {
-            write!(f, "[")?;
+        match self {
+            TypeIdentifier::Pointer(inner) => write!(f, "&{inner}"),
+            TypeIdentifier::Array(inner) => write!(f, "[{inner}]"),
+            TypeIdentifier::Standard { name } => write!(f, "{name}"),
         }
-
-        write!(f, "{}", self.name)?;
-
-        if self.is_list {
-            write!(f, "]")?;
-        }
-
-        Ok(())
     }
 }
 
@@ -437,7 +432,7 @@ impl TryFrom<TokenType> for UnaryOp {
             TokenType::Bang => Self::Not,
             TokenType::Minus => Self::Neg,
 
-            TokenType::Star => Self::Reference,
+            TokenType::Amp => Self::Reference,
             TokenType::At => Self::Dereference,
 
             _ => return Err(ParsingError::InvalidOp),
@@ -453,7 +448,7 @@ impl Display for UnaryOp {
             UnaryOp::Not => "!",
             UnaryOp::Neg => "-",
 
-            UnaryOp::Reference => "*",
+            UnaryOp::Reference => "&",
             UnaryOp::Dereference => "@",
         };
 

@@ -130,19 +130,22 @@ impl<'a> AstParser<'a> {
     }
 
     pub fn consume_type(&mut self) -> Result<TypeIdentifier, ParsingError> {
-        let is_list = self.peek().tt == TokenType::OpeningBracket;
+        Ok(match self.peek().tt {
+            TokenType::OpeningBracket => {
+                self.consume(TokenType::OpeningBracket, "Expected '['")?;
+                let typ = TypeIdentifier::Array(Box::new(self.consume_type()?));
+                self.consume(TokenType::ClosingBracket, "Expected ']'")?;
 
-        if is_list {
-            self.consume(TokenType::OpeningBracket, "Expected '['")?;
-        }
-
-        let name = self.consume_identifier()?;
-
-        if is_list {
-            self.consume(TokenType::ClosingBracket, "Expected ']'")?;
-        }
-
-        Ok(TypeIdentifier { name, is_list })
+                typ
+            }
+            TokenType::Amp => {
+                self.consume(TokenType::Amp, "Expected '&'")?;
+                TypeIdentifier::Pointer(Box::new(self.consume_type()?))
+            }
+            _ => TypeIdentifier::Standard {
+                name: self.consume_identifier()?,
+            },
+        })
     }
 
     pub fn reserve_id(&mut self) -> i32 {
