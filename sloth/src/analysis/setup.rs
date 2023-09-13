@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::AnalysisError;
 use crate::parser::ast::{
     AstNode, BinaryOp, Expr, ExprKind, Function, FunctionInput, FunctionKind, Literal, Stmt,
@@ -37,6 +39,14 @@ impl Populator {
                         }),
                         true,
                     )?;
+                    table.insert(identifier.to_owned(), symbol);
+                }
+                StmtKind::DefineStruct {
+                    identifier,
+                    properties,
+                } => {
+                    let symbol =
+                        self.build_struct_symbol(node.line(), &table, properties.clone())?;
                     table.insert(identifier.to_owned(), symbol);
                 }
                 StmtKind::DefineValue {
@@ -124,6 +134,24 @@ impl Populator {
         }))
     }
 
+    fn build_struct_symbol(
+        &mut self,
+        line: u32,
+        table: &SymbolTable,
+        properties: HashMap<String, TypeIdentifier>,
+    ) -> Result<Symbol, AnalysisError> {
+        let properties = properties
+            .iter()
+            .map(|it| (it.0.clone(), table.get_type(&it.1).unwrap()))
+            .collect::<HashMap<String, Type>>();
+
+        Ok(Symbol::Value(ValueSymbol {
+            typ: Type::Struct { properties },
+            id: self.reserve_id(),
+            mutable: true,
+        }))
+    }
+
     fn build_function_symbol(
         &mut self,
         line: u32,
@@ -194,6 +222,10 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
         StmtKind::DefineValue { value, .. } => {
             propagate_types(value)?;
         }
+        StmtKind::DefineStruct {
+            identifier,
+            properties,
+        } => (),
         StmtKind::AssignVariable { value, .. } => {
             propagate_types(value)?;
         }
@@ -257,6 +289,10 @@ pub(super) fn propagate_types(node: &mut Expr) -> Result<(), AnalysisError> {
                 }
 
                 match op {
+                    BinaryOp::PathRes => lhs
+                        .typ
+                        .clone()
+                        .ok_or(AnalysisError::Unknown(node.line, "Error Propagating Type"))?,
                     BinaryOp::Add
                     | BinaryOp::Con
                     | BinaryOp::Sub

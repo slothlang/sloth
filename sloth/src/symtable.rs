@@ -146,7 +146,7 @@ pub struct ValueSymbol {
     pub mutable: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Type {
     Void,
     Integer,
@@ -159,6 +159,9 @@ pub enum Type {
     Function {
         inputs: Vec<Type>,
         output: Box<Type>,
+    },
+    Struct {
+        properties: HashMap<String, Type>,
     },
     Array {
         typ: Box<Type>,

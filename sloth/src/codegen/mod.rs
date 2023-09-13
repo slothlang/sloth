@@ -325,6 +325,7 @@ impl<'ctx> Codegen<'ctx> {
             Type::Integer => self.context.i32_type().fn_type(&inputs_typ, false),
             Type::Float => self.context.f32_type().fn_type(&inputs_typ, false),
             Type::Boolean => self.context.bool_type().fn_type(&inputs_typ, false),
+            // Type::Pointer => self.context.ptr_type().fn_type(&inputs_typ, false),
             Type::Array { ref typ, .. } => {
                 let i32_type = self.context.i32_type().as_basic_type_enum();
 

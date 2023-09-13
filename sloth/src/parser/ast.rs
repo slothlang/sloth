@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 
 use crate::lexer::{self, TokenType};
@@ -167,6 +168,10 @@ impl Stmt {
         let mut children = Vec::new();
 
         match &self.kind {
+            StmtKind::DefineStruct {
+                identifier,
+                properties,
+            } => (),
             StmtKind::Block(inner) => {
                 children.extend(inner.iter().map(Self::as_node));
             }
@@ -242,6 +247,10 @@ pub enum StmtKind {
     AssignVariable {
         identifier: String,
         value: Expr,
+    },
+    DefineStruct {
+        identifier: String,
+        properties: HashMap<String, TypeIdentifier>,
     },
     /// A function definition. Output is None when the function returns nothing
     /// meaning void, otherwise it is the name of the type the function
@@ -360,6 +369,7 @@ pub enum BinaryOp {
     LogicalOr,
 
     Range,
+    PathRes,
 }
 
 impl TryFrom<TokenType> for BinaryOp {
@@ -385,6 +395,7 @@ impl TryFrom<TokenType> for BinaryOp {
             TokenType::PipePipe => Self::LogicalOr,
 
             TokenType::DotDot => Self::Range,
+            TokenType::Dot => Self::PathRes,
 
             _ => return Err(ParsingError::InvalidOp),
         };
@@ -414,6 +425,7 @@ impl Display for BinaryOp {
             BinaryOp::LogicalOr => "||",
 
             BinaryOp::Range => "..",
+            BinaryOp::PathRes => ".",
         };
 
         write!(f, "{value}")

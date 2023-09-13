@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::ast::{Function, FunctionInput, FunctionKind, Stmt, StmtKind};
 use super::{AstParser, ParsingError};
 use crate::lexer::TokenType;
@@ -17,6 +19,7 @@ impl<'a> AstParser<'a> {
             TokenType::For => self.for_stmt(),
             TokenType::Var => self.define_variable(),
             TokenType::Val => self.define_value(),
+            TokenType::Struct => self.define_struct(),
             TokenType::Fn => self.define_function(false),
             TokenType::Return => self.return_stmt(),
 
@@ -140,6 +143,36 @@ impl<'a> AstParser<'a> {
             identifier,
             value,
             typ,
+        };
+
+        Ok(Stmt::new(
+            self.reserve_id(),
+            self.line,
+            kind,
+            self.top.clone(),
+        ))
+    }
+
+    fn define_struct(&mut self) -> Result<Stmt, ParsingError> {
+        let mut properties = HashMap::new();
+
+        self.consume(TokenType::Struct, "Expected struct")?;
+
+        let identifier = self.consume_identifier()?;
+
+        while self.peek().tt != TokenType::ClosingBracket {
+            self.consume(TokenType::Val, "Expected val in struct!")?;
+
+            let ident = self.consume_identifier()?;
+            let typ = self.consume_type()?;
+
+            properties.insert(ident, typ).ok_or(0);
+        }
+        self.consume(TokenType::ClosingBracket, "Expected '}' at end of struct");
+
+        let kind = StmtKind::DefineStruct {
+            identifier,
+            properties,
         };
 
         Ok(Stmt::new(

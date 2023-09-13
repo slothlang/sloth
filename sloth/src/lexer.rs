@@ -102,6 +102,7 @@ pub enum TokenType {
     Loop,
     Break,
     Continue,
+    Struct,
 
     As,
 
@@ -173,6 +174,7 @@ impl Display for TokenType {
             TokenType::Arrow => "->",
             TokenType::FatArrow => "=>",
             TokenType::Const => "const",
+            TokenType::Struct => "struct",
             TokenType::Val => "val",
             TokenType::Var => "var",
             TokenType::Fn => "fn",
@@ -593,7 +595,7 @@ mod tests {
 
     #[test]
     fn lex_keywords() {
-        let source = "val var fn if else while for in loop break continue as true false";
+        let source = "val var fn if else while for in loop break continue as true false struct";
         let tokens = Lexer::new(source).map(|it| it.tt).collect_vec();
 
         assert_eq!(&tokens, &[
@@ -611,6 +613,7 @@ mod tests {
             TokenType::As,
             Literal::Boolean(true).into(),
             Literal::Boolean(false).into(),
+            TokenType::Struct,
         ]);
     }
 
