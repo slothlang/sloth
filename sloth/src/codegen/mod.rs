@@ -220,14 +220,16 @@ impl<'ctx> Codegen<'ctx> {
                 // Position the builder at the end of the loop
                 self.builder.position_at_end(after_bb);
             }
-            StmtKind::DefineStruct { identifier, properties } => {
+            StmtKind::DefineStruct {
+                identifier,
+                properties: _,
+            } => {
                 let table = code.symtable.clone();
                 let symbol = table.get_value(identifier).unwrap();
 
                 let ptr = self.codegen_alloca(self.type_as_basic_type(symbol.typ), identifier);
 
                 self.references.insert(symbol.id, ptr);
-
             }
             StmtKind::DefineVariable {
                 identifier, value, ..
@@ -662,14 +664,16 @@ impl<'ctx> Codegen<'ctx> {
                     .as_basic_type_enum()
             }
             Type::Struct { properties, .. } => {
-                let strct = self.context.struct_type(
+                let strct = self
+                    .context
+                    .struct_type(
                         &properties
                             .iter()
                             .map(|it| self.type_as_basic_type(it.1.clone()))
-                            .collect::<Vec::<BasicTypeEnum>>(),
+                            .collect::<Vec<BasicTypeEnum>>(),
                         false,
-                    ).as_basic_type_enum();
-
+                    )
+                    .as_basic_type_enum();
 
                 let ptr = strct.ptr_type(AddressSpace::default());
                 ptr.as_basic_type_enum()

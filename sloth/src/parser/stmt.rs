@@ -165,14 +165,13 @@ impl<'a> AstParser<'a> {
             self.consume(TokenType::Var, "Expected var in struct!")?;
 
             let ident = self.consume_identifier()?;
-            self.consume(TokenType::Colon, "Expected :");
+            self.consume(TokenType::Colon, "Expected :")?;
             let typ = self.consume_type()?;
-            self.consume(TokenType::SemiColon, "Expected ;");
+            self.consume(TokenType::SemiColon, "Expected ;")?;
 
-            properties.insert(ident, typ).ok_or(0);
-
+            properties.insert(ident, typ);
         }
-        self.consume(TokenType::ClosingBrace, "Expected '}' at end of struct");
+        self.consume(TokenType::ClosingBrace, "Expected '}' at end of struct")?;
 
         let kind = StmtKind::DefineStruct {
             identifier,
@@ -300,7 +299,10 @@ impl<'a> AstParser<'a> {
         let identifier = self.consume_identifier()?;
         self.consume(TokenType::Eq, "Expected '='")?;
         let value = self.expression()?;
-        self.consume(TokenType::SemiColon, "Expected ';' at end of statement ASSIGN")?;
+        self.consume(
+            TokenType::SemiColon,
+            "Expected ';' at end of statement ASSIGN",
+        )?;
         let kind = StmtKind::AssignVariable { identifier, value };
         Ok(Stmt::new(
             self.reserve_id(),
@@ -312,7 +314,10 @@ impl<'a> AstParser<'a> {
 
     fn expression_stmt(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
-        self.consume(TokenType::SemiColon, "Expected ';' at end of statement EXPR")?;
+        self.consume(
+            TokenType::SemiColon,
+            "Expected ';' at end of statement EXPR",
+        )?;
         let kind = StmtKind::ExprStmt(expr);
         Ok(Stmt::new(
             self.reserve_id(),

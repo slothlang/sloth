@@ -136,13 +136,13 @@ impl Populator {
 
     fn build_struct_symbol(
         &mut self,
-        line: u32,
+        _line: u32,
         table: &SymbolTable,
         properties: HashMap<String, TypeIdentifier>,
     ) -> Result<Symbol, AnalysisError> {
         let properties = properties
             .iter()
-            .map(|it| (it.0.clone(), table.get_type(&it.1).unwrap()))
+            .map(|it| (it.0.clone(), table.get_type(it.1).unwrap()))
             .collect::<HashMap<String, Type>>();
 
         Ok(Symbol::Value(ValueSymbol {
@@ -223,8 +223,8 @@ pub(super) fn propagate_types_stmt(node: &mut Stmt) -> Result<(), AnalysisError>
             propagate_types(value)?;
         }
         StmtKind::DefineStruct {
-            identifier,
-            properties,
+            identifier: _,
+            properties: _,
         } => (),
         StmtKind::AssignVariable { value, .. } => {
             propagate_types(value)?;

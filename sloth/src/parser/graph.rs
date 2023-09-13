@@ -48,8 +48,8 @@ impl GraphBuilder {
                 self.traverse_expr0(expr)?;
             }
             StmtKind::DefineStruct {
-                identifier,
-                properties,
+                identifier: _,
+                properties: _,
             } => {
                 todo!();
             }
@@ -224,7 +224,10 @@ impl GraphBuilder {
 
     fn traverse_stmt(&mut self, stmt: &Stmt) -> Result<(), Error> {
         match &stmt.kind {
-            StmtKind::DefineStruct { identifier, properties } => todo!(),
+            StmtKind::DefineStruct {
+                identifier: _,
+                properties: _,
+            } => todo!(),
             StmtKind::Block(children) => {
                 for child in children {
                     writeln!(&mut self.graph, "N{} -> N{};", stmt.id, child.id)?;

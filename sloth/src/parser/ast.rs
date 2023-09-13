@@ -169,8 +169,8 @@ impl Stmt {
 
         match &self.kind {
             StmtKind::DefineStruct {
-                identifier,
-                properties,
+                identifier: _,
+                properties: _,
             } => (),
             StmtKind::Block(inner) => {
                 children.extend(inner.iter().map(Self::as_node));
