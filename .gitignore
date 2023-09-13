@@ -1,6 +1,7 @@
 node_modules/
 *.vsix
 cbuild.sh
+out/
 # Added by cargo
 
 /target
