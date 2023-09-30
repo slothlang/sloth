@@ -1,3 +1,26 @@
+fn printMan(size: Float, maxVal: Float, maxIter: Float, plane: Float, x: Int, y: Int)
+{
+  var cReal = (as_float(x) * plane / size) - 2.0;
+  var cImg = (as_float(y) * plane / size) - 2.0;
+  var zReal = 0.0;
+  var zImg = 0.0;
+  var count = 0.0;
+    
+  # Calculate
+  while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
+    var temp = (zReal * zReal) - (zImg * zImg) + cReal;
+    zImg = 2.0 * zReal * zImg + cImg;
+    zReal = temp;
+    count = count + 1.0;
+
+    # Check
+    if as_int(count) == as_int(maxIter) {
+      termpos(x, y);
+      print("█");
+    }
+  }
+}
+
 fn main() Int {
   # Configure
   var size = 1000.0;
@@ -6,35 +29,13 @@ fn main() Int {
   var plane = 4.0;
 
   # loop over coordinates
-  var x = 0.0;
-  while x < size {	
-  	var y = 0.0;
-	  while y < size {
+
+  for x in 0..as_int(size) {
+      for y in 0..as_int(size) {
       # Initialize
-      var cReal = (x * plane / size) - 2.0;
-      var cImg = (y * plane / size) - 2.0;
-      var zReal = 0.0;
-      var zImg = 0.0;
-      var count = 0.0;
-
-	    # Calculate
-      while (zReal * zReal + zImg * zImg) <= maxVal && count < maxIter {
-        var temp = (zReal * zReal) - (zImg * zImg) + cReal;
-        zImg = 2.0 * zReal * zImg + cImg;
-        zReal = temp;
-        count = count + 1.0;
-      }
-
-	    # Check
-      if as_int(count) == as_int(maxIter) {
-        termpos(as_int(x), as_int(y));
-        print("█");
-      }
-	    
-      y = y  + 1.0;
+        printMan(size, maxVal, maxIter, plane, x, y);
     }
-    x = x + 1.0;
+
   }
   return 0;
 }
-

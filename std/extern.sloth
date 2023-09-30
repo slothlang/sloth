@@ -12,6 +12,7 @@ foreign fn slen(str: String) Int;
 foreign fn parse_int(str: String) Int;
 foreign fn termpos(x: Int, y: Int);
 foreign fn as_int(x: Float) Int;
+foreign fn as_float(x: Int) Float;
 foreign fn istr(x: Int) String;
 foreign fn system(cmd: String) Int;
 foreign fn sequals(a: String, b: String) Bool;

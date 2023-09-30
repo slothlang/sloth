@@ -41,6 +41,9 @@ int as_int(float x) {
     return (int) x;
 }
 
+float as_float(int x) {
+    return (float) x;
+}
 bool sequals(char* a, char* b) {
     if (strlen(a) != strlen(b)) {
         return false;
