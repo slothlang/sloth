@@ -71,6 +71,7 @@ impl<'ctx> Codegen<'ctx> {
 
         for stmt in stmts {
             self.codegen_stmt(stmt);
+            self.current_func.unwrap().print_to_stderr();
         }
     }
 
@@ -555,7 +556,6 @@ impl<'ctx> Codegen<'ctx> {
                             "",
                         )
                     };
-
                     self.builder.build_store(value_ptr, value);
                 }
 

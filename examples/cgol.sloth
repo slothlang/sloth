@@ -1,7 +1,7 @@
 fn populate() [Int]
 {
 	# Initialize life vector
-	var life: [Int] = [0];
+	var life: [Int] = [1];
 	vpopi(life);
 
 	# Fill the vector with random values
@@ -28,26 +28,28 @@ fn coord(x: Int, y: Int) Int
 	return res;
 }
 
-fn cval(x: Int, y: Int, life: [Int]) Int 
+fn cval(x: Int, y: Int, life: [Int]) Int
 {
 	# Check to make sure index exists before returning
 	var res: Int = 0;
 	var c: Int = coord(x, y);
-	if c >= 0 {
+	if c >= 0 
+  {
 		res = vgeti(life, c);
 	}
 	return res;
 }
 
-fn gol(total: Int, alive: Bool) Int
-{
+#fn gol(total: Int, alive: Bool) Int
+#{
   
-  if !alive && total == 3 {
-    return 1;
-  }
-  if alive && ()
-  return 0;
-}
+  #if !alive && total == 3 
+  #{
+    #return 1;
+    #}
+  #if alive && ()
+  #return 0;
+  #}
 
 fn update(life: [Int], new: [Int])
 {
@@ -97,32 +99,40 @@ fn update(life: [Int], new: [Int])
 	}
 }
 
-fn display(life: [Int]) {
+fn display(life: [Int]) 
+{
 	# Iterate through life
-	for x in 3..62 {
-		for y in 0..240 {
+	for x in 3..62 
+  {
+		for y in 0..240 
+    {
 			termpos(x-3, y);
-			if cval(x-3, y, life) == 1 {
+			if cval(x-3, y, life) == 1 
+      {
 				print("█");
-			} else {
+			}
+      else
+      {
 				print(" ");
 			}
 		}
 	}
 }
 
-fn main() Int {
+fn main() Int 
+{
 	# Populate
 	var life: [Int] = populate();
 	display(life);
-    curshide();
+  curshide();
 	# Play forever
-	while true {
+	while true 
+  {
     var new: [Int] = populate();
 		update(life, new);
 		display(new);
     life = new;
-		wait(100);
+    # wait(100);
 	}
 	return 0;
 }

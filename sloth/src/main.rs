@@ -50,7 +50,7 @@ fn main() {
 
     // Parsing
     let tokens = Lexer::new(&source).collect_vec();
-    println!("{tokens:#?}");
+    //println!("{tokens:#?}");
     let global_symtable = mk_symtable();
 
     let mut ast = match AstParser::parse(tokens, global_symtable) {

@@ -1,0 +1,10 @@
+
+fn getStr() Bool
+{
+  return true;
+}
+
+fn main() Int {
+  val poggers: Int = getStr();
+  return 0;
+}
