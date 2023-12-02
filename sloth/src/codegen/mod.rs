@@ -556,6 +556,7 @@ impl<'ctx> Codegen<'ctx> {
                             "",
                         )
                     };
+
                     self.builder.build_store(value_ptr, value);
                 }
 

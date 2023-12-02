@@ -26,3 +26,8 @@ foreign fn clientsock(port: Int, addr: String) Int;
 foreign fn closesock(soc: Int, server:Bool);
 foreign fn sendsock(msg: String, soc: Int);
 foreign fn recvsock(soc: Int) String;
+
+#stdmem
+foreign fn memalloc(size: Int) Int;
+foreign fn drefi(loc: Int) Int;
+foreign fn assignrefi(loc: Int, num: Int);

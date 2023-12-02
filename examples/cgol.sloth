@@ -1,7 +1,7 @@
 fn populate() [Int]
 {
 	# Initialize life vector
-	var life: [Int] = [1];
+	var life: [Int] = ["Hello World"];
 	vpopi(life);
 
 	# Fill the vector with random values
