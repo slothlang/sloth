@@ -1,0 +1,9 @@
+fn main() {
+  var intpointer: Int = memalloc(64);
+  println("We vibin");
+  assignrefi(intpointer, 10);
+  println("Still vibin");
+  var derefd: Int = drefi(intpointer);
+  print("Val of drefd: ");
+  println(istr(derefd));
+}

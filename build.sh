@@ -1,11 +1,11 @@
 # Build Sloth
-cargo build
+#cargo build
 FILENAME="$1"
 # Compile standard library
-./target/debug/sloth std/extern.sloth std/stdmath.sloth std/stdio.sloth $FILENAME
+./target/release/sloth std/extern.sloth std/stdmath.sloth std/stdio.sloth $FILENAME
 
 # Generate binary
-clang -lm output.o std/stdio.c std/stdlib.c std/stdmath.c -o "${FILENAME%.sloth}"
+clang -lm output.o std/stdsocket.c std/stdio.c std/stdlib.c std/stdmath.c std/stdmem.c -o "${FILENAME%.sloth}"
 
 # Move file
 mv "${FILENAME%.sloth}" out/
