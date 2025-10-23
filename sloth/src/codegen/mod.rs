@@ -113,7 +113,7 @@ impl<'ctx> Codegen<'ctx> {
                 self.builder
                     .build_conditional_branch(condition, then_bb, else_bb);
 
-                // Building the blocks for then
+                // Building the blocks for thgn
                 self.builder.position_at_end(then_bb);
                 self.codegen_stmt(if_then);
                 self.builder.build_unconditional_branch(continue_bb);
