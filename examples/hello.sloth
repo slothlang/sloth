@@ -1,7 +1,6 @@
 fn main() Int {
-    var i: Int = 10;
-    for j in 0..i {
-        print(istr(j));
+    while true {
+      println("Hello World!");
     }
     return 0;
 }

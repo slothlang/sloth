@@ -1,55 +1,56 @@
-fn populate() [Int]
-{
-  # Initialize life vector
-  var life: [Int] = [0];
-  vpopi(life);
+fn populate() [Int] {
+	# Initialize life vector
+	var life: [Int] = ["Hello World"];
+	vpopi(life);
 
-  # Fill the vector with random values
-  var i: Int = 0;
-  while i < 57600
-  {
-    var n: Int = randGen(0,1);
-    vpushi(life, n);
-    i = i+1;
-  }
+	# Fill the vector with random values
+	var i: Int = 0;
+	while i < 57600 {
+		var n: Int = randGen(0,1);
+		vpushi(life, n);
+		i = i+1;
+	}
 
   return life;
 }
 
-fn coord(x: Int, y: Int) Int
-{
-  var res: Int = -1;
-  # Calculate index based on coordinates
-  if x >= 0 && y >= 0
-  {
-    res = y*240+ x;
-  }
-  # if coordinate is invalid, return -1
-  return res;
+fn coord(x: Int, y: Int) Int {
+	var res: Int = -1;
+	# Calculate index based on coordinates
+	if x >= 0 && y >= 0 {
+		res = y*240+ x;
+	}
+	# if coordinate is invalid, return -1
+	return res;
 }
 
-fn cval(x: Int, y: Int, life: [Int]) Int
-{
-  # Check to make sure index exists before returning
-  var res: Int = 0;
-  var c: Int = coord(x, y);
-  if c >= 0 {
-    res = vgeti(life, c);
-  }
-  return res;
+fn cval(x: Int, y: Int, life: [Int]) Int {
+	# Check to make sure index exists before returning
+	var res: Int = 0;
+	var c: Int = coord(x, y);
+	if c >= 0 {
+		res = vgeti(life, c);
+	}
+	return res;
 }
 
+#fn gol(total: Int, alive: Bool) Int
+#{
 
+  #if !alive && total == 3
+  #{
+    #return 1;
+    #}
+  #if alive && ()
+  #return 0;
+  #}
 
-fn update(life: [Int], new: [Int])
-{
-  # Iterate through life
-  for x in 0..64
-  {
-    for y in 0..240
-    {
-      # Calculate total score around selected cell
-      var total: Int =
+fn update(life: [Int], new: [Int]) {
+	# Iterate through life
+	for x in 0..64 {
+		for y in 0..240 {
+		# Calculate total score around selected cell
+		var total: Int =
                 cval(x-1, y-1, life) + # Top Left
                 cval(x-1, y  , life) +
                 cval(x-1, y+1, life) +
@@ -59,29 +60,23 @@ fn update(life: [Int], new: [Int])
                 cval(x+1, y  , life) +
                 cval(x+1, y+1, life);
 
-      # Apply game of life rules
+			# Apply game of life rules
 
       var idx: Int = coord(x, y);
 
-      if cval(x, y, life) == 1
-      {
-        if total < 2 || total > 3
-        {
+      if cval(x, y, life) == 1 {
+        if total < 2 || total > 3 {
           vseti(new, idx, 0);
         }
-        else
-        {
+        else {
           vseti(new, idx, 1);
         }
       }
-      else
-      {
-        if total == 3
-        {
+      else {
+        if total == 3 {
           vseti(new, idx, 1);
         }
-        else
-        {
+        else {
           vseti(new, idx, 0);
         }
       }
@@ -95,7 +90,7 @@ fn display(life: [Int]) {
     for y in 0..240 {
       termpos(x-3, y);
       if cval(x-3, y, life) == 1 {
-        print("█");
+	print("█");
       } else {
         print(" ");
       }
@@ -107,7 +102,7 @@ fn main() Int {
   # Populate
   var life: [Int] = populate();
   display(life);
-    curshide();
+  curshide();
   # Play forever
   while true {
     var new: [Int] = populate();

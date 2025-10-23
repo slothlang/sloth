@@ -29,7 +29,6 @@ fn main() Int {
   var plane = 4.0;
 
   # loop over coordinates
-
   for x in 0..as_int(size) {
       for y in 0..as_int(size) {
       # Initialize
